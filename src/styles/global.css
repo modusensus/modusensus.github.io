@@ -1,0 +1,81 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;600;700&family=Inter:wght@400;500&display=swap');
+
+/* ── Design Tokens ── */
+:root {
+  --bg:       #F5F2EC;
+  --ink:      #0D0D0D;
+  --olive:    #6B7C4A;
+  --olive-bg: #E8EDD8;
+  --olive-text: #4A5E24;
+  --muted:    #888888;
+  --border:   rgba(13,13,13,0.12);
+  --border-strong: rgba(13,13,13,0.22);
+
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-ui:      'Space Grotesk', sans-serif;
+  --font-body:    'Inter', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:       #111110;
+    --ink:      #F0EDE6;
+    --olive:    #8FA85E;
+    --olive-bg: #2A3018;
+    --olive-text: #A8C070;
+    --muted:    #666660;
+    --border:   rgba(240,237,230,0.1);
+    --border-strong: rgba(240,237,230,0.2);
+  }
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+img { max-width: 100%; display: block; }
+
+/* ── Typography helpers ── */
+.font-display { font-family: var(--font-display); }
+.font-ui      { font-family: var(--font-ui); }
+
+/* ── Tag variants ── */
+.tag {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+  display: inline-block;
+}
+.tag-study { background: var(--olive-bg); color: var(--olive-text); }
+.tag-tech  { background: var(--olive-bg); color: var(--olive-text); }
+.tag-proj  { background: var(--ink); color: var(--bg); }
+.tag-think { background: transparent; color: var(--muted); border: 0.5px solid var(--border-strong); }
+
+/* ── Stack pill ── */
+.pill {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border: 0.5px solid var(--border-strong);
+  border-radius: 2px;
+  color: var(--muted);
+  display: inline-block;
+}

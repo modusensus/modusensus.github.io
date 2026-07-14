@@ -1,0 +1,176 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog');
+const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const tags = ['全部', '学习成长', '技术折腾', '专业思考', '项目日志'];
+
+const tagClass: Record<string, string> = {
+  '学习成长': 'tag-study',
+  '技术折腾': 'tag-tech',
+  '项目日志': 'tag-proj',
+  '专业思考': 'tag-think',
+};
+---
+
+<BaseLayout title="Blog · nowornever17 Chen" activeNav="blog">
+
+  <div class="page-header">
+    <h1 class="page-title">BLOG.</h1>
+  </div>
+
+  <!-- Tag filters (client-side) -->
+  <div class="filters" id="filters">
+    {tags.map(t => (
+      <button
+        class:list={['filter-btn', { active: t === '全部' }]}
+        data-tag={t}
+      >
+        {t}
+      </button>
+    ))}
+  </div>
+
+  <!-- Article list -->
+  <div class="article-list" id="article-list">
+    {posts.map((post, i) => (
+      <a
+        href={`/blog/${post.slug}`}
+        class="article-card"
+        data-tag={post.data.tag}
+      >
+        <div class="article-left">
+          <p class="article-date">
+            {post.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' })}
+            &nbsp;·&nbsp;{post.data.tag}
+          </p>
+          <h2 class="article-title">{post.data.title}</h2>
+          <p class="article-excerpt">{post.data.excerpt}</p>
+        </div>
+        <div class="article-right">
+          <span class="article-num">0{i + 1}</span>
+          <span class={`tag ${tagClass[post.data.tag] ?? 'tag-think'}`}>
+            {post.data.tag}
+          </span>
+        </div>
+      </a>
+    ))}
+  </div>
+
+</BaseLayout>
+
+<style>
+.page-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.page-title {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 8vw, 64px);
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+/* Filters */
+.filters {
+  padding: 1rem 2rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border);
+}
+.filter-btn {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 2px;
+  border: 0.5px solid var(--border-strong);
+  background: transparent;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.filter-btn.active,
+.filter-btn:hover {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+/* Article list */
+.article-list { padding: 0 2rem; }
+.article-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem;
+  padding: 1.4rem 0;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.2s;
+}
+.article-card[hidden] { display: none; }
+.article-card:hover .article-title { color: var(--olive); }
+
+.article-date {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.article-title {
+  font-family: var(--font-ui);
+  font-size: 18px;
+  font-weight: 700;
+  transition: color 0.2s;
+}
+.article-excerpt {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.7;
+}
+.article-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: space-between;
+  min-width: 60px;
+}
+.article-num {
+  font-family: var(--font-display);
+  font-size: 44px;
+  color: var(--border-strong);
+  line-height: 1;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .page-header,
+  .filters,
+  .article-list { padding-left: 1.25rem; padding-right: 1.25rem; }
+  .article-card { grid-template-columns: 1fr; gap: 0.5rem; }
+  .article-right { flex-direction: row; align-items: center; }
+  .article-num { font-size: 28px; }
+}
+</style>
+
+<script>
+const filterBtns = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+const cards      = document.querySelectorAll<HTMLAnchorElement>('.article-card');
+
+filterBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const selected = btn.dataset.tag ?? '全部';
+    cards.forEach(card => {
+      const match = selected === '全部' || card.dataset.tag === selected;
+      card.hidden = !match;
+    });
+  });
+});
+</script>

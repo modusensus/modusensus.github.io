@@ -1,0 +1,178 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.slug },
+    props:  { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const tagClass: Record<string, string> = {
+  '学习成长': 'tag-study',
+  '技术折腾': 'tag-tech',
+  '项目日志': 'tag-proj',
+  '专业思考': 'tag-think',
+};
+---
+
+<BaseLayout title={`${post.data.title} · nowornever17 Chen`} activeNav="blog">
+
+  <article class="article">
+    <!-- Article header -->
+    <header class="art-header">
+      <div class="art-meta">
+        <span class={`tag ${tagClass[post.data.tag] ?? 'tag-think'}`}>
+          {post.data.tag}
+        </span>
+        <time class="art-date">
+          {post.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </time>
+      </div>
+      <h1 class="art-title">{post.data.title}</h1>
+      {post.data.excerpt && (
+        <p class="art-excerpt">{post.data.excerpt}</p>
+      )}
+    </header>
+
+    <!-- Article body -->
+    <div class="art-body prose">
+      <Content />
+    </div>
+
+    <!-- Back link -->
+    <div class="art-footer">
+      <a href="/blog" class="back-link">← Back to Blog</a>
+    </div>
+  </article>
+
+</BaseLayout>
+
+<style>
+.article {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+/* Header */
+.art-header {
+  padding: 2.5rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+.art-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.art-date {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.art-title {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 6vw, 56px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  margin-bottom: 1rem;
+}
+.art-excerpt {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* Prose */
+.prose { font-size: 15px; line-height: 1.85; color: var(--ink); }
+.prose h2 {
+  font-family: var(--font-display);
+  font-size: 32px;
+  letter-spacing: 0.03em;
+  margin: 2.5rem 0 0.8rem;
+  line-height: 1;
+}
+.prose h3 {
+  font-family: var(--font-ui);
+  font-size: 17px;
+  font-weight: 700;
+  margin: 2rem 0 0.5rem;
+}
+.prose p { margin-bottom: 1.2rem; }
+.prose ul, .prose ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1.2rem;
+}
+.prose li { margin-bottom: 0.4rem; }
+.prose code {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  background: rgba(107,124,74,0.1);
+  color: var(--olive);
+  padding: 2px 5px;
+  border-radius: 2px;
+}
+.prose pre {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 1.2rem 1.4rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 1.4rem 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.prose pre code {
+  background: none;
+  color: inherit;
+  padding: 0;
+}
+.prose blockquote {
+  border-left: 3px solid var(--olive);
+  padding-left: 1rem;
+  color: var(--muted);
+  font-style: italic;
+  margin: 1.4rem 0;
+}
+.prose a {
+  color: var(--olive);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.prose a:hover { border-color: var(--olive); }
+.prose img {
+  border-radius: 4px;
+  margin: 1.5rem 0;
+  width: 100%;
+}
+.prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+/* Footer */
+.art-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.back-link {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--olive); }
+
+@media (max-width: 640px) {
+  .article { padding: 0 1.25rem 3rem; }
+}
+</style>

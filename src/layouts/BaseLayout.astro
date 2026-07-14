@@ -1,0 +1,188 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  activeNav?: 'home' | 'blog' | 'projects' | 'about';
+}
+
+const {
+  title = 'AnAn',
+  description = '跨考公管 · INTJ · AI 学习系统',
+  activeNav = 'home',
+} = Astro.props;
+
+const navLinks = [
+  { href: '/',         label: 'Home',     key: 'home'     },
+  { href: '/blog',     label: 'Blog',     key: 'blog'     },
+  { href: '/projects', label: 'Projects', key: 'projects' },
+  { href: '/about',    label: 'About',    key: 'about'    },
+];
+---
+
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+</head>
+<body>
+
+  <!-- ── Nav ── -->
+  <nav class="nav">
+    <a href="/" class="nav-logo">nowornever17.</a>
+    <div class="nav-links">
+      {navLinks.map(link => (
+        <a
+          href={link.href}
+          class:list={['nav-link', { active: activeNav === link.key }]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </div>
+    <button class="nav-menu" aria-label="菜单" id="menu-toggle">
+      <span></span><span></span><span></span>
+    </button>
+  </nav>
+
+  <!-- ── Mobile menu ── -->
+  <div class="mobile-menu" id="mobile-menu">
+    {navLinks.map(link => (
+      <a
+        href={link.href}
+        class:list={['mobile-link', { active: activeNav === link.key }]}
+      >
+        {link.label}
+      </a>
+    ))}
+  </div>
+
+  <!-- ── Page content ── -->
+  <main>
+    <slot />
+  </main>
+
+  <!-- ── Footer ── -->
+  <footer class="footer">
+    <span class="footer-copy">© 2026 nowornever17 Chen · Built with Astro</span>
+    <span class="footer-logo">D.</span>
+  </footer>
+
+</body>
+</html>
+
+<style>
+/* ── Nav ── */
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 100;
+}
+
+.nav-logo {
+  font-family: var(--font-display);
+  font-size: 22px;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: color 0.2s;
+}
+.nav-link:hover,
+.nav-link.active {
+  color: var(--ink);
+}
+
+/* Hamburger (mobile) */
+.nav-menu {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+.nav-menu span {
+  display: block;
+  width: 22px;
+  height: 1.5px;
+  background: var(--ink);
+  transition: transform 0.2s;
+}
+
+/* Mobile menu */
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+.mobile-menu.open { display: flex; }
+.mobile-link {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+.mobile-link.active { color: var(--ink); }
+
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+}
+.footer-copy {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+.footer-logo {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--muted);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .nav-links   { display: none; }
+  .nav-menu    { display: flex; }
+}
+</style>
+
+<script>
+const toggle = document.getElementById('menu-toggle');
+const menu   = document.getElementById('mobile-menu');
+toggle?.addEventListener('click', () => menu?.classList.toggle('open'));
+</script>
