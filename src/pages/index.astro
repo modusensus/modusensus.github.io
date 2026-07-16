@@ -55,7 +55,7 @@ const projects = [
 
     <div class="posts-list">
       {latestPosts.map((post, i) => (
-        <a href={`/blog/${post.slug}`} class="post-row">
+        <a href={post.data.redirect || `/blog/${post.slug}`} class="post-row">
           <span class="post-num">0{i + 1}</span>
           <div class="post-body">
             <p class="post-title">{post.data.title}</p>

@@ -7,6 +7,7 @@ const blog = defineCollection({
     date:    z.date(),
     tag:     z.enum(['学习成长', '项目日志', '阈值笔记']),
     excerpt: z.string().optional(),
+    redirect: z.string().optional(),
   }),
 });
 

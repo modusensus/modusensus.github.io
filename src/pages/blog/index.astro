@@ -36,7 +36,7 @@ const tagClass: Record<string, string> = {
   <div class="article-list" id="article-list">
     {posts.map((post, i) => (
       <a
-        href={`/blog/${post.slug}`}
+        href={post.data.redirect || `/blog/${post.slug}`}
         class="article-card"
         data-tag={post.data.tag}
       >

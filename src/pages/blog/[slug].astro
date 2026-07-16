@@ -20,6 +20,15 @@ const tagClass: Record<string, string> = {
 };
 ---
 
+{post.data.redirect && (
+  <html>
+    <head>
+      <meta http-equiv="refresh" content={`0;url=${post.data.redirect}`} />
+    </head>
+  </html>
+)}
+
+{!post.data.redirect && (
 <BaseLayout title={`${post.data.title} · nowornever17 Chen`} activeNav="blog">
 
   <article class="article">
@@ -51,6 +60,7 @@ const tagClass: Record<string, string> = {
   </article>
 
 </BaseLayout>
+)}
 
 <style>
 .article {
