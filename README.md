@@ -4,7 +4,7 @@
 
 基于 Astro + GitHub Pages，Editorial Brutalism 风格。
 
-🔗 **[nowornever17.github.io](https://nowornever17.github.io)**
+🔗 **[nowornever17.github.io](https://modusensus.github.io)**
 
 ---
 
@@ -12,8 +12,8 @@
 
 城乡规划 → 公共管理，跨考中。用 Obsidian 和 AI 搭建学习系统，写小说，写代码，做开源。
 
-- 📦 [CaseForge](https://github.com/nowornever17/CaseForge) — 学术论文深度拆解框架
-- 📰 [govdaily-skill](https://github.com/nowornever17/govdaily-skill) — 考研公管日报自动生成
+- 📦 [CaseForge](https://github.com/modusensus/CaseForge) — 学术论文深度拆解框架
+- 📰 [govdaily-skill](https://github.com/modusensus/govdaily-skill) — 考研公管日报自动生成
 
 ---
 
