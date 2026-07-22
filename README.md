@@ -4,7 +4,7 @@
 
 基于 Astro + GitHub Pages，Editorial Brutalism 风格。
 
-🔗 **[nowornever17.github.io](https://modusensus.github.io)**
+🔗 **[modusensus.github.io](https://modusensus.github.io)**
 
 ---
 
