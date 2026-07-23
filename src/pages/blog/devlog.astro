@@ -1,0 +1,1253 @@
+---
+// DevLog #001 — MindOS 开发日志
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>我做了个 AI 个人成长 Widget — 开发日志</title>
+<meta name="description" content="一篇开发日志，记录从 4 层架构到 8 个 tab、从单一 Claude API 到多 provider 兼容、从想法到上线的过程。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style is:global>
+/* ═══════════════════════════════════════════════════════════
+   EDITORIAL BRUTALISM — Design Tokens
+   低饱和知识分子感 + 数字杂志档案感 + Ink Blue 学术蓝
+   所有颜色和间距用 CSS 变量，方便长期复用
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  /* 色彩系统：奶油纸 + 墨黑 + 墨蓝学术 */
+  --paper:        #F2EFE7;  /* 奶油纸色，比纯白温暖 */
+  --paper-deep:   #E8E4D8;  /* 深一档纸色，用于次级背景 */
+  --ink:          #1A1612;  /* 墨黑，主文字 */
+  --ink-soft:     #4A4239;  /* 暖灰，次文字 */
+  --ink-faint:    #8A8275;  /* 淡灰，元数据 */
+  --rule:         #1A1612;  /* 硬线条颜色 */
+  --rule-soft:    #C4BDAE;  /* 软分隔线 */
+  --stamp:        #1B3A5C;  /* 墨蓝，学术沉稳，唯一强调色 */
+  --stamp-faint:  #2E5A8C;  /* 墨蓝浅档 */
+
+  /* 字体系统 */
+  --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-body:    'Crimson Pro', Georgia, serif;
+  --font-mono:    'JetBrains Mono', 'Courier New', monospace;
+
+  /* 字号阶梯 */
+  --fs-hero:      48px;
+  --fs-h1:        36px;
+  --fs-h2:        28px;
+  --fs-h3:        20px;
+  --fs-body:      18px;
+  --fs-small:     14px;
+  --fs-tiny:      11px;
+  --fs-dropcap:   72px;
+  --fs-mega:      96px;  /* 封面期号 */
+
+  /* 行高 */
+  --lh-tight:     1.15;
+  --lh-snug:      1.35;
+  --lh-body:      1.7;
+  --lh-loose:     1.85;
+
+  /* 间距 */
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* 阅读列宽 */
+  --measure:      680px;   /* 最佳阅读宽度 */
+  --measure-wide: 860px;   /* 宽列（代码、表格） */
+  --measure-full: 1080px;  /* 全宽（封面） */
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESET
+   ═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: var(--fs-body); scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; transition: color 0.15s; }
+a:hover { color: var(--stamp); }
+strong { font-weight: 600; }
+em { font-style: italic; }
+
+/* ═══════════════════════════════════════════════════════════
+   ARCHIVE FRAME — 杂志档案框架
+   顶部和底部的硬线条边框，营造"印刷品"感
+   ═══════════════════════════════════════════════════════════ */
+.archive-frame {
+  border-top: 3px solid var(--rule);
+  border-bottom: 3px solid var(--rule);
+  min-height: 100vh;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MASTHEAD — 刊头
+   固定在顶部的期刊信息条
+   ═══════════════════════════════════════════════════════════ */
+.masthead {
+  border-bottom: 1px solid var(--rule);
+  padding: var(--space-3) var(--space-8);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--paper);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.masthead-brand {
+  font-weight: 500;
+  color: var(--ink);
+}
+.masthead-brand em {
+  font-style: italic;
+  color: var(--stamp);
+  font-weight: 400;
+}
+.masthead-meta {
+  display: flex;
+  gap: var(--space-6);
+}
+.masthead-meta span {
+  white-space: nowrap;
+}
+@media (max-width: 600px) {
+  .masthead { padding: var(--space-2) var(--space-4); flex-wrap: wrap; gap: var(--space-1); }
+  .masthead-meta { gap: var(--space-3); }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HERO — 封面
+   ═══════════════════════════════════════════════════════════ */
+.hero {
+  max-width: var(--measure-full);
+  margin: 0 auto;
+  padding: var(--space-24) var(--space-8) var(--space-16);
+  border-bottom: 1px solid var(--rule);
+}
+.hero-issue {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--stamp);
+  margin-bottom: var(--space-6);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.hero-issue::before {
+  content: '';
+  display: inline-block;
+  width: 24px;
+  height: 1px;
+  background: var(--stamp);
+}
+.hero-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-hero);
+  font-weight: 400;
+  line-height: var(--lh-tight);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-bottom: var(--space-8);
+  max-width: 900px;
+}
+.hero-subtitle {
+  font-family: var(--font-body);
+  font-size: 22px;
+  font-style: italic;
+  line-height: var(--lh-snug);
+  color: var(--ink-soft);
+  max-width: 640px;
+  margin-bottom: var(--space-12);
+  border-left: 2px solid var(--stamp);
+  padding-left: var(--space-6);
+}
+.hero-meta {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.hero-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hero-meta-label {
+  color: var(--ink-faint);
+  font-size: 10px;
+}
+.hero-meta-value {
+  color: var(--ink);
+  font-size: var(--fs-tiny);
+}
+@media (max-width: 600px) {
+  .hero { padding: var(--space-12) var(--space-4) var(--space-8); }
+  .hero-title { font-size: 32px; }
+  .hero-subtitle { font-size: 17px; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABLE OF CONTENTS — 目录
+   ═══════════════════════════════════════════════════════════ */
+.toc {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-8);
+  border-bottom: 1px solid var(--rule);
+}
+.toc-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--rule-soft);
+}
+.toc-list {
+  list-style: none;
+  counter-reset: toc;
+}
+.toc-list li {
+  counter-increment: toc;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+  border-bottom: 1px dotted var(--rule-soft);
+}
+.toc-list li:last-child { border-bottom: none; }
+.toc-list li::before {
+  content: counter(toc, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  color: var(--stamp);
+  flex-shrink: 0;
+  min-width: 28px;
+}
+.toc-list a {
+  font-family: var(--font-display);
+  font-size: 20px;
+  text-decoration: none;
+  color: var(--ink);
+  flex: 1;
+}
+.toc-list a:hover { color: var(--stamp); font-style: italic; }
+
+/* ═══════════════════════════════════════════════════════════
+   ARTICLE BODY — 正文
+   ═══════════════════════════════════════════════════════════ */
+.article-body {
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-16) var(--space-8) var(--space-24);
+}
+
+/* 章节标记 §01 §02 */
+.article-section {
+  margin-bottom: var(--space-16);
+  scroll-margin-top: 60px;
+}
+.section-marker {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.2em;
+  color: var(--stamp);
+  margin-bottom: var(--space-2);
+  text-transform: uppercase;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h2);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  color: var(--ink);
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: 2px solid var(--ink);
+  letter-spacing: -0.01em;
+}
+.subsection-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-h3);
+  font-weight: 500;
+  line-height: var(--lh-snug);
+  color: var(--ink);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-4);
+}
+
+/* 正文段落 */
+.article-para {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  margin-bottom: var(--space-4);
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* Dropcap — 段首大写 */
+.dropcap {
+  font-family: var(--font-display);
+  font-size: var(--fs-dropcap);
+  font-weight: 500;
+  line-height: 0.85;
+  float: left;
+  margin-right: var(--space-2);
+  margin-top: 6px;
+  color: var(--stamp);
+}
+
+/* 分隔线 */
+.section-divider {
+  border: none;
+  border-top: 1px solid var(--rule-soft);
+  margin: var(--space-12) auto;
+  max-width: 200px;
+}
+.section-divider::after {
+  content: '§';
+  display: block;
+  text-align: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--ink-faint);
+  font-size: 16px;
+  margin-top: -10px;
+  background: var(--paper);
+  width: 24px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CODE BLOCKS — 代码块
+   ═══════════════════════════════════════════════════════════ */
+.code-block {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  background: var(--paper-deep);
+  border-left: 3px solid var(--ink);
+  padding: var(--space-4) var(--space-6);
+  margin: var(--space-6) 0;
+  overflow-x: auto;
+  white-space: pre;
+  color: var(--ink-soft);
+}
+.code-block code {
+  font-family: inherit;
+}
+.inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--paper-deep);
+  padding: 1px 5px;
+  border-radius: 0;
+  color: var(--stamp);
+  font-weight: 400;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TABLES — 杂志风格表格
+   ═══════════════════════════════════════════════════════════ */
+.table-wrap {
+  margin: var(--space-8) 0;
+  overflow-x: auto;
+}
+.editorial-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+}
+.editorial-table thead {
+  border-top: 2px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+.editorial-table th {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--ink);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+}
+.editorial-table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px dotted var(--rule-soft);
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+.editorial-table tbody tr:last-child td {
+  border-bottom: 1px solid var(--ink);
+}
+.editorial-table tbody tr:hover td {
+  background: var(--paper-deep);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LISTS — 列表
+   ═══════════════════════════════════════════════════════════ */
+.editorial-list {
+  margin: var(--space-4) 0 var(--space-6);
+  padding-left: var(--space-6);
+}
+.editorial-list li {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--ink);
+  margin-bottom: var(--space-2);
+}
+ul.editorial-list li::marker {
+  color: var(--stamp);
+  content: '— ';
+}
+ol.editorial-list {
+  counter-reset: ol-counter;
+  list-style: none;
+  padding-left: 0;
+}
+ol.editorial-list li {
+  counter-increment: ol-counter;
+  padding-left: var(--space-8);
+  position: relative;
+}
+ol.editorial-list li::before {
+  content: counter(ol-counter, decimal-leading-zero);
+  position: absolute;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  color: var(--stamp);
+  top: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BLOCKQUOTE — 引用
+   ═══════════════════════════════════════════════════════════ */
+.editorial-quote {
+  margin: var(--space-8) 0;
+  padding: var(--space-6) var(--space-8);
+  border-left: 3px solid var(--stamp);
+  background: var(--paper-deep);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 20px;
+  line-height: var(--lh-snug);
+  color: var(--ink-soft);
+}
+.editorial-quote p { margin: 0; }
+
+/* ═══════════════════════════════════════════════════════════
+   FIGURES — 图片（Demo 截图）
+   ═══════════════════════════════════════════════════════════ */
+.editorial-figure {
+  margin: var(--space-8) 0;
+  border: 1px solid var(--rule-soft);
+  background: var(--paper-deep);
+  padding: var(--space-2);
+}
+.editorial-figure img {
+  width: 100%;
+  border: 1px solid var(--rule-soft);
+}
+.editorial-figure figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+  padding: var(--space-3) var(--space-2) var(--space-1);
+  text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   COLOPHON — 版权页
+   ═══════════════════════════════════════════════════════════ */
+.colophon {
+  max-width: var(--measure-full);
+  margin: 0 auto;
+  padding: var(--space-12) var(--space-8);
+  border-top: 3px solid var(--rule);
+  background: var(--paper);
+}
+.colophon-inner {
+  max-width: var(--measure);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.colophon-label {
+  color: var(--ink-faint);
+  margin-bottom: var(--space-1);
+}
+.colophon-value {
+  color: var(--ink);
+  margin-bottom: var(--space-4);
+}
+.colophon-stamp {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--rule-soft);
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
+  text-align: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+}
+@media (max-width: 600px) {
+  .colophon-inner { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PRINT — 打印优化
+   ═══════════════════════════════════════════════════════════ */
+@media print {
+  .masthead { position: static; }
+  .hero { page-break-after: always; }
+  .article-section { page-break-inside: avoid; }
+  .code-block { white-space: pre-wrap; word-break: break-all; }
+  a { color: var(--ink); text-decoration: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SELECTION
+   ═══════════════════════════════════════════════════════════ */
+::selection {
+  background: var(--stamp);
+  color: var(--paper);
+}
+
+
+/* ═══════════════════════════════════════════════════════════
+   STICKY SIDEBAR TOC — 阅读时侧边栏目录
+   桌面端：左侧固定迷你目录，高亮当前章节
+   ═══════════════════════════════════════════════════════════ */
+.sidebar-toc {
+  position: fixed;
+  left: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 200px;
+  max-height: 70vh;
+  overflow-y: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-tiny);
+  letter-spacing: 0.06em;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.sidebar-toc.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sidebar-toc-label {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--rule-soft);
+}
+.sidebar-toc-list {
+  list-style: none;
+  counter-reset: side-toc;
+}
+.sidebar-toc-list li {
+  counter-increment: side-toc;
+  margin-bottom: var(--space-1);
+}
+.sidebar-toc-list a {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: var(--ink-faint);
+  font-family: var(--font-display);
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 2px 0 2px var(--space-3);
+  border-left: 2px solid transparent;
+  transition: all 0.15s;
+}
+.sidebar-toc-list a::before {
+  content: counter(side-toc, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--ink-faint);
+  flex-shrink: 0;
+  min-width: 20px;
+}
+.sidebar-toc-list a:hover {
+  color: var(--ink);
+  border-left-color: var(--rule-soft);
+}
+.sidebar-toc-list a.active {
+  color: var(--stamp);
+  border-left-color: var(--stamp);
+  font-weight: 500;
+}
+.sidebar-toc-list a.active::before {
+  color: var(--stamp);
+}
+/* 移动端隐藏侧边栏 */
+@media (max-width: 1024px) {
+  .sidebar-toc { display: none; }
+}
+/* 打印时隐藏 */
+@media print {
+  .sidebar-toc { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLLBAR
+   ═══════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--paper-deep); }
+::-webkit-scrollbar-thumb { background: var(--ink-soft); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink); }
+</style>
+</head>
+<body>
+<div class="archive-frame">
+
+  <!-- ═══ MASTHEAD ═══ -->
+  <header class="masthead">
+    <div class="masthead-brand">DEVLOG &mdash; DEVLOG</div>
+    <div class="masthead-meta">
+      <span>ISSUE №.001</span>
+      <span>JULY 23, 2026</span>
+      <span>22 MIN READ</span>
+    </div>
+  </header>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="hero-issue">ISSUE №.001 &mdash; PROJECT JOURNAL</div>
+    <h1 class="hero-title">我做了个 AI 个人成长 Widget，把脑子里乱七八糟的想法交给 AI 整理
+</h1>
+    <p class="hero-subtitle">一篇开发日志，记录从 4 层架构到 8 个 tab、从单一 Claude API 到多 provider 兼容、从想法到上线的过程，还有中间踩过的坑。
+</p>
+    <div class="hero-meta">
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">PUBLISHED</span>
+        <span class="hero-meta-value">July 23, 2026</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">READING TIME</span>
+        <span class="hero-meta-value">22 MINUTES</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">SECTIONS</span>
+        <span class="hero-meta-value">13 CHAPTERS</span>
+      </div>
+      <div class="hero-meta-item">
+        <span class="hero-meta-label">CATEGORY</span>
+        <span class="hero-meta-value">ENGINEERING</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ TABLE OF CONTENTS ═══ -->
+  <nav class="toc">
+    <div class="toc-label">CONTENTS</div>
+    <ol class="toc-list">
+      <li><a href="#sec-01">起因
+</a></li>
+      <li><a href="#sec-02">架构：从 4 层到 8 个 tab
+</a></li>
+      <li><a href="#sec-03">多 API 兼容：为什么不用 Claude 一家
+</a></li>
+      <li><a href="#sec-04">关键技术决策：API key 的安全边界
+</a></li>
+      <li><a href="#sec-05">周期回顾的层级设计：月报读周报，年报读月报
+</a></li>
+      <li><a href="#sec-06">语音输入：浏览器原生 vs 云端 API 的取舍
+</a></li>
+      <li><a href="#sec-07">UI 精修：被忽视的细节决定质感
+</a></li>
+      <li><a href="#sec-08">技术栈选型理由
+</a></li>
+      <li><a href="#sec-09">踩过的坑
+</a></li>
+      <li><a href="#sec-10">项目数据
+</a></li>
+      <li><a href="#sec-11">demo
+</a></li>
+      <li><a href="#sec-12">下一步
+</a></li>
+      <li><a href="#sec-13">写在最后
+</a></li>
+    </ol>
+  </nav>
+
+  <!-- ═══ SIDEBAR TOC ═══ -->
+  <nav class="sidebar-toc" id="sidebar-toc">
+    <div class="sidebar-toc-label">CONTENTS</div>
+    <ol class="sidebar-toc-list">
+      <li><a href="#sec-01" data-sec="01">起因
+</a></li>
+      <li><a href="#sec-02" data-sec="02">架构：从 4 层到 8 个 tab
+</a></li>
+      <li><a href="#sec-03" data-sec="03">多 API 兼容：为什么不用 Claude 一家
+</a></li>
+      <li><a href="#sec-04" data-sec="04">关键技术决策：API key 的安全边界
+</a></li>
+      <li><a href="#sec-05" data-sec="05">周期回顾的层级设计：月报读周报，年报读月报
+</a></li>
+      <li><a href="#sec-06" data-sec="06">语音输入：浏览器原生 vs 云端 API 的取舍
+</a></li>
+      <li><a href="#sec-07" data-sec="07">UI 精修：被忽视的细节决定质感
+</a></li>
+      <li><a href="#sec-08" data-sec="08">技术栈选型理由
+</a></li>
+      <li><a href="#sec-09" data-sec="09">踩过的坑
+</a></li>
+      <li><a href="#sec-10" data-sec="10">项目数据
+</a></li>
+      <li><a href="#sec-11" data-sec="11">demo
+</a></li>
+      <li><a href="#sec-12" data-sec="12">下一步
+</a></li>
+      <li><a href="#sec-13" data-sec="13">写在最后
+</a></li>
+    </ol>
+  </nav>
+
+  <!-- ═══ ARTICLE BODY ═══ -->
+  <article class="article-body">
+<hr class="section-divider">
+<section class="article-section" id="sec-01">
+<div class="section-marker">§ 01</div>
+<h2 class="section-title">起因</h2>
+<p class="article-para">我脑子里经常比手头做的事多得多。</p>
+<p class="article-para">读书时冒出一个论文选题想法，地铁上突然想通一个设计问题，凌晨焦虑明天该怎么安排——这些想法像潮水一样来去，留下来的是零碎的便签、聊天记录、和"我好像之前想到过什么但忘了"。</p>
+<p class="article-para">试过 Notion、Obsidian、各种日记 app。<strong>都败在同一件事上</strong>：它们要求我先想清楚怎么分类，再写。但想法来的时候，我不想分类，我只想把它记下来。等我事后想整理，几百条原始记录摊在那里，整理成本高到让我直接放弃。</p>
+<p class="article-para">所以我想做一个工具，满足三件事：</p>
+<ol class="editorial-list">
+  <li><strong>记的时候零摩擦</strong>——不用选标签、不用选 notebook、不用想标题，打开就写。</li>
+  <li><strong>AI 帮我整理</strong>——不是我去看几百条记录找规律，是 AI 读完后告诉我："你最近一直在想 X，但你嘴上说在意 Y，行为上却在做 Z。"</li>
+  <li><strong>最终落到行动</strong>——不是给我 10 条 todo，而是告诉我今天最该做的那一件事。</li>
+</ol>
+<p class="article-para">这就是 MindOS 的起点。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-02">
+<div class="section-marker">§ 02</div>
+<h2 class="section-title">架构：从 4 层到 8 个 tab</h2>
+<p class="article-para">最早的设计是 4 层，很纯粹：</p>
+<pre class="code-block"><code>01 CAPTURE → 02 UNDERSTAND → 03 GROWTH → 04 ACTION
+  记录         理解            成长         行动
+</code></pre>
+<p class="article-para">每层只做一件事，单向流动：<strong>chaos → clarity → action</strong>。这是我从 Tiago Forte 的 PARA 那套里偷的灵感，但砍掉了所有"分类"环节——分类是后置的，由 AI 来做，不是用户做。</p>
+<p class="article-para">但实际做下来发现 4 层不够。最明显的问题是 <strong>04 ACTION 缺乏监督</strong>：AI 每天给我推荐一件事，我做没做？没人管。一周下来回看，发现 AI 推的事我压根没动——它就成了装饰品。</p>
+<p class="article-para">于是加了 <strong>07 COACH</strong>：一个 AI 教练，每天读我的任务完成率，按完成度给三档反馈：</p>
+<div class="table-wrap"><table class="editorial-table">
+<thead><tr><th>完成率</th><th>tone</th><th>风格</th></tr></thead>
+<tbody><tr><td>≥ 70%</td><td>encourage</td><td>鼓励，但不浮夸</td></tr><tr><td>30–70%</td><td>push</td><td>推一把，指出卡点</td></tr><tr><td>&lt; 30%</td><td>critique</td><td>批评，但不羞辱</td></tr></tbody></table></div>
+<p class="article-para">不是 habit tracker 那种打卡+streak，是真正的"读你的数据+说实话"。</p>
+<p class="article-para">然后又发现回顾这件事必须有结构。光"理解"是当下的、即时的，但人需要周期性的回顾——日回顾、周回顾、月回顾、年回顾。所以加了 <strong>04 REVIEW</strong>，AI 基于用户的记录生成结构化的周期回顾。</p>
+<p class="article-para">加了 review 之后又发现，review 里 AI 经常会推荐"下周可以试试 X"——那这个 X 总不能让它飘在回顾里吧？得有个地方承接。于是加了 <strong>05 SCHEDULE</strong>，最简的任务清单，可以从周报里一键导入下一步。</p>
+<p class="article-para">最后再加 <strong>08 CONFIG</strong> 放设置。</p>
+<p class="article-para">最终 8 个 tab：</p>
+<pre class="code-block"><code>01 CAPTURE    →  02 UNDERSTAND  →  03 GROWTH   →  04 REVIEW
+   记录             理解               成长           回顾
+05 SCHEDULE   →  06 ACTION       →  07 COACH    →  08 CONFIG
+   日程             行动               教练           设置
+</code></pre>
+<p class="article-para">设计原则始终是单向流动：从混乱到清晰，从思考到行动，从行动到监督。<strong>没有任何 tab 是为了"管理"而存在的</strong>——每个 tab 都对应认知链路上的一个真实环节。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-03">
+<div class="section-marker">§ 03</div>
+<h2 class="section-title">多 API 兼容：为什么不用 Claude 一家</h2>
+<p class="article-para">最早这玩意是设计在 claude.ai 里跑的 artifact。但很快遇到问题：</p>
+<ol class="editorial-list">
+  <li><strong>Claude API 在国内访问不便</strong>，普通用户用不了。</li>
+  <li><strong>Claude API 收费</strong>，而且不便宜。</li>
+  <li><strong>claude.ai 的 artifact 用 Claude 自己的模型</strong>，但用户没法插自己的 key。</li>
+</ol>
+<p class="article-para">我想让这个 widget 给更多人用，所以做了一件笨但正确的事：<strong>把所有 AI 调用统一成 OpenAI Chat Completions 协议</strong>，然后维护一个 PROVIDERS 注册表：</p>
+<pre class="code-block lang-js"><code>const PROVIDERS = {
+  deepseek: {
+    label:'DeepSeek',
+    base_url:'https://api.deepseek.com/v1',
+    model:'deepseek-chat',
+    keyHint:'申请：platform.deepseek.com → API Keys...',
+    keyUrl:'https://platform.deepseek.com/api_keys',
+  },
+  zhipu: {
+    label:'智谱 GLM-4-Flash',
+    base_url:'https://open.bigmodel.cn/api/paas/v4',
+    model:'glm-4-flash',
+    keyHint:'GLM-4-Flash 完全免费，无需付费即可使用全部功能。',
+    keyUrl:'https://open.bigmodel.cn/usercenter/apikeys',
+  },
+  claude: { ... },
+  openai: { ... },
+};
+</code></pre>
+<p class="article-para">架构上抄了 CaseForge 的 <code class="inline-code">config.example.py</code> 思路：<strong>一个注册表，每个 provider 一行 <code class="inline-code">base_url</code> + <code class="inline-code">model</code></strong>，运行时根据用户选的 provider 解析端点。要加新 provider，注册表里加一行 + dropdown 里加一个 <code class="inline-code">&lt;option&gt;</code> 就完事了。</p>
+<p class="article-para">只要对方暴露 OpenAI 兼容的 <code class="inline-code">/chat/completions</code> 端点，就能直接接入。</p>
+<p class="article-para">实测过的：</p>
+<ul class="editorial-list">
+  <li><strong>DeepSeek</strong>：完美兼容，端到端真实调用通过，价格感人（输入 ¥0.27/百万 tokens）</li>
+  <li><strong>智谱 GLM-4-Flash</strong>：完美兼容，<strong>完全免费</strong>——这是我最推荐的方案，普通用户注册就能用</li>
+  <li><strong>Claude</strong>：走 Anthropic 的 OpenAI 兼容接口，能跑</li>
+  <li><strong>OpenAI</strong>：标准接口</li>
+</ul>
+<p class="article-para">这套架构最大的好处是：<strong>用户用自己的 key，调自己的额度，开发者不用付任何中转成本</strong>。 widget 只是个前端，所有 AI 调用都是浏览器直接打到 provider 端点。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-04">
+<div class="section-marker">§ 04</div>
+<h2 class="section-title">关键技术决策：API key 的安全边界</h2>
+<p class="article-para">这个决策踩过坑，值得单独说。</p>
+<p class="article-para">claude.ai 的 artifact 环境有两个存储：</p>
+<ul class="editorial-list">
+  <li><strong><code class="inline-code">window.storage</code></strong>：artifact 范围的持久化存储，<strong>会跨会话同步到服务器</strong>。</li>
+  <li><strong><code class="inline-code">localStorage</code></strong>：浏览器本地存储，<strong>永远不会离开浏览器</strong>（除了用户主动调用的 AI provider 请求）。</li>
+</ul>
+<p class="article-para">最初的设计是：API key 存 localStorage，其他配置（provider、model 等）也存 localStorage。简单粗暴。</p>
+<p class="article-para">后来有一次让 Claude（claude.ai 里的）改文件，它把所有配置合并成一个 <code class="inline-code">mindos:cfg</code> 对象，统一写到 <code class="inline-code">window.storage</code>——<strong>代码更优雅了，但 API key 被上传到了服务器</strong>。这是个安全回归：API key 是用户私密的东西，绝不应该离开浏览器。</p>
+<p class="article-para">修复方案：<strong>严格区分敏感数据和非敏感数据的存储边界</strong>。</p>
+<pre class="code-block lang-js"><code>async function saveSetting(k, v) {
+  // 同步写 localStorage（apiKey 始终只在这里）
+  try { if (typeof localStorage !== 'undefined') localStorage.setItem(k, v); } catch {}
+
+  // ⚠️ 写 window.storage 时排除 apiKey（防止上传到服务器）
+  if (typeof window.storage !== 'undefined') {
+    try {
+      const safeCfg = Object.assign({}, _cfgCache, { apiKey: '' });
+      await window.storage.set('mindos:cfg', JSON.stringify(safeCfg));
+    } catch {}
+  }
+}
+
+async function loadSettings() {
+  // ...从 window.storage 读非敏感配置
+  _cfgCache = Object.assign({}, defaults, JSON.parse(r.value));
+  // apiKey 强制从 localStorage 覆盖（不信 window.storage 里的值）
+  _cfgCache.apiKey = (typeof localStorage !== 'undefined')
+    ? (localStorage.getItem(LS.apiKey) || '')
+    : '';
+  return _cfgCache;
+}
+</code></pre>
+<p class="article-para">写的时候主动剔除 <code class="inline-code">apiKey</code> 字段；读的时候不信 <code class="inline-code">window.storage</code> 里的 apiKey 值，强制用 localStorage 覆盖。这样即使 <code class="inline-code">window.storage</code> 里有历史残留的 apiKey，也不会被采用。</p>
+<p class="article-para"><strong>这个坑的教训</strong>：让 AI 改代码时，安全相关的边界条件一定要在 prompt 里明确写出来，否则它会为了"代码优雅"无意中破坏安全约束。AI 不会主动考虑"这个数据能不能上传服务器"这种语义层面的问题。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-05">
+<div class="section-marker">§ 05</div>
+<h2 class="section-title">周期回顾的层级设计：月报读周报，年报读月报</h2>
+<p class="article-para">Review 这个 tab 看起来简单，其实有个隐藏的工程问题：<strong>做年回顾的时候，要喂给 AI 多少数据？</strong></p>
+<p class="article-para">最 naive 的做法：把一整年的 captures 全部塞给 AI。问题：</p>
+<ol class="editorial-list">
+  <li><strong>token 爆炸</strong>：一年 500 条 captures，每条平均 100 字，光输入就是 5 万字。年回顾调用一次成本惊人。</li>
+  <li><strong>信息损失</strong>：AI 处理超长上下文会丢细节，500 条原始记录里那些微妙的转折会被淹没。</li>
+  <li><strong>重复劳动</strong>：月报已经总结过的内容，年报再总结一遍是浪费。</li>
+</ol>
+<p class="article-para">我的解法是 <strong>混合层级</strong>：</p>
+<ul class="editorial-list">
+  <li><strong>日回顾</strong>：直接读当天的 captures（最少 1 条）</li>
+  <li><strong>周回顾</strong>：直接读本周的 captures（最少 3 条）</li>
+  <li><strong>月回顾</strong>：<strong>优先读本月所有周回顾的摘要</strong>，没有周回顾时降级到读原始 captures（最少 5 条）</li>
+  <li><strong>年回顾</strong>：<strong>优先读本年所有月回顾的摘要</strong>，没有月回顾时降级到读原始 captures（最少 20 条）</li>
+</ul>
+<p class="article-para">这样年回顾的输入是 12 个月报摘要（每个几百字），而不是 500 条原始记录。<strong>token 成本降一个数量级，叙事连贯性反而更好</strong>——因为月报已经做过一次提炼，年报是在提炼过的内容上做更高一层的抽象。</p>
+<p class="article-para">代价是：如果用户从没生成过月报，那年报会降级到读原始 captures，token 成本会上去。但这个降级路径是显式的、可控的。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-06">
+<div class="section-marker">§ 06</div>
+<h2 class="section-title">语音输入：浏览器原生 vs 云端 API 的取舍</h2>
+<p class="article-para">最后一个加的功能。最早没打算做，因为觉得"记下来"这个动作打字就够了。但实际用下来发现，<strong>有些场景下打字确实是摩擦</strong>：</p>
+<ul class="editorial-list">
+  <li>走路时有想法，掏手机打字危险</li>
+  <li>情绪强烈时（焦虑、兴奋），打字跟不上思绪</li>
+  <li>长想法（&gt;50 字）打字累</li>
+</ul>
+<p class="article-para">加语音输入时面临选择：用浏览器原生的 <strong>Web Speech API</strong>，还是用 <strong>Whisper API</strong>（OpenAI）？</p>
+<div class="table-wrap"><table class="editorial-table">
+<thead><tr><th>方案</th><th>优点</th><th>缺点</th></tr></thead>
+<tbody><tr><td>Web Speech API</td><td>免费、本地、实时、无需 key</td><td>仅 Chrome/Edge 支持</td></tr><tr><td>Whisper API</td><td>多浏览器、质量高</td><td>要 OpenAI key、要上传音频、有成本</td></tr></tbody></table></div>
+<p class="article-para">最后选了<strong>两者结合，自动降级</strong>：</p>
+<pre class="code-block lang-js"><code>const _SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+async function _micStart() {
+  if (_SR) _micStartWebSpeech();  // Chrome/Edge 走原生
+  else await _micStartWhisper();   // Firefox 走 Whisper（需 OpenAI key）
+}
+</code></pre>
+<p class="article-para">Web Speech API 这条路有意思的细节：</p>
+<ol class="editorial-list">
+  <li><strong><code class="inline-code">continuous: true</code> + <code class="inline-code">interimResults: true</code></strong>：让识别持续运行，并把中间结果实时填进 textarea。用户说话过程中就能看到文字浮现，反馈感很强。</li>
+  <li><strong>自动重启</strong>：部分浏览器在静默几秒后会自动停止识别。我在 <code class="inline-code">onend</code> 里加了判断——如果用户没点停止按钮，就自动重启识别：</li>
+</ol>
+<pre class="code-block lang-js"><code>r.onend = () =&gt; {
+  if (_isRec) { try { r.start(); } catch {} }
+};
+</code></pre>
+<ol class="editorial-list">
+  <li><strong>增量拼接</strong>：识别结果分 final 和 interim 两种。我用 <code class="inline-code">baseText + finalText + interim</code> 的方式拼接到 textarea，保证已确认的内容不会丢，未确认的内容实时更新。</li>
+</ol>
+<p class="article-para">Whisper 降级路径的限制：<strong>只有当前 provider 是 <code class="inline-code">openai</code> 且配了 API key 时才能用</strong>。否则会提示用户切换到 OpenAI provider 或者换 Chrome/Edge。这是有意的设计——不为了"功能完整"而引入隐式的 API 调用成本。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-07">
+<div class="section-marker">§ 07</div>
+<h2 class="section-title">UI 精修：被忽视的细节决定质感</h2>
+<p class="article-para">最后做了整整一轮 UI 精修，没加新功能，全是细节。但这些细节决定了 widget 看起来是"是个 demo"还是"是个产品"。</p>
+<h3 class="subsection-title">可访问性</h3>
+<p class="article-para">给所有 nav-item 加了 <code class="inline-code">role="button" tabindex="0"</code> 和键盘事件：</p>
+<pre class="code-block lang-js"><code>t.addEventListener('keydown', e =&gt; {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    t.click();
+  }
+});
+</code></pre>
+<p class="article-para">加上 <code class="inline-code">:focus-visible</code> 样式。<strong>这不仅是无障碍，也让自动化测试能正常点击 nav-item</strong>——之前用 Playwright 测试时点击没反应，就是因为缺这俩属性。</p>
+<h3 class="subsection-title">响应式</h3>
+<p class="article-para"><code class="inline-code">@media (max-width: 520px)</code> 把侧边栏缩到 52px 图标-only，label 改成 hover 浮窗：</p>
+<pre class="code-block lang-css"><code>.nav-label {
+  position: absolute;
+  left: 54px;
+  opacity: 0;
+  /* ... */
+}
+.nav-item:hover .nav-label { opacity: 1; }
+</code></pre>
+<p class="article-para">桌面端用鼠标 hover 显示，移动端窄屏下侧边栏不占空间。</p>
+<h3 class="subsection-title">排版的层次感</h3>
+<p class="article-para">字体选了三种，故意拉开差距：</p>
+<ul class="editorial-list">
+  <li><strong>Crimson Pro</strong>（衬线，斜体）：所有 AI 生成的内容——insights、reviews、coach 消息、action 文案。营造"读一本关于自己的杂志"的感觉。</li>
+  <li><strong>Instrument Sans</strong>（无衬线）：用户输入和 UI 标签。</li>
+  <li><strong>DM Mono</strong>（等宽）：所有元数据、时间戳、label。</li>
+</ul>
+<p class="article-para"><strong>AI 的输出和用户的输入在视觉上是两种不同的物体</strong>——这是刻意的。让用户感觉到"这是 AI 写的关于我的话"，而不是"这是我写的笔记"。</p>
+<h3 class="subsection-title">暗色模式</h3>
+<p class="article-para">暗色模式没另写一套样式，而是用 CSS 变量覆盖：</p>
+<pre class="code-block lang-css"><code>.app { --ms-bg: #F8F8F6; --ms-tx: #1A1A1A; /* ...浅色变量 */ }
+.app.dark { --ms-bg: #141414; --ms-tx: #F0F0EE; /* ...暗色变量 */ }
+</code></pre>
+<p class="article-para">切换时只是给 <code class="inline-code">.app</code> 加/移除 <code class="inline-code">.dark</code> 类，所有 CSS 自动重算。主题偏好存 <code class="inline-code">window.storage</code>，跨会话保留。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-08">
+<div class="section-marker">§ 08</div>
+<h2 class="section-title">技术栈选型理由</h2>
+<p class="article-para">做这种"形态特殊"的项目，每个技术决策背后都有具体的约束。把选型理由列出来，比讲实现细节更有价值。</p>
+<h3 class="subsection-title">1. 为什么是单文件 HTML widget，不是 React/Vue SPA</h3>
+<p class="article-para">这是个<strong>部署形态决定架构</strong>的典型案例。MindOS 最初的目标是跑在 claude.ai 的 artifact 环境里——artifact 只接受一段自包含的 HTML，不能有外部文件、不能有构建步骤、不能 import npm 包。</p>
+<p class="article-para">这个约束反过来塑造了所有后续决策：</p>
+<ul class="editorial-list">
+  <li><strong>不能用框架</strong>：React/Vue 都需要 build step 或者大型 CDN bundle，artifact 环境不友好</li>
+  <li><strong>不能用模块化</strong>：没有 import，所有 JS 必须塞进一个 <code class="inline-code">&lt;script&gt;</code> 标签</li>
+  <li><strong>不能用外部资源</strong>（除了 CDN 字体和图标）：所有 CSS/JS 必须内联</li>
+</ul>
+<p class="article-para">最后就是 vanilla JS + 一个大 <code class="inline-code">&lt;script&gt;</code> + 一个大 <code class="inline-code">&lt;style&gt;</code>。听起来很 retro，但实际上<strong>对一个状态简单的 CRUD-like 应用，vanilla JS 完全够用</strong>。整个 widget 的状态就是几个数组（captures、tasks、reviews、coach history），加几个 UI 状态变量。这种规模的代码用 React 反而 overkill。</p>
+<h3 class="subsection-title">2. 为什么用 OpenAI Chat Completions 协议作为统一接口</h3>
+<p class="article-para">不是因为它最好，是因为它是<strong>事实标准</strong>。</p>
+<p class="article-para">国内主流 LLM provider（DeepSeek、智谱、月之暗面、MiniMax）几乎全部提供 OpenAI 兼容的 <code class="inline-code">/chat/completions</code> 端点。这意味着只要 MindOS 会说 OpenAI 协议，就能接所有这些 provider，<strong>不需要为每家写一套适配器</strong>。</p>
+<p class="article-para">代码上就是一个 PROVIDERS 注册表 + 一个 <code class="inline-code">resolveEndpoint()</code> 函数：</p>
+<pre class="code-block lang-js"><code>function resolveEndpoint(s) {
+  const p = PROVIDERS[s.provider] || PROVIDERS.deepseek;
+  const base = (s.baseUrl || p.base_url || '').replace(/\/+$/, '');
+  return base + '/chat/completions';
+}
+</code></pre>
+<p class="article-para">加新 provider 就是注册表加一行 + UI 加一个 <code class="inline-code">&lt;option&gt;</code>。<strong>架构复杂度不随 provider 数量增长</strong>。</p>
+<h3 class="subsection-title">3. 为什么用 localStorage + window.storage 双层</h3>
+<p class="article-para">这是<strong>安全边界和用户体验的折中</strong>。</p>
+<ul class="editorial-list">
+  <li><code class="inline-code">window.storage</code>（claude.ai artifact 提供）：跨会话同步，但<strong>会上传到服务器</strong></li>
+  <li><code class="inline-code">localStorage</code>（浏览器原生）：只在本地，<strong>永远不离开浏览器</strong></li>
+</ul>
+<p class="article-para">正确的设计是：</p>
+<ul class="editorial-list">
+  <li><strong>敏感数据（API key）</strong>：只存 localStorage，<strong>绝对不写 window.storage</strong></li>
+  <li><strong>非敏感配置（provider、theme 等）</strong>：双写，跨会话保留方便用户</li>
+</ul>
+<p class="article-para">这个边界在代码里是显式的：</p>
+<pre class="code-block lang-js"><code>async function saveSetting(k, v) {
+  // localStorage 永远写
+  localStorage.setItem(k, v);
+  // window.storage 写之前剔除 apiKey
+  const safeCfg = Object.assign({}, _cfgCache, { apiKey: '' });
+  await window.storage.set('mindos:cfg', JSON.stringify(safeCfg));
+}
+</code></pre>
+<h3 class="subsection-title">4. 为什么用 Web Speech API 优先，Whisper 降级</h3>
+<p class="article-para">语音识别这事有个反直觉的事实：<strong>浏览器原生 API 反而比云端 API 体验更好</strong>，前提是浏览器支持。</p>
+<div class="table-wrap"><table class="editorial-table">
+<thead><tr><th>维度</th><th>Web Speech API</th><th>Whisper API</th></tr></thead>
+<tbody><tr><td>延迟</td><td>实时（&lt;100ms）</td><td>几秒（要上传+识别）</td></tr><tr><td>中间结果</td><td>支持，实时显示</td><td>不支持，要等整段说完</td></tr><tr><td>成本</td><td>免费</td><td>按 audio 分钟计费</td></tr><tr><td>网络</td><td>不需要</td><td>必须</td></tr><tr><td>浏览器</td><td>Chrome/Edge</td><td>全部</td></tr></tbody></table></div>
+<p class="article-para">Web Speech API 的 <code class="inline-code">interimResults: true</code> 让用户说话时文字就实时浮现，这种反馈感是 Whisper 给不了的。所以默认走 Web Speech，只在浏览器不支持时才降级到 Whisper。</p>
+<h3 class="subsection-title">5. 为什么字体选 Crimson Pro + Instrument Sans + DM Mono</h3>
+<p class="article-para">不是 Inter + Playfair Display 这种"安全牌"。</p>
+<ul class="editorial-list">
+  <li><strong>Crimson Pro</strong>（衬线，斜体）：所有 AI 生成的内容。衬线+斜体的组合让 AI 输出读起来像"一本关于你的杂志"，和用户输入视觉上完全区隔。</li>
+  <li><strong>Instrument Sans</strong>（无衬线）：UI 和用户输入。比 Inter 更有性格，不那么"通用"。</li>
+  <li><strong>DM Mono</strong>（等宽）：所有元数据。等宽字体让时间戳和 label 有"档案感"。</li>
+</ul>
+<p class="article-para">三个字体的层次感拉开了 AI 输出和用户输入的视觉区隔，<strong>强化了"AI 在说关于你的话"这个感知</strong>。</p>
+<h3 class="subsection-title">6. 为什么 8 个 tab 而不是单一长页面</h3>
+<p class="article-para">认知分块。</p>
+<p class="article-para">人面对一个长页面会进入"扫读模式"，看到第二屏就开始走神。8 个 tab 强制用户<strong>一次只看一个认知环节</strong>：</p>
+<ul class="editorial-list">
+  <li>想记东西时只看 CAPTURE</li>
+  <li>想理解自己时只看 UNDERSTAND</li>
+  <li>想回顾时只看 REVIEW</li>
+</ul>
+<p class="article-para">每个 tab 的内容量都被限制在一屏左右，<strong>强制保持认知聚焦</strong>。</p>
+<p class="article-para">侧边栏设计也呼应这点：52px 窄边栏 + hover 显示 label，<strong>让 tab 切换的成本足够低（一次点击）但足够明确（视觉反馈强烈）</strong>。</p>
+<h3 class="subsection-title">7. 为什么用 CSS 变量而不是预处理器</h3>
+<p class="article-para">暗色模式用 CSS 变量一套就解决了：</p>
+<pre class="code-block lang-css"><code>.app { --ms-bg: #F8F8F6; /* ... */ }
+.app.dark { --ms-bg: #141414; /* ... */ }
+</code></pre>
+<p class="article-para">切换主题就是 <code class="inline-code">classList.toggle('dark')</code>，所有 CSS 自动重算。如果用 Sass/Less，还得引入构建步骤，违反单文件约束。CSS 变量是<strong>原生支持、零成本、运行时切换</strong>的方案。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-09">
+<div class="section-marker">§ 09</div>
+<h2 class="section-title">踩过的坑</h2>
+<h3 class="subsection-title">1. Edit 工具报告成功但改动没持久化</h3>
+<p class="article-para">开发 Phase 2 时连续 6 次 Edit 调用都报告"Successfully modified"，但 <code class="inline-code">git diff</code> 一看文件根本没变。换 Node.js 的 <code class="inline-code">fs.writeFileSync</code> 直接写文件，从此全部可靠。</p>
+<p class="article-para"><strong>教训</strong>：在 Trae/Claude Code 这类环境里，对工具的"成功"回报要保持怀疑，<strong>关键改动一定要用文件系统层面的 API 验证</strong>。</p>
+<h3 class="subsection-title">2. 让 AI 改代码可能引入安全回归</h3>
+<p class="article-para">前面讲过 API key 那次。AI 为了"代码优雅"把所有配置合并到 <code class="inline-code">window.storage</code>，破坏了"API key 不离开浏览器"的安全边界。</p>
+<p class="article-para"><strong>教训</strong>：让 AI 改代码时，<strong>安全相关的边界条件必须在 prompt 里显式写出来</strong>。不能假设 AI 会自己考虑到"这个数据能不能上传服务器"。</p>
+<h3 class="subsection-title">3. Review 页 "undefined" 的隐性 bug</h3>
+<p class="article-para">初始化时调用 <code class="inline-code">renderReview()</code> 没传 period 参数，导致 <code class="inline-code">REV_NAME[undefined]</code> 渲染成 "undefined"。功能正常，但 UI 上有个 "生成本undefined回顾" 的难看文字。</p>
+<p class="article-para">修了两处：</p>
+<pre class="code-block lang-js"><code>// 修复 1：init 调用时传参
+renderReview(revPeriod);
+
+// 修复 2：函数签名加默认参数（防御性）
+function renderReview(period = revPeriod, data) { ... }
+</code></pre>
+<p class="article-para"><strong>教训</strong>：默认参数是廉价的保险。即使调用方"应该"传参，也给个默认值兜底。</p>
+<h3 class="subsection-title">4. 浏览器权限和自动化测试的冲突</h3>
+<p class="article-para">Playwright 自动化点击麦克风按钮时，浏览器可能没弹权限请求就直接拒绝，导致测试结果和真实用户体验不一致。</p>
+<p class="article-para"><strong>教训</strong>：涉及浏览器权限（麦克风、摄像头、地理位置）的功能，<strong>自动化测试只能验证 UI 状态机，真实体验必须手动验证</strong>。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-10">
+<div class="section-marker">§ 10</div>
+<h2 class="section-title">项目数据</h2>
+<p class="article-para">最终交付：</p>
+<ul class="editorial-list">
+  <li><strong>代码量</strong>：单文件 widget.md，83638 chars（约 1700 行 HTML/CSS/JS）</li>
+  <li><strong>8 个 tab</strong>：记录 / 理解 / 成长 / 回顾 / 日程 / 行动 / 教练 / 设置</li>
+  <li><strong>4 个 AI provider</strong>：DeepSeek / 智谱 GLM-4-Flash / Claude / OpenAI</li>
+  <li><strong>7 处 AI 调用点</strong>：理解 / 成长 / 行动 / 日回顾 / 周回顾 / 月回顾 / 年回顾 / 教练</li>
+  <li><strong>16 个核心函数</strong>：从 <code class="inline-code">addCapture()</code> 到 <code class="inline-code">_micTranscribeWhisper()</code></li>
+  <li><strong>零依赖</strong>：单 HTML 文件，无 npm、无构建、无框架</li>
+  <li><strong>可访问性</strong>：键盘导航、focus 样式、aria-label</li>
+  <li><strong>响应式</strong>：520px 断点，桌面/移动都可用</li>
+  <li><strong>暗色模式</strong>：CSS 变量切换，跨会话保留</li>
+  <li><strong>语音输入</strong>：Web Speech API + Whisper 降级</li>
+</ul>
+<hr class="section-divider">
+<section class="article-section" id="sec-11">
+<div class="section-marker">§ 11</div>
+<h2 class="section-title">demo</h2>
+<p class="article-para">以下是 widget 在浏览器中实际运行的截图，展示 8 个 tab 的真实样貌。</p>
+<h3 class="subsection-title">01 · 记录（浅色模式）</h3>
+<p class="article-para">初始状态。顶栏 LIGHT 主题按钮、侧边栏 8 个图标、textarea 输入框、能量心情点、麦克风按钮、记下来按钮。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/01-capture-light.png" alt="记录 tab 初始状态" loading="lazy">
+  <figcaption>记录 tab 初始状态</figcaption>
+</figure>
+<h3 class="subsection-title">02 · 记录（添加 3 条 captures 后）</h3>
+<p class="article-para">输入 3 条想法后，左侧"记录"图标 badge 显示 3，下方"最近记录"列表出现 3 条带颜色条和情绪标签的条目。每条记录的能量值用左侧色条颜色区分。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/02-capture-list.png" alt="添加 captures 后的列表" loading="lazy">
+  <figcaption>添加 captures 后的列表</figcaption>
+</figure>
+<h3 class="subsection-title">03 · 暗色模式</h3>
+<p class="article-para">点击顶栏 LIGHT 按钮切换到暗色。整个 widget 背景变为 <code class="inline-code">#141414</code>，文字变浅，按钮文字变为 DARK。暗色模式通过 CSS 变量覆盖实现，跨会话保留。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/03-dark-mode.png" alt="暗色模式" loading="lazy">
+  <figcaption>暗色模式</figcaption>
+</figure>
+<h3 class="subsection-title">04 · 日程 tab</h3>
+<p class="article-para">添加 3 个任务后的日程页。每个任务有 checkbox、文字、删除按钮。顶上有"今日/本周/已完成/全部"4 个筛选 tab。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/04-schedule.png" alt="日程 tab" loading="lazy">
+  <figcaption>日程 tab</figcaption>
+</figure>
+<h3 class="subsection-title">05 · 回顾 tab</h3>
+<p class="article-para">周期回顾页面。日/周/月/年 4 个 tab 切换，显示当前周期（如 2026-07-21）和空状态提示。点击右上角"生成 / 重新生成"按钮触发 AI 生成回顾。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/05-review.png" alt="回顾 tab" loading="lazy">
+  <figcaption>回顾 tab</figcaption>
+</figure>
+<h3 class="subsection-title">06 · 行动 tab</h3>
+<p class="article-para">每日单一行动页面。AI 基于用户的 captures 和成长分析，推荐今天最值得做的一件事，附带 WHY 解释。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/06-action.png" alt="行动 tab" loading="lazy">
+  <figcaption>行动 tab</figcaption>
+</figure>
+<h3 class="subsection-title">07 · 教练 tab</h3>
+<p class="article-para">AI 教练页面。读取任务完成率，按完成度给三档反馈（encourage ≥70% / push 30-70% / critique &lt;30%）。不是 habit tracker，是诚实的镜子。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/07-coach.png" alt="教练 tab" loading="lazy">
+  <figcaption>教练 tab</figcaption>
+</figure>
+<h3 class="subsection-title">08 · 设置 tab</h3>
+<p class="article-para">配置页面。provider 下拉（DeepSeek/智谱/Claude/OpenAI）、API key 输入框（只存 localStorage，不写 window.storage）、model/base_url 覆盖、用户背景文本域。</p>
+<figure class="editorial-figure">
+  <img src="devlog-assets/08-config.png" alt="设置 tab" loading="lazy">
+  <figcaption>设置 tab</figcaption>
+</figure>
+<hr class="section-divider">
+<section class="article-section" id="sec-12">
+<div class="section-marker">§ 12</div>
+<h2 class="section-title">下一步</h2>
+<p class="article-para">还能做的事：</p>
+<ul class="editorial-list">
+  <li><strong>JSON 导出/导入</strong>：现在数据锁在 widget 里，得让用户能带走</li>
+  <li><strong>标签系统</strong>：captures 现在没标签，AI 能识别主题但用户没法手动归类</li>
+  <li><strong>时间线视图</strong>：所有 captures 按时间排成一条线，看自己的思维演变</li>
+  <li><strong>多生活领域</strong>：工作/学习/个人分开追踪</li>
+  <li><strong>英文 UI</strong>：现在全中文</li>
+  <li><strong>Obsidian 导出</strong>：把 captures 导成 markdown 给 Obsidian 用</li>
+</ul>
+<p class="article-para">短期最想做的是 JSON 导出——因为我自己用着也开始担心数据丢了。</p>
+<hr class="section-divider">
+<section class="article-section" id="sec-13">
+<div class="section-marker">§ 13</div>
+<h2 class="section-title">写在最后</h2>
+<p class="article-para">做这个东西的过程让我重新理解了"工具"这个词。</p>
+<p class="article-para">最早我想做的是"AI 帮我整理笔记"，做着做着发现，<strong>真正的难点不是整理，而是诚实</strong>。人都需要一面镜子——不是 P 图过的镜子，是如实映照的镜子。AI 的价值在于它能读你几百条原始想法后说："你嘴上说在意事业，但你 70% 的记录都在想另一件事。"</p>
+<p class="article-para">这种话朋友不会跟你说，家人不忍心说，自己不愿意承认。但 AI 没有这种顾虑——只要 prompt 写得对，它就是个<strong>永远说真话的镜子</strong>。</p>
+<p class="article-para">这就是为什么 Coach tab 不是一个 habit tracker。habit tracker 让你欺骗自己（"我今天其实做了，只是忘了打卡"），Coach 读你的真实数据然后告诉你："你这周完成率 25%，下次别承诺这么多。"</p>
+<p class="article-para">这不是 productivity，这是 self-awareness engineering。</p>
+<hr class="section-divider">
+<p class="article-para"><em>项目地址：<a href="https://github.com/">GitHub</a> · 单文件 widget，复制粘贴到 Claude.ai 即可用。智谱 GLM-4-Flash 用户完全免费。</em></p>
+
+  </article>
+
+  
+  <!-- ═══ BACK NAV ═══ -->
+  <div style="max-width: var(--measure-full); margin: 0 auto; padding: 0 var(--space-8);">
+    <div style="max-width: var(--measure); margin: 0 auto; padding: var(--space-8) 0; border-top: 1px solid var(--rule-soft);">
+      <a href="/blog" style="font-family: var(--font-mono); font-size: var(--fs-tiny); letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); text-decoration: none;">← 返回 Blog</a>
+    </div>
+  </div>
+
+
+  <!-- ═══ COLOPHON ═══ -->
+  <footer class="colophon">
+    <div class="colophon-inner">
+      <div>
+        <div class="colophon-label">PUBLISHED IN</div>
+        <div class="colophon-value">MINDOS DEVLOG &mdash; ISSUE №.001</div>
+        <div class="colophon-label">LICENSE</div>
+        <div class="colophon-value">CC-BY-NC 4.0</div>
+      </div>
+      <div>
+        <div class="colophon-label">SET IN</div>
+        <div class="colophon-value">EB GARAMOND &middot; CRIMSON PRO &middot; JETBRAINS MONO</div>
+        <div class="colophon-label">REPOSITORY</div>
+        <div class="colophon-value"><a href="https://github.com/">GITHUB.COM / MINDOS-SKILL</a></div>
+      </div>
+      <div class="colophon-stamp">
+        &mdash; End of Issue №.001 &mdash;
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+
+<script>
+// 侧边栏 TOC：滚动时显示，高亮当前章节
+(function() {
+  var sidebar = document.getElementById('sidebar-toc');
+  if (!sidebar) return;
+  var articleBody = document.querySelector('.article-body');
+  var sections = document.querySelectorAll('.article-section');
+  var links = document.querySelectorAll('.sidebar-toc-list a');
+
+  // 滚动时显示/隐藏侧边栏
+  function toggleSidebar() {
+    var rect = articleBody.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.3 && rect.bottom > 0) {
+      sidebar.classList.add('visible');
+    } else {
+      sidebar.classList.remove('visible');
+    }
+  }
+
+  // 高亮当前章节
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var id = entry.target.id;
+        var secNum = id.replace('sec-', '');
+        links.forEach(function(l) {
+          if (l.getAttribute('data-sec') === secNum) {
+            l.classList.add('active');
+          } else {
+            l.classList.remove('active');
+          }
+        });
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+
+  sections.forEach(function(s) { observer.observe(s); });
+  window.addEventListener('scroll', toggleSidebar, { passive: true });
+  toggleSidebar();
+})();
+</script>
+</html>
