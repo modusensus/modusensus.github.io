@@ -1,0 +1,971 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { marked } from 'marked';
+---
+
+<BaseLayout title="Write — MODUSENSUS">
+  <!-- ── 认证锁屏 ── -->
+  <section id="auth-screen" class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-badge">PRIVATE</div>
+      <h1 class="auth-title">管理员入口</h1>
+      <p class="auth-hint">本站为私人创作空间，请输入访问密码。</p>
+      <input type="password" id="auth-password" class="auth-input" placeholder="Password" autocomplete="current-password" />
+      <p class="auth-error" id="auth-error" hidden>密码错误，请重试。</p>
+      <button id="auth-unlock" class="auth-btn">进入编辑台 →</button>
+    </div>
+  </section>
+
+  <!-- ── 编辑台 ── -->
+  <section id="editor-screen" class="editor-screen" hidden>
+    <!-- 工具栏 -->
+    <div class="editor-toolbar">
+      <span class="editor-brand">NEW ARTICLE</span>
+      <button type="button" class="tool-btn" id="import-md" title="导入 Markdown 文件">导入 MD</button>
+      <input type="file" id="import-file" accept=".md,.mdx,text/markdown" hidden />
+      <div class="editor-tools">
+        <button type="button" class="tool-btn" data-action="bold" title="加粗"><b>B</b></button>
+        <button type="button" class="tool-btn" data-action="italic" title="斜体"><i>I</i></button>
+        <button type="button" class="tool-btn" data-action="h2" title="二级标题">H2</button>
+        <button type="button" class="tool-btn" data-action="h3" title="三级标题">H3</button>
+        <button type="button" class="tool-btn" data-action="quote" title="引用">“ ”</button>
+        <button type="button" class="tool-btn" data-action="code" title="代码块">&lt;/&gt;</button>
+        <button type="button" class="tool-btn" data-action="link" title="链接">🔗</button>
+        <button type="button" class="tool-btn" data-action="image" title="插入图片" id="tool-image">🖼</button>
+        <input type="file" id="image-file" accept="image/*" hidden />
+      </div>
+      <button type="button" class="tool-preview-toggle" id="preview-toggle">预览 / 写作</button>
+    </div>
+
+    <div class="editor-body">
+      <!-- 左侧：写作区 -->
+      <div class="editor-write" id="editor-write">
+        <input type="text" id="post-title" class="post-title" placeholder="文章标题" />
+        <input type="text" id="post-subtitle" class="post-subtitle" placeholder="副标题（可选）" />
+        <textarea id="post-body" class="post-body" placeholder="开始写作……支持 Markdown 语法，点击工具栏或直接输入。" spellcheck="false"></textarea>
+      </div>
+
+      <!-- 右侧：实时预览 -->
+      <div class="editor-preview" id="editor-preview" hidden>
+        <div class="preview-cover" id="preview-cover" hidden></div>
+        <h1 class="preview-title" id="preview-title">文章标题</h1>
+        <p class="preview-subtitle" id="preview-subtitle"></p>
+        <div class="preview-markdown" id="preview-markdown"></div>
+      </div>
+
+      <!-- 设置面板 -->
+      <aside class="editor-side">
+        <div class="set-card">
+          <div class="set-label">文章模块</div>
+          <div class="set-row" id="module-group">
+            <label><input type="radio" name="module" value="threshold" /> Threshold</label>
+            <label><input type="radio" name="module" value="lab" /> Lab</label>
+            <label><input type="radio" name="module" value="archive" checked /> Archive</label>
+          </div>
+        </div>
+        <div class="set-card">
+          <div class="set-label">分类（Category）</div>
+          <input type="text" id="post-category" class="set-input" placeholder="如 PROJECT / AI" />
+        </div>
+        <div class="set-card">
+          <div class="set-label">期号（Issue）</div>
+          <input type="text" id="post-issue" class="set-input" placeholder="如 03" />
+        </div>
+        <div class="set-card">
+          <div class="set-label">发布日期</div>
+          <input type="date" id="post-date" class="set-input" />
+        </div>
+        <div class="set-card">
+          <div class="set-label">封面图（可选）</div>
+          <button type="button" class="set-cover-btn" id="cover-btn">选择封面图片</button>
+          <input type="file" id="cover-file" accept="image/*" hidden />
+          <div class="cover-thumb" id="cover-thumb" hidden></div>
+          <p class="set-note">建议 1600×900。不设置则文章无封面。</p>
+        </div>
+      </aside>
+    </div>
+
+    <!-- 底部发布栏 -->
+    <div class="editor-publishbar">
+      <div class="publish-meta">
+        <span id="publish-chars">0 字 · 阅读约 0 分钟</span>
+      </div>
+      <div class="publish-actions">
+        <input type="text" id="gh-token" class="publish-token" placeholder="GitHub Token（发布需要）" />
+        <button type="button" id="publish-btn" class="publish-btn">发布文章 →</button>
+      </div>
+    </div>
+    <div class="publish-status" id="publish-status" hidden></div>
+  </section>
+</BaseLayout>
+
+<style>
+/* ── 认证锁屏 ── */
+.auth-screen {
+  min-height: calc(100vh - 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.auth-screen[hidden] { display: none; }
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2.5rem 2.25rem;
+  text-align: center;
+  box-shadow: 0 8px 30px rgba(26, 26, 26, 0.06);
+}
+.auth-badge {
+  display: inline-block;
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: var(--paper);
+  background: var(--ink);
+  padding: 4px 10px;
+  border-radius: 2px;
+  margin-bottom: 1.25rem;
+}
+.auth-title {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 26px;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.auth-hint {
+  font-family: var(--font-body);
+  font-size: 13px;
+  color: var(--dust);
+  margin-bottom: 1.5rem;
+}
+.auth-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: var(--font-ui);
+  margin-bottom: 0.75rem;
+  outline: none;
+}
+.auth-input:focus { border-color: var(--ink); }
+.auth-error {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--accent);
+  text-align: left;
+  margin-bottom: 0.75rem;
+}
+.auth-btn {
+  width: 100%;
+  padding: 11px;
+  background: var(--ink);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.auth-btn:hover { opacity: 0.85; }
+.auth-btn:disabled { opacity: 0.4; cursor: wait; }
+
+/* ── 编辑台整体 ── */
+.editor-screen {
+  max-width: 1128px;
+  margin: 0 auto;
+  padding: 0 2rem 3rem;
+}
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 52px;
+  z-index: 90;
+  background: var(--paper);
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.editor-brand {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--dust);
+}
+.editor-tools {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.tool-btn {
+  min-width: 30px;
+  height: 30px;
+  padding: 0 8px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.tool-btn:hover { background: var(--accent-bg); border-color: var(--ink); }
+.tool-preview-toggle {
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--dust);
+  cursor: pointer;
+}
+.tool-preview-toggle:hover { color: var(--ink); border-color: var(--ink); }
+
+/* ── 编辑主体 ── */
+.editor-body {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 1.5rem;
+  align-items: start;
+}
+.editor-write {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2rem 2.25rem;
+}
+.post-title {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+  padding: 0;
+}
+.post-title::placeholder { color: #c9c4ba; }
+.post-subtitle {
+  width: 100%;
+  border: none;
+  outline: none;
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--dust);
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 1.1rem;
+  margin-bottom: 1.25rem;
+}
+.post-subtitle::placeholder { color: #d4cfc6; }
+.post-body {
+  width: 100%;
+  min-height: 52vh;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.85;
+  color: var(--ink);
+  padding: 0;
+}
+.post-body::placeholder { color: #d4cfc6; }
+
+/* ── 预览 ── */
+.editor-preview {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 2rem 2.25rem;
+}
+.preview-cover {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  margin-bottom: 1.25rem;
+  background-position: center;
+  background-size: cover;
+}
+.preview-cover::before { content: ''; display: block; padding-top: 56.25%; }
+.preview-title {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.4rem;
+}
+.preview-subtitle {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--dust);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+.preview-markdown p { margin-bottom: 1.2rem; line-height: 1.85; }
+.preview-markdown h2, .preview-markdown h3 {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  border-top: 1px solid var(--border);
+  padding-top: 1.2rem;
+  margin: 1.8rem 0 0.8rem;
+}
+.preview-markdown blockquote {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 17px;
+  font-style: italic;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 1.4rem 1rem;
+  margin: 1.8rem 0;
+}
+.preview-markdown pre {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 1rem 1.2rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 13px;
+  margin: 1.2rem 0;
+}
+.preview-markdown code {
+  font-family: 'Courier New', monospace;
+  background: var(--accent-bg);
+  color: var(--accent-text);
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-size: 13px;
+}
+.preview-markdown pre code { background: none; color: inherit; padding: 0; }
+.preview-markdown img {
+  max-width: 100%;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  margin: 1rem 0;
+}
+.preview-markdown a { color: var(--accent); border-bottom: 1px solid var(--accent); }
+
+/* ── 设置面板 ── */
+.editor-side { display: flex; flex-direction: column; gap: 12px; }
+.set-card {
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.set-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--dust);
+  margin-bottom: 10px;
+}
+.set-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.set-row label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.set-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: var(--font-ui);
+  outline: none;
+}
+.set-input:focus { border-color: var(--ink); }
+.set-cover-btn {
+  width: 100%;
+  padding: 9px;
+  background: var(--accent-bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-text);
+  cursor: pointer;
+}
+.set-cover-btn:hover { border-color: var(--ink); }
+.cover-thumb {
+  margin-top: 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background-position: center;
+  background-size: cover;
+  position: relative;
+}
+.cover-thumb::before { content: ''; display: block; padding-top: 56.25%; }
+.set-note {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: var(--dust);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* ── 发布栏 ── */
+.editor-publishbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.25rem;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+.publish-meta {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--dust);
+  letter-spacing: 0.04em;
+}
+.publish-actions {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.publish-token {
+  width: 260px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: var(--font-ui);
+  outline: none;
+}
+.publish-token:focus { border-color: var(--ink); }
+.publish-btn {
+  padding: 9px 22px;
+  background: var(--ink);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 4px;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.publish-btn:hover { opacity: 0.85; }
+.publish-btn:disabled { opacity: 0.4; cursor: wait; }
+.publish-status {
+  margin-top: 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+.publish-status.ok { border-left-color: var(--accent-text); }
+.publish-status.err { border-left-color: var(--accent); }
+
+/* ── 响应式 ── */
+@media (max-width: 900px) {
+  .editor-body { grid-template-columns: 1fr; }
+  .editor-side { flex-direction: row; flex-wrap: wrap; }
+  .set-card { flex: 1; min-width: 160px; }
+  .post-title { font-size: 28px; }
+}
+@media (max-width: 640px) {
+  .editor-screen { padding: 0 1rem 2rem; }
+  .editor-write, .editor-preview { padding: 1.25rem 1rem; }
+  .publish-token { width: 100%; }
+}
+</style>
+
+<script>
+import { marked } from 'marked';
+
+// 全局错误提示：任何 JS 异常都会显示在页面上，便于排查
+window.addEventListener('error', e => {
+  try {
+    const div = document.createElement('div');
+    div.style.cssText = 'position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#9E2B25;color:#fff;font:12px/1.6 monospace;padding:10px 16px;white-space:pre-wrap;';
+    div.textContent = `[页面 JS 错误] ${e.message}\n${e.filename || ''}:${e.lineno || ''}`;
+    document.body.appendChild(div);
+  } catch (_) {}
+});
+
+/* ═══════════════ 认证 ═══════════════ */
+// 默认密码的 SHA-256 哈希（默认密码：modusensus2026）
+// 修改方法：node -e "const c=require('crypto');console.log(c.createHash('sha256').update('你的新密码').digest('hex'))"
+// 把结果替换到下面 DEFAULT_PASSWORD_HASH。
+const DEFAULT_PASSWORD_HASH = '34961e5d68ee7c8d29dedede33dff48c824f41034cd2a5b4fdaa621ff7852dbe';
+
+// 纯 JS SHA-256（不依赖 crypto.subtle，任何访问方式下都能计算）
+// 仅支持 ASCII 输入；密码请使用英文/数字
+function sha256Hex(ascii) {
+  function rightRotate(value, amount) {
+    return (value >>> amount) | (value << (32 - amount));
+  }
+  const maxWord = Math.pow(2, 32);
+  let result = '';
+  const words = [];
+  const asciiBitLength = ascii.length * 8;
+  let hash = [];
+  let k = [];
+  let primeCounter = 0;
+  const isComposite = {};
+  for (let candidate = 2; primeCounter < 64; candidate++) {
+    if (!isComposite[candidate]) {
+      for (let i = 0; i < 313; i += candidate) {
+        isComposite[i] = candidate;
+      }
+      hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+      k[primeCounter++] = (Math.pow(candidate, 1 / 3) * maxWord) | 0;
+    }
+  }
+  ascii += '\x80';
+  while ((ascii.length % 64) - 56) ascii += '\x00';
+  for (let i = 0; i < ascii.length; i++) {
+    const j = ascii.charCodeAt(i);
+    if (j >> 8) return '';
+    words[i >> 2] |= j << (((3 - i) % 4) * 8);
+  }
+  words[words.length] = (asciiBitLength / maxWord) | 0;
+  words[words.length] = asciiBitLength;
+  for (let j = 0; j < words.length; ) {
+    const w = words.slice(j, (j += 16));
+    const oldHash = hash;
+    hash = hash.slice(0, 8);
+    for (let i = 0; i < 64; i++) {
+      const w15 = w[i - 15];
+      const w2 = w[i - 2];
+      const a = hash[0];
+      const e = hash[4];
+      const temp1 =
+        hash[7] +
+        (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) +
+        ((e & hash[5]) ^ (~e & hash[6])) +
+        k[i] +
+        (w[i] =
+          i < 16
+            ? w[i]
+            : (w[i - 16] +
+                (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) +
+                w[i - 7] +
+                (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) |
+              0);
+      const temp2 =
+        (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) +
+        ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+      hash = [(temp1 + temp2) | 0].concat(hash);
+      hash[4] = (hash[4] + temp1) | 0;
+    }
+    for (let i = 0; i < 8; i++) {
+      hash[i] = (hash[i] + oldHash[i]) | 0;
+    }
+  }
+  for (let i = 0; i < 8; i++) {
+    for (let j = 3; j + 1; j--) {
+      const b = (hash[i] >> (j * 8)) & 255;
+      result += (b < 16 ? '0' : '') + b.toString(16);
+    }
+  }
+  return result;
+}
+
+const authScreen = document.getElementById('auth-screen');
+const editorScreen = document.getElementById('editor-screen');
+const authInput = document.getElementById('auth-password');
+const authError = document.getElementById('auth-error');
+const authBtn = document.getElementById('auth-unlock');
+
+async function unlock() {
+  const pw = authInput.value;
+  if (!pw) return;
+  authBtn.disabled = true;
+  const hash = sha256Hex(pw);
+  const stored = localStorage.getItem('modusensus_pw_hash');
+  // 默认密码始终可用；若曾设置过自定义密码，则两者都有效
+  if (hash === DEFAULT_PASSWORD_HASH || (stored && hash === stored)) {
+    sessionStorage.setItem('modusensus_auth', '1');
+    authScreen.hidden = true;
+    editorScreen.hidden = false;
+    window.scrollTo(0, 0);
+    if (!stored) {
+      showStatus('提示：当前使用默认密码（modusensus2026）。建议修改 —— 在浏览器控制台执行 <code>localStorage.setItem("modusensus_pw_hash", "新密码的SHA256")</code> 即可更换。', '');
+    }
+  } else {
+    authError.hidden = false;
+  }
+  authBtn.disabled = false;
+}
+
+authBtn.addEventListener('click', unlock);
+authInput.addEventListener('keydown', e => { if (e.key === 'Enter') unlock(); });
+
+if (sessionStorage.getItem('modusensus_auth') === '1') {
+  authScreen.hidden = true;
+  editorScreen.hidden = false;
+}
+
+/* ═══════════════ Markdown 渲染 ═══════════════ */
+marked.setOptions({ breaks: true, gfm: true });
+
+function sanitize(html) {
+  return html.replace(/<(script|iframe|object|embed)\b[\s\S]*?<\/(script|iframe|object|embed)>/gi, '');
+}
+
+function renderPreview() {
+  document.getElementById('preview-title').textContent = titleInput.value || '文章标题';
+  document.getElementById('preview-subtitle').textContent = subtitleInput.value || '';
+  document.getElementById('preview-markdown').innerHTML = sanitize(marked.parse(bodyInput.value || ''));
+}
+
+/* ═══════════════ 编辑器状态与元素 ═══════════════ */
+const titleInput = document.getElementById('post-title');
+const subtitleInput = document.getElementById('post-subtitle');
+const bodyInput = document.getElementById('post-body');
+const previewPane = document.getElementById('editor-preview');
+const writePane = document.getElementById('editor-write');
+const previewCover = document.getElementById('preview-cover');
+const coverThumb = document.getElementById('cover-thumb');
+const statusBox = document.getElementById('publish-status');
+
+let pendingImages = {};   // filename -> dataURL（正文图片）
+let coverDataUrl = null;  // 封面图 dataURL
+let coverFileName = null;
+
+['input'].forEach(ev => {
+  titleInput.addEventListener(ev, renderPreview);
+  subtitleInput.addEventListener(ev, renderPreview);
+  bodyInput.addEventListener(ev, () => {
+    renderPreview();
+    updateCharCount();
+  });
+});
+
+function updateCharCount() {
+  const text = bodyInput.value;
+  const chars = text.length;
+  const mins = Math.max(1, Math.round(chars / 300));
+  document.getElementById('publish-chars').textContent = `${chars} 字 · 阅读约 ${mins} 分钟`;
+}
+
+/* ═══════════════ 工具栏 ═══════════════ */
+const toolActions = {
+  bold:   { before: '**', after: '**', placeholder: '加粗文字' },
+  italic: { before: '*', after: '*', placeholder: '斜体文字' },
+  h2:     { before: '\n## ', after: '\n', placeholder: '二级标题' },
+  h3:     { before: '\n### ', after: '\n', placeholder: '三级标题' },
+  quote:  { before: '\n> ', after: '\n', placeholder: '引用内容' },
+  code:   { before: '\n```\n', after: '\n```\n', placeholder: '代码' },
+  link:   { before: '[', after: '](https://)', placeholder: '链接文字' },
+};
+
+function wrapSelection(action) {
+  const { before, after, placeholder } = toolActions[action];
+  const start = bodyInput.selectionStart;
+  const end = bodyInput.selectionEnd;
+  const selected = bodyInput.value.slice(start, end) || placeholder;
+  bodyInput.value =
+    bodyInput.value.slice(0, start) +
+    before + selected + after +
+    bodyInput.value.slice(end);
+  const newPos = start + before.length + selected.length + after.length;
+  bodyInput.focus();
+  bodyInput.setSelectionRange(start + before.length, newPos - after.length);
+  renderPreview();
+  updateCharCount();
+}
+
+document.querySelectorAll('.tool-btn[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => wrapSelection(btn.dataset.action));
+});
+
+/* ── 图片插入 ── */
+const toolImage = document.getElementById('tool-image');
+const imageFile = document.getElementById('image-file');
+const coverBtn = document.getElementById('cover-btn');
+const coverFile = document.getElementById('cover-file');
+
+function readAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function uniqueImageName(originalName) {
+  const extMatch = (originalName || '').split('.').pop().toLowerCase();
+  const ext = /^(png|jpe?g|gif|svg|webp|avif|bmp)$/.test(extMatch) ? extMatch : 'png';
+  const stamp = Date.now().toString(36);
+  const rand = Math.random().toString(36).slice(2, 6);
+  return `img-${stamp}-${rand}.${ext}`;
+}
+
+toolImage.addEventListener('click', () => imageFile.click());
+imageFile.addEventListener('change', async () => {
+  const file = imageFile.files[0];
+  if (!file) return;
+  const name = uniqueImageName(file.name);
+  const dataUrl = await readAsDataURL(file);
+  pendingImages[name] = dataUrl;
+  const alt = file.name.replace(/\.[^.]+$/, '');
+  // 在光标处插入图片语法
+  const start = bodyInput.selectionStart;
+  const marker = `![${alt}](/blog/images/${name})`;
+  bodyInput.value = bodyInput.value.slice(0, start) + marker + bodyInput.value.slice(start);
+  bodyInput.focus();
+  bodyInput.setSelectionRange(start + marker.length, start + marker.length);
+  renderPreview();
+  updateCharCount();
+  imageFile.value = '';
+  showStatus(`已插入图片 <code>${name}</code>，发布时自动上传。`, '');
+});
+
+coverBtn.addEventListener('click', () => coverFile.click());
+coverFile.addEventListener('change', async () => {
+  const file = coverFile.files[0];
+  if (!file) return;
+  coverFileName = uniqueImageName(file.name);
+  coverDataUrl = await readAsDataURL(file);
+  coverThumb.hidden = false;
+  coverThumb.style.backgroundImage = `url(${coverDataUrl})`;
+  previewCover.hidden = false;
+  previewCover.style.backgroundImage = `url(${coverDataUrl})`;
+});
+
+/* ── 预览切换 ── */
+document.getElementById('preview-toggle').addEventListener('click', () => {
+  const previewing = !previewPane.hidden;
+  previewPane.hidden = previewing;
+  writePane.hidden = !previewPane.hidden;
+});
+
+/* ── 导入 Markdown 文件 ── */
+const importMdBtn = document.getElementById('import-md');
+const importFile = document.getElementById('import-file');
+
+// 简单解析 frontmatter：---\n key: value \n---\n 正文
+function parseFrontmatter(content) {
+  const m = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
+  if (!m) return { fm: {}, body: content.trim() };
+  const fm = {};
+  for (const line of m[1].split(/\r?\n/)) {
+    const kv = line.match(/^([A-Za-z_][A-Za-z0-9_]*):\s*(.*)$/);
+    if (kv) {
+      let v = kv[2].trim();
+      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+        v = v.slice(1, -1);
+      }
+      fm[kv[1]] = v;
+    }
+  }
+  return { fm, body: m[2].trim() };
+}
+
+importMdBtn.addEventListener('click', () => importFile.click());
+importFile.addEventListener('change', async () => {
+  const file = importFile.files[0];
+  if (!file) return;
+  const text = await file.text();
+  const { fm, body } = parseFrontmatter(text);
+  if (fm.title) titleInput.value = fm.title;
+  if (fm.subtitle) subtitleInput.value = fm.subtitle;
+  bodyInput.value = body;
+  if (fm.category) document.getElementById('post-category').value = fm.category;
+  if (fm.issue) document.getElementById('post-issue').value = fm.issue;
+  if (fm.date && /^\d{4}-\d{2}-\d{2}/.test(fm.date)) {
+    document.getElementById('post-date').value = fm.date.slice(0, 10);
+  }
+  if (fm.module && ['threshold', 'lab', 'archive'].includes(fm.module)) {
+    document.querySelector(`input[name="module"][value="${fm.module}"]`).checked = true;
+  }
+  renderPreview();
+  updateCharCount();
+  importFile.value = '';
+  if (fm.cover) {
+    showStatus(`已导入 <code>${file.name}</code>，标题、正文、模块等已填充。原封面 <code>${fm.cover}</code> 是本地路径，如需封面请重新上传。`, '');
+  } else {
+    showStatus(`已导入 <code>${file.name}</code>，标题、正文、模块等已填充。`, '');
+  }
+});
+
+/* ═══════════════ GitHub 发布 ═══════════════ */
+const REPO = 'modusensus/modusensus.github.io';
+
+async function ghRequest(token, method, path, body) {
+  const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: 'application/vnd.github+json',
+      'Content-Type': 'application/json',
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+function slugify(title) {
+  const latin = title.toLowerCase()
+    .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+  return latin || `post-${Date.now().toString(36)}`;
+}
+
+function dataUrlToBase64(dataUrl) {
+  return dataUrl.split(',')[1];
+}
+
+function showStatus(html, kind) {
+  statusBox.hidden = false;
+  statusBox.className = `publish-status ${kind}`;
+  statusBox.innerHTML = html;
+}
+
+async function uploadImage(token, fileName, dataUrl) {
+  const b64 = dataUrlToBase64(dataUrl);
+  const res = await ghRequest(token, 'PUT', `public/blog/images/${fileName}`, {
+    message: `Add image ${fileName}`,
+    content: b64,
+  });
+  if (!res.ok) throw new Error(`图片 ${fileName} 上传失败（HTTP ${res.status}）：${res.data?.message || '未知错误'}`);
+}
+
+async function publish() {
+  const title = titleInput.value.trim();
+  const body = bodyInput.value;
+  if (!title) { showStatus('请填写文章标题。', 'err'); return; }
+  if (!body.trim()) { showStatus('正文不能为空。', 'err'); return; }
+
+  const token = document.getElementById('gh-token').value.trim();
+  if (!token) { showStatus('请填写 GitHub Token 才能发布。Token 只保存在当前浏览器，不会上传到本站服务器。', 'err'); return; }
+
+  const btn = document.getElementById('publish-btn');
+  btn.disabled = true;
+  btn.textContent = '发布中…';
+
+  try {
+    const module = document.querySelector('input[name="module"]:checked').value;
+    const category = document.getElementById('post-category').value.trim();
+    const issue = document.getElementById('post-issue').value.trim();
+    const subtitle = subtitleInput.value.trim();
+    const dateVal = document.getElementById('post-date').value || new Date().toISOString().slice(0, 10);
+    const readingTime = String(Math.max(1, Math.round(body.length / 300)));
+
+    // 1) 上传正文中的图片（替换 data URL）
+    const regex = /!\[([^\]]*)\]\((data:image\/[^)]+)\)/g;
+    let mdx = body;
+    let m;
+    while ((m = regex.exec(mdx))) {
+      const name = uniqueImageName('png');
+      await uploadImage(token, name, m[2]);
+      pendingImages[name] = m[2];
+      mdx = mdx.replace(m[0], `![${m[1]}](${'/blog/images/' + name})`);
+    }
+
+    // 2) 上传封面图
+    let coverPath = '';
+    if (coverDataUrl && coverFileName) {
+      await uploadImage(token, coverFileName, coverDataUrl);
+      coverPath = `/blog/images/${coverFileName}`;
+    }
+
+    // 3) 生成 frontmatter 与正文
+    const excerpt = body.replace(/#{1,6}\s*/g, '').replace(/\s+/g, ' ').trim().slice(0, 160);
+    const fm = [
+      '---',
+      `title: ${JSON.stringify(title)}`,
+      subtitle ? `subtitle: ${JSON.stringify(subtitle)}` : '',
+      `date: ${dateVal}`,
+      issue ? `issue: ${JSON.stringify(issue)}` : '',
+      category ? `category: ${JSON.stringify(category)}` : '',
+      `readingTime: ${JSON.stringify(readingTime)}`,
+      coverPath ? `cover: ${JSON.stringify(coverPath)}` : '',
+      `excerpt: ${JSON.stringify(excerpt)}`,
+      `module: ${module}`,
+      '---',
+      '',
+    ].filter(l => l !== '').join('\n');
+    const content = fm + mdx.trim() + '\n';
+
+    // 4) 上传文章
+    let slug = slugify(title);
+    const check = await ghRequest(token, 'GET', `src/content/blog/${slug}.mdx`);
+    if (check.ok) {
+      slug = `${slug}-${Date.now().toString(36)}`;
+      showStatus(`同名文章已存在，已自动改名 <code>${slug}.mdx</code> 避免覆盖。`, '');
+    }
+    const articleRes = await ghRequest(token, 'PUT', `src/content/blog/${slug}.mdx`, {
+      message: `New article: ${title}`,
+      content: btoa(unescape(encodeURIComponent(content))),
+    });
+    if (!articleRes.ok) {
+      throw new Error(`文章提交失败（HTTP ${articleRes.status}）：${articleRes.data?.message || '未知错误'}`);
+    }
+
+    localStorage.setItem('modusensus_gh_token', token);
+    showStatus(`✅ 发布成功！文章已提交到仓库（<code>src/content/blog/${slug}.mdx</code>），GitHub Actions 正在自动构建部署，约 1-2 分钟后访问 <a href="/blog/${slug}" style="text-decoration: underline;">/blog/${slug}</a> 即可看到。`, 'ok');
+  } catch (err) {
+    showStatus(`❌ 发布失败：${err.message}`, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '发布文章 →';
+  }
+}
+
+// 初始化日期为今天
+document.getElementById('post-date').value = new Date().toISOString().slice(0, 10);
+
+// 记住上次的 Token（方便再次发布）
+const savedToken = localStorage.getItem('modusensus_gh_token');
+if (savedToken) document.getElementById('gh-token').value = savedToken;
+
+document.getElementById('publish-btn').addEventListener('click', publish);
+
+// 初始化预览
+renderPreview();
+updateCharCount();
+</script>

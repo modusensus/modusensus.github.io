@@ -8,12 +8,8 @@
     "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/mdx": "^3.1.0",
-    "@astrojs/rss": "^4.0.0",
     "astro": "^4.15.0",
-    "marked": "^18.0.9"
-  },
-  "allowScripts": {
-    "astro@4.16.19": true
+    "@astrojs/mdx": "^3.1.0",
+    "@astrojs/rss": "^4.0.0"
   }
 }

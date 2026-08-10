@@ -4,184 +4,90 @@ import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
 const posts = allPosts
-  .filter(p => p.data.module === 'threshold' || p.data.tag === '阈值笔记')
+  .filter(p => p.data.module === 'threshold')
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
 ---
 
-<BaseLayout title="Threshold Notes · MODUSENSUS" activeNav="threshold">
+<BaseLayout activeNav="threshold" title="Threshold Notes — MODUSENSUS">
+  <header class="page-header">
+    <h1 class="page-header-title">THRESHOLD NOTES</h1>
+    <p class="page-header-subtitle">数字思想杂志 — Essay / Humanity / Technology</p>
+  </header>
 
-  <!-- ── Page Header ── -->
-  <section class="page-header fade-in">
-    <h1 class="page-title">THRESHOLD NOTES</h1>
-    <p class="page-sub">数字思想杂志</p>
-  </section>
+  <div class="page-layout">
+    <aside class="page-col-left">
+      <div class="card card-padded">
+        <div class="card-label">About this section</div>
+        <p style="font-size: 12px; color: var(--dust); line-height: 1.6; margin-bottom: 12px;">长期关注的思想议题，关于技术、城市与人类的交叉地带。</p>
+        <div class="card-divider"></div>
+        <div class="card-stat-row"><span>Articles</span><span>{posts.length}</span></div>
+        <div class="card-stat-row"><span>Latest</span><span>{posts[0] ? formatDate(posts[0].data.date) : '—'}</span></div>
+      </div>
+      <div class="card card-padded">
+        <div class="card-label">Categories</div>
+        <span class="pill">算法</span>
+        <span class="pill">城市</span>
+        <span class="pill">人文</span>
+      </div>
+    </aside>
 
-  <!-- ── Article Cards ── -->
-  <section class="card-grid fade-in">
-    {posts.map(post => (
-      <article class="card-item">
-        <a href={`/blog/${post.slug}`} class="card-link">
-          <div class="card-image cover-img">
-            {post.data.cover ? (
-              <img src={post.data.cover} alt={post.data.title} />
-            ) : (
-              <div class="placeholder-img threshold-img"></div>
-            )}
-          </div>
-          <div class="card-body">
-            <div class="card-meta">
-              {post.data.issue && <span class="card-issue">NO.{post.data.issue}</span>}
-              <time class="card-date">
-                {post.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </time>
-              {post.data.category && <span class="tag tag-threshold">{post.data.category}</span>}
+    <section class="page-col-main">
+      {posts.map((post, idx) => (
+        <article class="article-feed-card">
+          <a href={`/blog/${post.slug}`} style="display: block;">
+            <div class="article-feed-header">
+              <div class="feed-avatar">TN</div>
+              <div>
+                <div class="feed-meta-name">Threshold Notes</div>
+                <div class="feed-meta-date">{formatDate(post.data.date)} · NO.{post.data.issue || String(idx + 1).padStart(2, '0')}</div>
+              </div>
             </div>
-            <h2 class="card-title">{post.data.title}</h2>
-            {post.data.subtitle && <p class="card-subtitle">{post.data.subtitle}</p>}
-          </div>
-        </a>
-      </article>
-    ))}
-  </section>
-
-  {posts.length === 0 && (
-    <section class="empty fade-in">
-      <p class="empty-text">暂无文章，敬请期待。</p>
+            <div class="feed-body">
+              <h3 class="feed-title">{post.data.title}</h3>
+              <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
+            </div>
+            {post.data.cover ? (
+              <img src={post.data.cover} alt={post.data.title} class="feed-cover" />
+            ) : (
+              <div class="feed-cover-placeholder threshold-gradient"></div>
+            )}
+            <div class="feed-footer">
+              <span class="feed-read-btn">→ Read</span>
+              <span class="feed-tag">#essay</span>
+            </div>
+          </a>
+        </article>
+      ))}
     </section>
-  )}
 
+    <aside class="page-col-right">
+      <div class="card card-padded">
+        <div class="card-label">Explore other sections</div>
+        <div class="section-item">
+          <div class="section-avatar">LB</div>
+          <div>
+            <div class="section-name">Lab</div>
+            <div class="section-desc">AI experiments / tools</div>
+            <a href="/lab"><button class="browse-btn">Browse →</button></a>
+          </div>
+        </div>
+        <div class="section-item" style="margin-bottom: 0;">
+          <div class="section-avatar">AR</div>
+          <div>
+            <div class="section-name">Archive</div>
+            <div class="section-desc">知识档案</div>
+            <a href="/archive"><button class="browse-btn">Browse →</button></a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
 </BaseLayout>
-
-<style>
-/* ── Page Header ── */
-.page-header {
-  padding: 5rem 2rem 3rem;
-  border-bottom: 1px solid var(--border);
-}
-.page-title {
-  font-family: var(--font-display);
-  font-size: clamp(48px, 10vw, 72px);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1;
-}
-.page-sub {
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--dust);
-  margin-top: 1rem;
-}
-
-/* ── Article Cards ── */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0;
-  border-bottom: 1px solid var(--border);
-}
-.card-item {
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.card-item:nth-child(2n) { border-right: none; }
-.card-link {
-  display: block;
-  padding: 1.5rem;
-  transition: background 0.2s;
-}
-.card-link:hover { background: rgba(17,17,17,0.02); }
-
-.card-image {
-  width: 100%;
-  height: 200px;
-  margin-bottom: 1rem;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.cover-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.card-link:hover .cover-img img { transform: scale(1.03); }
-.placeholder-img {
-  width: 100%;
-  height: 100%;
-}
-.threshold-img {
-  background: linear-gradient(135deg, #2a1f14 0%, #5c4a32 50%, #8a7355 100%);
-}
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-}
-.card-issue {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--accent);
-}
-.card-date {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--dust);
-}
-
-.card-title {
-  font-family: var(--font-body);
-  font-size: clamp(20px, 2.5vw, 26px);
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 0.4rem;
-  position: relative;
-  display: inline-block;
-}
-.card-title::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0;
-  height: 1px;
-  background: var(--ink);
-  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.card-link:hover .card-title::after { width: 100%; }
-
-.card-subtitle {
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.6;
-  color: var(--dust);
-}
-
-/* ── Empty ── */
-.empty {
-  padding: 4rem 2rem;
-  text-align: center;
-}
-.empty-text {
-  font-family: var(--font-body);
-  font-size: 16px;
-  color: var(--dust);
-}
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .page-header { padding: 3rem 1.25rem 2rem; }
-  .card-grid { grid-template-columns: 1fr; }
-  .card-item { border-right: none; }
-  .card-title { font-size: 20px; }
-}
-</style>

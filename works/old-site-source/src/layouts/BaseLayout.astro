@@ -40,21 +40,29 @@ const navLinks = [
   <!-- ── Reading progress bar (article pages) ── -->
   <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
 
-  <!-- ── Navbar ── -->
-  <nav class="navbar entrance entrance-1">
-    <div class="navbar-inner">
-      {navLinks.map(link => (
-        <a
-          href={link.href}
-          class:list={['navbar-link', { active: activeNav === link.key }]}
-        >
-          {link.label}
-        </a>
-      ))}
+  <!-- ── Masthead ── -->
+  <header class="masthead entrance entrance-1">
+    <div class="masthead-center">
+      <a href="/" class="masthead-title">MODUSENSUS</a>
     </div>
-    <button class="navbar-menu" aria-label="Menu" id="menu-toggle">
-      <span></span><span></span><span></span>
-    </button>
+    <div class="masthead-right">
+      <button class="masthead-menu" aria-label="Menu" id="menu-toggle">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Sub-nav bar ── -->
+  <nav class="subnav entrance entrance-1">
+    {navLinks.map(link => (
+      <a
+        href={link.href}
+        class:list={['subnav-link', { active: activeNav === link.key }]}
+      >
+        {link.label}
+      </a>
+    ))}
+
   </nav>
 
   <!-- ── Mobile menu ── -->
@@ -78,6 +86,7 @@ const navLinks = [
   <footer class="footer">
     <div class="footer-inner">
       <span class="footer-copy">&copy; 2026 MODUSENSUS &middot; Independent Digital Studio</span>
+
     </div>
   </footer>
 
@@ -85,50 +94,37 @@ const navLinks = [
 </html>
 
 <style>
-/* ── Navbar ── */
-.navbar {
+/* ── Masthead ── */
+.masthead {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 2rem;
-  height: 52px;
-  background: var(--paper);
+  padding: 0.75rem 2rem;
   border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  position: relative;
 }
-.navbar-inner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  max-width: 1128px;
-  width: 100%;
+.masthead-right {
+  position: absolute;
+  right: 2rem;
 }
-.navbar-link {
+.masthead-center {
+  text-align: center;
+}
+.masthead-location {
   font-family: var(--font-ui);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--dust, #888);
-  text-decoration: none;
-  background-image: linear-gradient(var(--accent, #9E2B25), var(--accent, #9E2B25));
-  background-repeat: no-repeat;
-  background-size: 0% 1.5px;
-  background-position: 0 100%;
-  padding: 8px 4px 5px;
-  transition: color 0.2s, background-size 0.25s ease;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--dust);
 }
-.navbar-link:hover,
-.navbar-link.active {
-  color: var(--ink, #111);
+.masthead-title {
+  font-family: 'Playfair Display', 'Noto Serif SC', serif;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ink);
 }
-.navbar-link:hover {
-  background-size: 100% 1px;
-}
-.navbar-menu {
+.masthead-menu {
   display: none;
   flex-direction: column;
   gap: 4px;
@@ -137,11 +133,33 @@ const navLinks = [
   padding: 4px;
   cursor: pointer;
 }
-.navbar-menu span {
+.masthead-menu span {
   display: block;
   width: 20px;
   height: 1.5px;
   background: var(--ink);
+}
+
+/* ── Sub-nav ── */
+.subnav {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 0.6rem 2rem;
+  border-bottom: 1px solid var(--border);
+}
+.subnav-link {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--dust);
+  transition: color 0.2s;
+}
+.subnav-link:hover,
+.subnav-link.active {
+  color: var(--ink);
 }
 
 /* ── Mobile menu ── */
@@ -167,7 +185,6 @@ const navLinks = [
 .footer {
   border-top: 1px solid var(--border);
   margin-top: auto;
-  background: var(--paper);
 }
 .footer-inner {
   display: flex;
@@ -182,14 +199,16 @@ const navLinks = [
   letter-spacing: 0.06em;
 }
 
+
 /* ── Responsive ── */
 @media (max-width: 768px) {
-  .navbar {
-    justify-content: flex-end;
-    padding: 0 1.25rem;
+  .masthead { padding: 0.75rem 1.25rem; }
+  .masthead-right { right: 1.25rem; }
+  .masthead-title { font-size: 22px; }
+  .masthead-menu { display: flex; }
+  .subnav {
+    display: none;
   }
-  .navbar-inner { display: none; }
-  .navbar-menu { display: flex; }
   .footer-inner { padding: 1rem 1.25rem; }
 }
 </style>

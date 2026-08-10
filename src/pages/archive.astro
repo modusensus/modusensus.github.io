@@ -4,194 +4,109 @@ import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
 const posts = allPosts
-  .filter(p => p.data.module === 'archive' || (p.data.module !== 'threshold' && p.data.module !== 'lab' && p.data.tag !== '阈值笔记' && p.data.tag !== '项目日志'))
+  .filter(p => p.data.module === 'archive')
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function formatDateShort(date: Date) {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).replace(/\//g, '.');
+}
+
+const projects = [
+  {
+    name: 'python-self-learning-map',
+    desc: '持续更新的学习档案，记录通过项目驱动的 Python 学习过程。包含练习代码、笔记和阶段性总结，目前仍在不断扩展中。',
+    tags: ['Python', '学习档案', '持续更新'],
+    link: 'https://github.com/modusensus/python-self-learning-map',
+  },
+];
 ---
 
-<BaseLayout title="Archive · MODUSENSUS" activeNav="archive">
+<BaseLayout activeNav="archive" title="Archive — MODUSENSUS">
+  <header class="page-header">
+    <h1 class="page-header-title">ARCHIVE</h1>
+    <p class="page-header-subtitle">知识档案 — Reading / Research / Notes</p>
+  </header>
 
-  <!-- ── Page Header ── -->
-  <section class="page-header fade-in">
-    <h1 class="page-title">ARCHIVE</h1>
-    <p class="page-sub">知识档案</p>
-    <p class="page-tags">Reading / Research / Notes</p>
-  </section>
-
-  <!-- ── Article Cards ── -->
-  <section class="card-grid fade-in">
-    {posts.map(post => (
-      <article class="card-item">
-        <a href={`/blog/${post.slug}`} class="card-link">
-          <div class="card-image cover-img">
-            {post.data.cover ? (
-              <img src={post.data.cover} alt={post.data.title} />
-            ) : (
-              <div class="placeholder-img archive-img"></div>
-            )}
-          </div>
-          <div class="card-body">
-            <div class="card-meta">
-              {post.data.issue && <span class="card-issue">NO.{post.data.issue}</span>}
-              <time class="card-date">
-                {post.data.date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
-              </time>
-              {post.data.category && <span class="tag tag-archive">{post.data.category}</span>}
+  <div class="page-layout">
+    <aside class="page-col-left">
+      <div class="card card-padded">
+        <div class="card-label">Archive stats</div>
+        <div class="card-stat-row"><span>Total</span><span>{allPosts.length}</span></div>
+        <div class="card-stat-row"><span>Threshold</span><span>{allPosts.filter(p => p.data.module === 'threshold').length}</span></div>
+        <div class="card-stat-row"><span>Lab</span><span>{allPosts.filter(p => p.data.module === 'lab').length}</span></div>
+        <div class="card-stat-row"><span>Archive</span><span>{posts.length}</span></div>
+      </div>
+      <div class="card card-padded">
+        <div class="card-label">Ongoing Projects</div>
+        {projects.map(p => (
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px;">
+              {p.link ? <a href={p.link} target="_blank" style="color: inherit; text-decoration: none;">{p.name} ↗</a> : p.name}
             </div>
-            <h2 class="card-title">{post.data.title}</h2>
-            {post.data.subtitle && <p class="card-subtitle">{post.data.subtitle}</p>}
+            <div style="font-size: 11px; color: var(--dust); margin-bottom: 6px;">{p.desc}</div>
+            <div>{p.tags.map(t => <span class="pill">{t}</span>)}</div>
           </div>
+        ))}
+      </div>
+    </aside>
+
+    <section class="page-col-main">
+      {posts.map((post, idx) => (
+        <a href={`/blog/${post.slug}`} class="list-card">
+          {post.data.cover ? (
+            <img src={post.data.cover} alt={post.data.title} class="list-card-cover" />
+          ) : (
+            <div class="list-card-cover archive-gradient"></div>
+          )}
+          <div style="flex: 1; min-width: 0; padding-right: 12px;">
+            <div class="list-card-title">{post.data.title}</div>
+            <div class="list-card-meta">{formatDateShort(post.data.date)} · ARCHIVE · {post.data.category || 'NOTE'}</div>
+          </div>
+          <div class="list-card-num">{String(idx + 1).padStart(2, '0')}</div>
         </a>
-      </article>
-    ))}
-  </section>
-
-  {posts.length === 0 && (
-    <section class="empty fade-in">
-      <p class="empty-text">暂无文章，敬请期待。</p>
+      ))}
     </section>
-  )}
 
+    <aside class="page-col-right">
+      <div class="card card-padded">
+        <div class="card-label">Tags</div>
+        <span class="pill">算法</span>
+        <span class="pill">AI</span>
+        <span class="pill">Obsidian</span>
+        <span class="pill">城市</span>
+        <span class="pill">工具</span>
+      </div>
+      <div class="card card-padded">
+        <div class="card-label">Explore other sections</div>
+        <div class="section-item">
+          <div class="section-avatar">TN</div>
+          <div>
+            <div class="section-name">Threshold Notes</div>
+            <div class="section-desc">数字思想杂志</div>
+            <a href="/threshold-notes"><button class="browse-btn">Browse →</button></a>
+          </div>
+        </div>
+        <div class="section-item" style="margin-bottom: 0;">
+          <div class="section-avatar">LB</div>
+          <div>
+            <div class="section-name">Lab</div>
+            <div class="section-desc">AI experiments / tools</div>
+            <a href="/lab"><button class="browse-btn">Browse →</button></a>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
 </BaseLayout>
-
-<style>
-/* ── Page Header ── */
-.page-header {
-  padding: 5rem 2rem 3rem;
-  border-bottom: 1px solid var(--border);
-}
-.page-title {
-  font-family: var(--font-display);
-  font-size: clamp(48px, 10vw, 72px);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1;
-}
-.page-sub {
-  font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--dust);
-  margin-top: 1rem;
-}
-.page-tags {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--dust);
-  text-transform: uppercase;
-  margin-top: 0.5rem;
-}
-
-/* ── Article Cards ── */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0;
-  border-bottom: 1px solid var(--border);
-}
-.card-item {
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.card-item:nth-child(2n) { border-right: none; }
-.card-link {
-  display: block;
-  padding: 1.5rem;
-  transition: background 0.2s;
-}
-.card-link:hover { background: rgba(17,17,17,0.02); }
-
-.card-image {
-  width: 100%;
-  height: 200px;
-  margin-bottom: 1rem;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.cover-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.card-link:hover .cover-img img { transform: scale(1.03); }
-.placeholder-img {
-  width: 100%;
-  height: 100%;
-}
-.archive-img {
-  background: linear-gradient(135deg, #3a3a2a 0%, #6a6a50 50%, #9a9a7a 100%);
-}
-
-.card-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 0.5rem;
-}
-.card-issue {
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--dust);
-}
-.card-date {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--dust);
-}
-
-.card-title {
-  font-family: var(--font-body);
-  font-size: clamp(20px, 2.5vw, 26px);
-  font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 0.4rem;
-  position: relative;
-  display: inline-block;
-}
-.card-title::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0;
-  height: 1px;
-  background: var(--ink);
-  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.card-link:hover .card-title::after { width: 100%; }
-
-.card-subtitle {
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 400;
-  line-height: 1.6;
-  color: var(--dust);
-}
-
-/* ── Empty ── */
-.empty {
-  padding: 4rem 2rem;
-  text-align: center;
-}
-.empty-text {
-  font-family: var(--font-body);
-  font-size: 16px;
-  color: var(--dust);
-}
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .page-header { padding: 3rem 1.25rem 2rem; }
-  .card-grid { grid-template-columns: 1fr; }
-  .card-item { border-right: none; }
-  .card-title { font-size: 20px; }
-}
-</style>

@@ -1,0 +1,218 @@
+<h2>首页领英布局 v4 — 侧边栏更像 LinkedIn</h2>
+<p class="subtitle">左侧 Profile 卡片 + 右侧 "Add to your feed" 推荐列表，杂志编辑风配色</p>
+
+<div class="mockup" style="max-width: 100%; overflow: hidden;">
+  <div class="mockup-header">LinkedIn 式侧边栏 × 杂志编辑风</div>
+  <div class="mockup-body" style="padding: 0; background: #FAFAF8;">
+
+    <!-- Top Navbar -->
+    <div style="background: #FAFAF8; border-bottom: 1px solid rgba(17,17,17,0.1); padding: 0 32px; display: flex; align-items: center; height: 52px; position: sticky; top: 0; z-index: 10;">
+      <div style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #111; margin-right: 48px;">M</div>
+      <div style="display: flex; gap: 28px; flex: 1;">
+        <span style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #111;">Home</span>
+        <span style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #888;">Threshold Notes</span>
+        <span style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #888;">Lab</span>
+        <span style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #888;">Archive</span>
+        <span style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; color: #888;">Colophon</span>
+      </div>
+      <div style="width: 28px; height: 28px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: #FAFAF8;">M</div>
+    </div>
+
+    <!-- 3-column layout -->
+    <div style="display: flex; gap: 24px; max-width: 1128px; margin: 24px auto; padding: 0 32px; align-items: flex-start;">
+
+      <!-- LEFT SIDEBAR (225px) — LinkedIn Profile Card -->
+      <div style="width: 225px; flex-shrink: 0; position: sticky; top: 76px;">
+        <div style="background: #FAFAF8; border: 1px solid rgba(17,17,17,0.12); border-radius: 8px; overflow: hidden; text-align: center;">
+          <!-- Banner -->
+          <div style="height: 60px; background: linear-gradient(135deg, #2a1f14, #5c4a32);"></div>
+          <!-- Avatar -->
+          <div style="width: 72px; height: 72px; border-radius: 50%; border: 3px solid #FAFAF8; background: #111; margin: -36px auto 12px; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 700; color: #FAFAF8;">M</div>
+          <!-- Name & Headline -->
+          <div style="padding: 0 16px 12px;">
+            <div style="font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: #111; margin-bottom: 2px;">MODUSENSUS</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; line-height: 1.4;">Independent Digital Studio</div>
+          </div>
+          <!-- Divider -->
+          <div style="border-top: 1px solid rgba(17,17,17,0.08); margin: 0 16px;"></div>
+          <!-- Stats -->
+          <div style="padding: 10px 16px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; font-size: 10px; color: #888; margin-bottom: 6px;">
+              <span>Articles</span>
+              <span style="color: #111; font-weight: 600;">3</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-family: 'Inter', sans-serif; font-size: 10px; color: #888;">
+              <span>Projects</span>
+              <span style="color: #111; font-weight: 600;">2</span>
+            </div>
+          </div>
+          <!-- Divider -->
+          <div style="border-top: 1px solid rgba(17,17,17,0.08); margin: 0 16px;"></div>
+          <!-- Saved items -->
+          <div style="padding: 10px 16px; text-align: left;">
+            <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #111; font-weight: 600; margin-bottom: 6px;">My items</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; padding: 3px 0;">★ Saved articles</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; padding: 3px 0;">⏵ Reading list</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; padding: 3px 0;">⚑ Subscriptions</div>
+          </div>
+        </div>
+
+        <!-- Recent Groups -->
+        <div style="background: #FAFAF8; border: 1px solid rgba(17,17,17,0.12); border-radius: 8px; padding: 14px 16px; margin-top: 8px;">
+          <div style="font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #111; margin-bottom: 10px;">Sections</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; padding: 4px 0;">Threshold Notes</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; padding: 4px 0;">Modusensus Lab</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; padding: 4px 0;">Archive</div>
+          <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666; padding: 4px 0;">Colophon</div>
+        </div>
+      </div>
+
+      <!-- CENTER FEED -->
+      <div style="flex: 1; min-width: 0;">
+        <!-- Start a post -->
+        <div style="background: #FAFAF8; border: 1px solid rgba(17,17,17,0.12); border-radius: 8px; padding: 14px 16px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; color: #FAFAF8;">M</div>
+            <div style="flex: 1; height: 40px; border: 1px solid rgba(17,17,17,0.16); border-radius: 20px; display: flex; align-items: center; padding: 0 16px; font-family: 'Inter', sans-serif; font-size: 12px; color: #888;">Start a post...</div>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding: 0 8px;">
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666;">📝 Article</span>
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666;">🖼 Photo</span>
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #666;">📎 Link</span>
+          </div>
+        </div>
+
+        <!-- Post 1 -->
+        <div style="background: #FAFAF8; border: 1px solid rgba(17,17,17,0.12); border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
+          <div style="padding: 14px 16px 10px; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: #FAFAF8; letter-spacing: 0.1em;">TN</div>
+            <div>
+              <div style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #111;">Threshold Notes</div>
+              <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888;">August 10, 2026</div>
+            </div>
+          </div>
+          <div style="padding: 0 16px 14px;">
+            <div style="font-family: 'Playfair Display', 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; color: #111; line-height: 1.25; margin-bottom: 6px;">我们正在失去好好说话的能力</div>
+            <div style="font-family: 'Noto Serif SC', serif; font-size: 14px; color: #555; line-height: 1.6;">算法时代，人类如何重新夺回思考的主动权</div>
+          </div>
+          <div style="height: 220px; background: linear-gradient(135deg, #2a1f14, #5c4a32, #8a7355);"></div>
+          <div style="padding: 12px 16px; display: flex; gap: 16px; border-top: 1px solid rgba(17,17,17,0.08);">
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: #111;">→ Read</span>
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888;">#essay</span>
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888;">#algorithm</span>
+          </div>
+        </div>
+
+        <!-- Post 2 -->
+        <div style="background: #FAFAF8; border: 1px solid rgba(17,17,17,0.12); border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
+          <div style="padding: 14px 16px 10px; display: flex; align-items: center; gap: 10px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: #FAFAF8; letter-spacing: 0.1em;">LB</div>
+            <div>
+              <div style="font-family: 'Space Grotesk', sans-serif; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #111;">Modusensus Lab</div>
+              <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888;">August 5, 2026</div>
+            </div>
+          </div>
+          <div style="padding: 0 16px 14px;">
+            <div style="font-family: 'Playfair Display', 'Noto Serif SC', serif; font-size: 22px; font-weight: 700; color: #111; line-height: 1.25; margin-bottom: 6px;">我做了个 AI 个人成长 Widget</div>
+            <div style="font-family: 'Noto Serif SC', serif; font-size: 14px; color: #555; line-height: 1.6;">把脑子里乱七八糟的想法交给 AI 整理</div>
+          </div>
+          <div style="height: 180px; background: linear-gradient(135deg, #1a2a3a, #3a5a7a, #6a9aba);"></div>
+          <div style="padding: 12px 16px; display: flex; gap: 16px; border-top: 1px solid rgba(17,17,17,0.08);">
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: #111;">→ Read</span>
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888;">#AI</span>
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888;">#widget</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDEBAR (300px) — LinkedIn "Add to your feed" -->
+      <div style="width: 300px; flex-shrink: 0; position: sticky; top: 76px;">
+        <div style="background: #FAFAF8; border: 1px solid rgba(17,17,17,0.12); border-radius: 8px; padding: 14px 16px; margin-bottom: 8px;">
+          <div style="font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #111; margin-bottom: 14px;">Add to your feed</div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: #FAFAF8; letter-spacing: 0.1em;">TN</div>
+            <div style="flex: 1;">
+              <div style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: #111;">Threshold Notes</div>
+              <div style="font-family: 'Noto Serif SC', serif; font-size: 11px; color: #888; margin-bottom: 6px;">数字思想杂志</div>
+              <button style="border: 1px solid #111; border-radius: 16px; background: transparent; padding: 5px 16px; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: #111; cursor: pointer;">+ Follow</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start; margin-bottom: 16px;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: #FAFAF8; letter-spacing: 0.1em;">LB</div>
+            <div style="flex: 1;">
+              <div style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: #111;">Modusensus Lab</div>
+              <div style="font-family: 'Noto Serif SC', serif; font-size: 11px; color: #888; margin-bottom: 6px;">AI experiments</div>
+              <button style="border: 1px solid #111; border-radius: 16px; background: transparent; padding: 5px 16px; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: #111; cursor: pointer;">+ Follow</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; align-items: flex-start;">
+            <div style="width: 48px; height: 48px; border-radius: 50%; background: #111; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; color: #FAFAF8; letter-spacing: 0.1em;">AR</div>
+            <div style="flex: 1;">
+              <div style="font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: #111;">Archive</div>
+              <div style="font-family: 'Noto Serif SC', serif; font-size: 11px; color: #888; margin-bottom: 6px;">知识档案</div>
+              <button style="border: 1px solid #111; border-radius: 16px; background: transparent; padding: 5px 16px; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; color: #111; cursor: pointer;">+ Follow</button>
+            </div>
+          </div>
+
+          <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(17,17,17,0.08);">
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888; font-weight: 600;">View all recommendations →</span>
+          </div>
+        </div>
+
+        <!-- LinkedIn News style -->
+        <div style="background: #FAFAF8; border: 1px solid rgba(17,17,17,0.12); border-radius: 8px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="font-family: 'Space Grotesk', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #111;">What's new</div>
+            <span style="font-family: 'Inter', sans-serif; font-size: 9px; color: #888;">ⓘ</span>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <div style="font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 600; color: #111; line-height: 1.4;">算法时代，如何重新夺回思考主动权</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 9px; color: #888; margin-top: 3px; letter-spacing: 0.06em;">3 MIN READ · THRESHOLD NOTES</div>
+          </div>
+          <div style="margin-bottom: 12px;">
+            <div style="font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 600; color: #111; line-height: 1.4;">AI 个人成长 Widget 开发日志</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 9px; color: #888; margin-top: 3px; letter-spacing: 0.06em;">NEW · LAB</div>
+          </div>
+          <div>
+            <div style="font-family: 'Noto Serif SC', serif; font-size: 13px; font-weight: 600; color: #111; line-height: 1.4;">Obsidian 七层知识库架构拆解</div>
+            <div style="font-family: 'Inter', sans-serif; font-size: 9px; color: #888; margin-top: 3px; letter-spacing: 0.06em;">POPULAR · ARCHIVE</div>
+          </div>
+          <div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(17,17,17,0.08);">
+            <span style="font-family: 'Inter', sans-serif; font-size: 10px; color: #888; font-weight: 600;">Show more ↓</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>本次调整重点</h3>
+  <ul style="font-size: 14px; line-height: 1.8; color: #333;">
+    <li><strong>左侧 Profile 卡片</strong> — 加上领英标志性的 banner + 圆形头像 + stats + My items + Sections</li>
+    <li><strong>右侧推荐列表</strong> — "Add to your feed" + "What's new" 双卡片，每个推荐项都有头像、标题、副标题、Follow 按钮</li>
+    <li><strong>中间 Feed</strong> — 增加 "Start a post" 输入框，更像 LinkedIn 首页</li>
+    <li><strong>保留杂志风</strong> — 黑白配色、Playfair Display 标题、细边框、高对比</li>
+  </ul>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="yes" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content">
+      <h3>对，就是这个感觉</h3>
+      <p>开始实现</p>
+    </div>
+  </div>
+  <div class="option" data-choice="tweak" onclick="toggleSelect(this)">
+    <div class="letter">✎</div>
+    <div class="content">
+      <h3>还差一点</h3>
+      <p>告诉我改哪里</p>
+    </div>
+  </div>
+</div>

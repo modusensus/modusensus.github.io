@@ -3,378 +3,151 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
-const thresholdPosts = allPosts
-  .filter(p => p.data.module === 'threshold' || p.data.tag === '阈值笔记')
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const latestEssay = thresholdPosts[0];
+const sortedPosts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const labPosts = allPosts
-  .filter(p => p.data.module === 'lab' || p.data.tag === '项目日志')
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const latestLab = labPosts[0];
+const thresholdPosts = sortedPosts.filter(p => p.data.module === 'threshold');
+const labPosts = sortedPosts.filter(p => p.data.module === 'lab');
+const archivePosts = sortedPosts.filter(p => p.data.module === 'archive');
 
-const archivePosts = allPosts
-  .filter(p => !p.data.module || p.data.module === 'archive' || p.data.tag === '学习成长')
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
-const latestArchive = archivePosts[0];
+const latestPost = sortedPosts[0];
 
-const NEW_DAYS = 14;
-const isNew = (post) => post && (Date.now() - post.data.date.valueOf()) < NEW_DAYS * 86400000;
+const sectionColors: Record<string, string> = {
+  threshold: 'threshold-gradient',
+  lab: 'lab-gradient',
+  archive: 'archive-gradient',
+};
+
+const sectionNames: Record<string, string> = {
+  threshold: 'Threshold Notes',
+  lab: 'Modusensus Lab',
+  archive: 'Archive',
+};
+
+const sectionDesc: Record<string, string> = {
+  threshold: '数字思想杂志',
+  lab: 'AI experiments',
+  archive: '知识档案',
+};
+
+const sectionAbbr: Record<string, string> = {
+  threshold: 'TN',
+  lab: 'LB',
+  archive: 'AR',
+};
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
 ---
 
 <BaseLayout activeNav="home">
+  <div class="page-layout">
+    <!-- Left: Profile -->
+    <aside class="page-col-left">
+      <div class="card profile-card">
+        <div class="profile-banner" style="background-image: url('/images/profile-banner.jpg'); background-size: cover; background-position: center;"></div>
+        <div class="profile-avatar-wrap"><img src="/images/profile-avatar.jpg" alt="MODUSENSUS avatar" /></div>
+        <div style="padding: 0 16px 12px;">
+          <div class="profile-name">MODUSENSUS</div>
+          <div class="profile-headline">Independent Digital Studio</div>
+        </div>
+        <p class="profile-signature">关注城市、数据与创造力的交汇处，在这里记录学习的轨迹。</p>
+        <div class="card-divider"></div>
+        <div style="padding: 10px 16px; text-align: left;">
+          <div class="card-stat-row"><span>Articles</span><span>{allPosts.length}</span></div>
+          <div class="card-stat-row"><span>Projects</span><span>2</span></div>
+        </div>
+        <div class="card-divider"></div>
+        <div style="padding: 10px 16px; text-align: left;">
+          <div style="font-size: 10px; color: var(--ink); font-weight: 600; margin-bottom: 6px;">Sections</div>
+          <a href="/threshold-notes" class="card-list-item" style="display: block;">Threshold Notes</a>
+          <a href="/lab" class="card-list-item" style="display: block;">Modusensus Lab</a>
+          <a href="/archive" class="card-list-item" style="display: block;">Archive</a>
+          <a href="/colophon" class="card-list-item" style="display: block;">Colophon</a>
+        </div>
+      </div>
+    </aside>
 
-  <!-- ── Hero Banner ── -->
-  <section class="hero-banner">
-    <p class="hero-eyebrow entrance entrance-2">A Digital Studio</p>
-    <h1 class="hero-headline entrance entrance-2">
-      WAYS OF<br />THINKING
-    </h1>
-    <div class="hero-rule entrance entrance-3"><div class="rule-line"></div></div>
-    <p class="hero-subline entrance entrance-3">
-      Exploring ideas,<br />
-      technology,<br />
-      and human creativity.
-    </p>
-    <p class="hero-tip entrance entrance-4">SCROLL TO EXPLORE &darr;</p>
-  </section>
+    <!-- Main: Write + Feed -->
+    <section class="page-col-main">
+      <a href="/write" class="write-box">
+        <div class="write-avatar"><img src="/images/profile-avatar.jpg" alt="avatar" /></div>
+        <div class="write-input">Write a new article...</div>
+      </a>
 
-  <!-- ── Editorial Grid: 3 columns ── -->
-  <section class="editorial-grid reveal-stagger">
-
-    <!-- Column 1: Threshold Notes -->
-    <article class="grid-card">
-      {latestEssay && (
-        <a href={`/blog/${latestEssay.slug}`} class="card-link">
-          {latestEssay.data.cover ? (
-            <div class="card-image cover-img">
-              <img src={latestEssay.data.cover} alt={latestEssay.data.title} />
+      {sortedPosts.map((post, idx) => (
+        <article class="article-feed-card">
+          <a href={`/blog/${post.slug}`} style="display: block;">
+            <div class="article-feed-header">
+              <div class="feed-avatar">{sectionAbbr[post.data.module]}</div>
+              <div>
+                <div class="feed-meta-name">{sectionNames[post.data.module]}</div>
+                <div class="feed-meta-date">{formatDate(post.data.date)}</div>
+              </div>
             </div>
-          ) : (
-            <div class="card-image placeholder-img threshold-img"></div>
-          )}
-          <div class="card-body">
-            <div class="card-tag">
-              <span class="card-label">THRESHOLD NOTES</span>
-              {isNew(latestEssay) && <span class="new-badge">NEW</span>}
+            <div class="feed-body">
+              <h3 class="feed-title">{post.data.title}</h3>
+              <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
             </div>
-            <h3 class="card-title">{latestEssay.data.title}</h3>
-            <p class="card-desc">
-              {latestEssay.data.subtitle || latestEssay.data.excerpt || '数字思想杂志 — Essay / Humanity / Technology'}
-            </p>
+            {post.data.cover ? (
+              <img src={post.data.cover} alt={post.data.title} class="feed-cover" />
+            ) : (
+              <div class={`feed-cover-placeholder ${sectionColors[post.data.module]}`}></div>
+            )}
+            <div class="feed-footer">
+              <span class="feed-read-btn">→ Read</span>
+              <span class="feed-tag">#{post.data.module}</span>
+            </div>
+          </a>
+        </article>
+      ))}
+    </section>
+
+    <!-- Right: Explore + What's new -->
+    <aside class="page-col-right">
+      <div class="card card-padded">
+        <div class="card-label">Explore sections</div>
+        <div class="section-item">
+          <div class="section-avatar">TN</div>
+          <div>
+            <div class="section-name">Threshold Notes</div>
+            <div class="section-desc">数字思想杂志</div>
+            <a href="/threshold-notes"><button class="browse-btn">Browse →</button></a>
           </div>
-        </a>
-      )}
-    </article>
-
-    <!-- Column 2: Lab -->
-    <article class="grid-card">
-      {latestLab && (
-        <a href={`/blog/${latestLab.slug}`} class="card-link">
-          {latestLab.data.cover ? (
-            <div class="card-image cover-img">
-              <img src={latestLab.data.cover} alt={latestLab.data.title} />
-            </div>
-          ) : (
-            <div class="card-image placeholder-img lab-img"></div>
-          )}
-          <div class="card-body">
-            <div class="card-tag">
-              <span class="card-label">MODUSENSUS LAB</span>
-              {isNew(latestLab) && <span class="new-badge">NEW</span>}
-            </div>
-            <h3 class="card-title">{latestLab.data.title}</h3>
-            <p class="card-desc">
-              {latestLab.data.excerpt || 'AI experiments / tools / automation / systems'}
-            </p>
+        </div>
+        <div class="section-item">
+          <div class="section-avatar">LB</div>
+          <div>
+            <div class="section-name">Modusensus Lab</div>
+            <div class="section-desc">AI experiments</div>
+            <a href="/lab"><button class="browse-btn">Browse →</button></a>
           </div>
-        </a>
-      )}
-    </article>
-
-    <!-- Column 3: Archive -->
-    <article class="grid-card">
-      {latestArchive && (
-        <a href={`/blog/${latestArchive.slug}`} class="card-link">
-          {latestArchive.data.cover ? (
-            <div class="card-image cover-img">
-              <img src={latestArchive.data.cover} alt={latestArchive.data.title} />
-            </div>
-          ) : (
-            <div class="card-image placeholder-img archive-img"></div>
-          )}
-          <div class="card-body">
-            <div class="card-tag">
-              <span class="card-label">ARCHIVE</span>
-              {isNew(latestArchive) && <span class="new-badge">NEW</span>}
-            </div>
-            <h3 class="card-title">{latestArchive.data.title}</h3>
-            <p class="card-desc">
-              {latestArchive.data.excerpt || 'Reading / Research / Notes'}
-            </p>
+        </div>
+        <div class="section-item" style="margin-bottom: 0;">
+          <div class="section-avatar">AR</div>
+          <div>
+            <div class="section-name">Archive</div>
+            <div class="section-desc">知识档案</div>
+            <a href="/archive"><button class="browse-btn">Browse →</button></a>
           </div>
-        </a>
+        </div>
+      </div>
+
+      {latestPost && (
+        <div class="card card-padded">
+          <div class="card-label">What's new</div>
+          <div class="news-item">
+            <a href={`/blog/${latestPost.slug}`}>
+              <div class="news-title">{latestPost.data.title}</div>
+              <div class="news-meta">{formatDate(latestPost.data.date).toUpperCase()} · {sectionNames[latestPost.data.module].toUpperCase()}</div>
+            </a>
+          </div>
+        </div>
       )}
-    </article>
-
-  </section>
-
-  <!-- ── Section Links ── -->
-  <section class="section-links fade-in">
-    <a href="/threshold-notes" class="section-link">
-      <span class="section-link-label">THRESHOLD NOTES</span>
-      <span class="section-link-desc">数字思想杂志</span>
-    </a>
-    <a href="/lab" class="section-link">
-      <span class="section-link-label">MODUSENSUS LAB</span>
-      <span class="section-link-desc">实验室</span>
-    </a>
-    <a href="/archive" class="section-link">
-      <span class="section-link-label">ARCHIVE</span>
-      <span class="section-link-desc">知识档案</span>
-    </a>
-    <a href="/colophon" class="section-link">
-      <span class="section-link-label">COLOPHON</span>
-      <span class="section-link-desc">关于工作室</span>
-    </a>
-  </section>
-
+    </aside>
+  </div>
 </BaseLayout>
-
-<script is:inline>
-// ── Auto-scroll editorial grid (alternating direction) ──
-(function() {
-  function initAutoScroll() {
-    var grid = document.querySelector('.editorial-grid');
-    if (!grid) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    var dir = 1;
-    var paused = false;
-    var speed = 0.8;
-
-    setInterval(function() {
-      if (paused) return;
-      grid.scrollLeft += dir * speed;
-      var max = grid.scrollWidth - grid.clientWidth;
-      if (grid.scrollLeft >= max - 1) dir = -1;
-      else if (grid.scrollLeft <= 1) dir = 1;
-    }, 16);
-
-    grid.addEventListener('mouseenter', function() { paused = true; });
-    grid.addEventListener('mouseleave', function() { paused = false; });
-    grid.addEventListener('touchstart', function() { paused = true; }, { passive: true });
-    grid.addEventListener('touchend', function() { paused = false; });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initAutoScroll);
-  } else {
-    initAutoScroll();
-  }
-  document.addEventListener('astro:after-swap', initAutoScroll);
-})();
-</script>
-
-<style>
-/* ── Hero Banner ── */
-.hero-banner {
-  text-align: center;
-  padding: 3rem 2rem 2.5rem;
-  border-bottom: 1px solid var(--border);
-}
-.hero-eyebrow {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--dust);
-  margin-bottom: 0.5rem;
-}
-.hero-headline {
-  font-family: 'Playfair Display', 'Noto Serif SC', serif;
-  font-size: clamp(64px, 12vw, 120px);
-  font-weight: 700;
-  line-height: 0.9;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-  margin-bottom: 1.5rem;
-}
-.hero-rule {
-  display: flex;
-  justify-content: center;
-  margin: 1.5rem 0;
-}
-.hero-rule .rule-line {
-  width: 40px;
-  height: 2px;
-  background: var(--ink);
-}
-.hero-subline {
-  font-family: 'Playfair Display', 'Noto Serif SC', serif;
-  font-size: clamp(18px, 3vw, 26px);
-  font-weight: 400;
-  font-style: italic;
-  line-height: 1.5;
-  color: var(--ink);
-  margin-bottom: 2rem;
-}
-.hero-tip {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--dust);
-}
-
-/* ── Editorial Grid ── horizontal scroll ── */
-.editorial-grid {
-  display: flex;
-  gap: 0;
-  border-bottom: 1px solid var(--border);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-strong) transparent;
-}
-.editorial-grid::-webkit-scrollbar { height: 3px; }
-.editorial-grid::-webkit-scrollbar-track { background: transparent; }
-.editorial-grid::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
-.grid-card {
-  flex: 0 0 60%;
-  min-width: 340px;
-  max-width: 560px;
-  border-right: 1px solid var(--border);
-}
-.grid-card:last-child { border-right: none; }
-.card-link {
-  display: block;
-  padding: 1.5rem;
-  transition: background 0.2s;
-}
-.card-link:hover { background: rgba(17,17,17,0.02); }
-
-/* Placeholder images — colored blocks like the reference */
-.card-image {
-  width: 100%;
-  height: 180px;
-  margin-bottom: 1rem;
-  border-radius: 2px;
-  overflow: hidden;
-}
-.cover-img img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.threshold-img {
-  background: linear-gradient(135deg, #2a1f14 0%, #5c4a32 50%, #8a7355 100%);
-}
-.lab-img {
-  background: linear-gradient(135deg, #1a2a3a 0%, #3a5a7a 50%, #6a9aba 100%);
-}
-.archive-img {
-  background: linear-gradient(135deg, #3a3a2a 0%, #6a6a50 50%, #9a9a7a 100%);
-}
-
-.card-tag {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-.card-label {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink);
-}
-.new-badge {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: #C0392B;
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: 1px;
-}
-.card-title {
-  font-family: 'Playfair Display', 'Noto Serif SC', serif;
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.3;
-  color: var(--ink);
-  margin-bottom: 0.5rem;
-}
-.card-desc {
-  font-family: var(--font-body);
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--dust);
-}
-
-/* ── Section Links ── */
-.section-links {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  border-bottom: 1px solid var(--border);
-}
-.section-link {
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
-  border-right: 1px solid var(--border);
-  transition: background 0.2s;
-}
-.section-link:last-child { border-right: none; }
-.section-link:hover { background: rgba(17,17,17,0.02); }
-.section-link-label {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink);
-  margin-bottom: 0.25rem;
-}
-.section-link-desc {
-  font-family: var(--font-body);
-  font-size: 13px;
-  color: var(--dust);
-}
-
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .hero-banner { padding: 2rem 1.25rem 1.5rem; }
-  .grid-card {
-    flex: 0 0 280px;
-    max-width: 280px;
-  }
-  .section-links {
-    grid-template-columns: 1fr 1fr;
-  }
-  .section-link:nth-child(2) { border-right: none; }
-  .section-link:nth-child(1),
-  .section-link:nth-child(2) {
-    border-bottom: 1px solid var(--border);
-  }
-}
-
-@media (max-width: 480px) {
-  .section-links {
-    grid-template-columns: 1fr;
-  }
-  .section-link {
-    border-right: none;
-    border-bottom: 1px solid var(--border);
-  }
-  .section-link:last-child { border-bottom: none; }
-}
-</style>
