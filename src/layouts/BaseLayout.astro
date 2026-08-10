@@ -57,16 +57,26 @@ const navLinks = [
     </button>
   </nav>
 
-  <!-- ── Mobile menu ── -->
-  <div class="mobile-menu" id="mobile-menu">
-    {navLinks.map(link => (
-      <a
-        href={link.href}
-        class:list={['mobile-link', { active: activeNav === link.key }]}
-      >
-        {link.label}
-      </a>
-    ))}
+  <!-- ── Mobile menu (drawer) ── -->
+  <div class="mobile-overlay" id="mobile-overlay" hidden></div>
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <div class="mobile-menu-head">
+      <span class="mobile-menu-brand">MODUSENSUS</span>
+      <button class="mobile-close" id="mobile-close" aria-label="Close menu">
+        <span></span><span></span>
+      </button>
+    </div>
+    <nav class="mobile-menu-nav">
+      {navLinks.map(link => (
+        <a
+          href={link.href}
+          class:list={['mobile-link', { active: activeNav === link.key }]}
+        >
+          {link.label}
+        </a>
+      ))}
+    </nav>
+    <div class="mobile-menu-foot">&copy; 2026 MODUSENSUS</div>
   </div>
 
   <!-- ── Page content ── -->
@@ -144,24 +154,121 @@ const navLinks = [
   background: var(--ink);
 }
 
-/* ── Mobile menu ── */
+/* ── Mobile menu (drawer) ── */
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 17, 17, 0.35);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.mobile-overlay.open { opacity: 1; }
+
 .mobile-menu {
-  display: none;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(78vw, 300px);
+  background: var(--paper);
+  border-left: 1px solid var(--border);
+  z-index: 1001;
+  display: flex;
   flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  visibility: hidden;
+}
+.mobile-menu.open {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.mobile-menu-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
   border-bottom: 1px solid var(--border);
 }
-.mobile-menu.open { display: flex; }
+.mobile-menu-brand {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink);
+}
+.mobile-close {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 6px;
+  cursor: pointer;
+}
+.mobile-close span {
+  display: block;
+  width: 18px;
+  height: 1.5px;
+  background: var(--ink);
+}
+.mobile-close span:first-child { transform: rotate(45deg) translate(2px, 2px); }
+.mobile-close span:last-child  { transform: rotate(-45deg) translate(2px, -2px); }
+
+.mobile-menu-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  overflow-y: auto;
+}
 .mobile-link {
   font-family: var(--font-ui);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 1rem 2rem;
+  padding: 15px 20px;
   border-bottom: 1px solid var(--border);
   color: var(--dust);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: color 0.15s, background 0.15s;
 }
-.mobile-link.active { color: var(--ink); }
+.mobile-link::after {
+  content: '→';
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.mobile-link.active {
+  color: var(--ink);
+  font-weight: 700;
+}
+.mobile-link.active::after {
+  opacity: 1;
+}
+.mobile-link:active {
+  color: var(--ink);
+  background: var(--accent-bg);
+}
+
+.mobile-menu-foot {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--dust);
+}
+
+@media (min-width: 769px) {
+  .mobile-overlay,
+  .mobile-menu { display: none; }
+}
 
 /* ── Footer ── */
 .footer {
@@ -195,11 +302,44 @@ const navLinks = [
 </style>
 
 <script>
-// ── Mobile menu toggle ──
+// ── Mobile menu (drawer) toggle ──
 function initMenu() {
-  const toggle = document.getElementById('menu-toggle');
-  const menu   = document.getElementById('mobile-menu');
-  toggle?.addEventListener('click', () => menu?.classList.toggle('open'));
+  const toggle  = document.getElementById('menu-toggle');
+  const menu    = document.getElementById('mobile-menu');
+  const overlay = document.getElementById('mobile-overlay');
+  const close   = document.getElementById('mobile-close');
+  if (!toggle || !menu || !overlay || !close) return;
+
+  const open = () => {
+    menu.classList.add('open');
+    menu.setAttribute('aria-hidden', 'false');
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add('open'));
+    document.body.style.overflow = 'hidden';
+  };
+  const closeMenu = () => {
+    menu.classList.remove('open');
+    menu.setAttribute('aria-hidden', 'true');
+    overlay.classList.remove('open');
+    document.body.style.overflow = '';
+    // 等淡出动画结束后再隐藏遮罩，避免透明层拦截点击
+    setTimeout(() => {
+      if (!overlay.classList.contains('open')) overlay.hidden = true;
+    }, 300);
+  };
+
+  toggle.addEventListener('click', () => {
+    if (menu.classList.contains('open')) closeMenu();
+    else open();
+  });
+  close.addEventListener('click', closeMenu);
+  overlay.addEventListener('click', closeMenu);
+  // 点击链接后自动收起
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+  // Escape 键关闭
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeMenu();
+  });
 }
 
 // ── Scroll reveal observer (fade-in + reveal + reveal-stagger) ──

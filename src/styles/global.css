@@ -1032,3 +1032,82 @@ img { max-width: 100%; display: block; }
 .lab-gradient       { background: linear-gradient(135deg, #1a2a3a 0%, #3a5a7a 50%, #6a9aba 100%); }
 .archive-gradient   { background: linear-gradient(135deg, #3a3a2a 0%, #6a6a50 50%, #9a9a7a 100%); }
 
+/* ═══════════════════════════════════════════════════════════════
+   Mobile UI Adaptation — magazine editorial, LinkedIn stack
+   ═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1023px) {
+  /* 三栏塌缩后按 左→中→右 顺序排列，阅读页正文优先保证 */
+  .page-layout { gap: 16px; margin: 16px auto 48px; }
+
+  /* 页头收紧 */
+  .page-header { padding: 28px 20px 18px; }
+  .page-header-title { font-size: clamp(28px, 6vw, 34px); }
+
+  /* 文章详情内边距收紧 */
+  .article-detail { padding: 28px 22px; }
+  .article-detail-title { font-size: clamp(24px, 5.5vw, 32px); line-height: 1.25; }
+
+  /* 项目网格单列 */
+  .project-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  /* 卡片间距紧凑 */
+  .article-feed-card { margin-bottom: 10px; }
+
+  /* 编辑台工具按钮加大点击区域（触屏友好） */
+  .tool-btn { min-width: 36px; height: 36px; }
+  .set-row label { font-size: 13px; gap: 6px; padding: 4px 0; }
+}
+
+@media (max-width: 640px) {
+  /* 正文图片：移动端取消左浮动，改为全宽 */
+  .prose img {
+    float: none;
+    width: 100%;
+    margin: 1.2rem 0;
+    shape-outside: none;
+  }
+
+  /* 文章封面图降低高度，避免占屏过多 */
+  .feed-cover,
+  .feed-cover-placeholder { height: 180px; }
+
+  /* 卡片标题缩小 */
+  .feed-title { font-size: 19px; }
+
+  /* 统计行与列表项字号微调 */
+  .card-stat-row { font-size: 11px; }
+  .card-list-item { font-size: 12px; }
+
+  /* 列表卡片封面缩小 */
+  .list-card-cover { width: 80px; height: 60px; margin-right: 10px; }
+
+  /* 编辑台：标题与正文输入字号适配触屏 */
+  .post-title { font-size: 24px; }
+  .post-body { font-size: 16px; }
+  .editor-toolbar { gap: 0.5rem; }
+  .editor-brand { display: none; }
+  .tool-preview-toggle { padding: 6px 10px; }
+
+  /* 发布栏堆叠 */
+  .editor-publishbar { flex-direction: column; align-items: stretch; }
+  .publish-actions { flex-direction: column; align-items: stretch; }
+  .publish-btn { width: 100%; padding: 12px 22px; }
+
+  /* 认证卡内边距收紧 */
+  .auth-card { padding: 2rem 1.5rem; }
+
+  /* 订阅表单输入字号提升，便于触屏 */
+  .prose table { font-size: 13px; }
+}
+
+/* 触屏设备禁用 hover 悬浮态，避免点击时卡片跳动 */
+@media (hover: none) {
+  .article-feed-card:hover,
+  .project-card:hover,
+  .card-link:hover .cover-img img {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
