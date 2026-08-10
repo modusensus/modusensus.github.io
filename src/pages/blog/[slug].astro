@@ -66,6 +66,16 @@ function formatDate(date: Date) {
           {formatDate(post.data.date)}
           {post.data.readingTime && ` · ${post.data.readingTime} min read`}
         </div>
+        <div class="article-meta-bar">
+          <span class="meta-view">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <span id="busuanzi_value_page_pv">0</span> views
+          </span>
+          <button id="like-btn" class="like-btn" type="button" data-slug={post.slug}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+            <span id="like-count">0</span>
+          </button>
+        </div>
         {post.data.cover && (
           <img src={post.data.cover} alt={post.data.title} class="article-detail-cover" />
         )}
@@ -92,3 +102,29 @@ function formatDate(date: Date) {
     </aside>
   </div>
 </BaseLayout>
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<script>
+  // 点赞：localStorage 本地记录
+  const likeBtn = document.getElementById('like-btn');
+  if (likeBtn) {
+    const slug = likeBtn.dataset.slug;
+    const key = 'modusensus_like_' + slug;
+    let state = JSON.parse(localStorage.getItem(key) || '{"liked":false,"count":0}');
+    const countEl = document.getElementById('like-count');
+
+    const render = () => {
+      countEl.textContent = state.count;
+      likeBtn.classList.toggle('liked', state.liked);
+    };
+
+    likeBtn.addEventListener('click', () => {
+      state.liked = !state.liked;
+      state.count += state.liked ? 1 : -1;
+      localStorage.setItem(key, JSON.stringify(state));
+      render();
+    });
+
+    render();
+  }
+</script>
