@@ -509,6 +509,32 @@ img { max-width: 100%; display: block; }
   filter: none;
 }
 
+/* ── Article Prose — Screenshot figures (full-width, centered with caption) ── */
+.prose figure.screenshot {
+  margin: 2.2rem 0;
+  text-align: center;
+}
+.prose figure.screenshot img {
+  float: none;
+  width: 100%;
+  max-width: 760px;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  filter: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.prose figure.screenshot figcaption {
+  margin-top: 0.6rem;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dust);
+}
+
 /* ── Article Prose — Reading Archive sidebar ── */
 .prose .reading-archive {
   margin-top: 3rem;
