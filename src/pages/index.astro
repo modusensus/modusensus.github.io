@@ -81,11 +81,13 @@ function formatDate(date: Date) {
               <span class="timeline-num">{String(sortedPosts.length - idx).padStart(2, '0')}</span>
             </div>
             <article class="timeline-body">
-              <div class="timeline-meta">
-                <span class={`tag tag-${post.data.module}`}>{sectionNames[post.data.module]}</span>
-                <span class="timeline-date">{formatDate(post.data.date)}</span>
+              <div class="timeline-header">
+                <div class="timeline-meta">
+                  <span class={`tag tag-${post.data.module}`}>{sectionNames[post.data.module]}</span>
+                  <span class="timeline-date">{formatDate(post.data.date)}</span>
+                </div>
+                <h3 class="feed-title">{post.data.title}</h3>
               </div>
-              <h3 class="feed-title">{post.data.title}</h3>
               <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
               {post.data.cover ? (
                 <img src={post.data.cover} alt={post.data.title} class="timeline-cover" />
@@ -245,6 +247,7 @@ function formatDate(date: Date) {
 
 /* 标题描边：入场一次性扫入 */
 .timeline-card .feed-title {
+  position: relative;
   animation: none;
 }
 .timeline-card.reveal.visible .feed-title {
@@ -254,11 +257,25 @@ function formatDate(date: Date) {
   from { background-size: 0% 2px; }
   to   { background-size: 100% 2px; }
 }
+/* 选中（hover）标题下划线浮现动效 */
+.timeline-card .feed-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 1px;
+  background: var(--ink);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.timeline-card:hover .feed-title::after {
+  width: 100%;
+}
 
 /* 右侧卡片 */
 .timeline-body {
   position: relative;
-  background: #FFFFFF;
+  background: var(--paper);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 18px 20px;
@@ -278,6 +295,54 @@ function formatDate(date: Date) {
   transform: translateY(-2px) scale(1.01);
   box-shadow: 0 6px 18px rgba(26, 26, 26, 0.08);
   border-color: var(--ink);
+}
+
+/*  红色小票裁剪风格头部（四角内凹弧 + 亮红 + 宽边距） ─ */
+.timeline-header {
+  position: relative;
+  background: #a42d15ff;          /* ← 红色深浅，改这个调颜色 */
+  color: #FFFFFF;
+  padding: 20px 25px 25px;      /* ← 上 左右 下 内边距，改这个调内容离边缘的距离 */
+  margin: -12px -12px 12px;     /* ← 上 左右 下 外边距，负值让 header 撑满卡片宽度 */
+  /* 矩形主体 + 四角各挖一个圆形凹陷孔（r 是圆半径，改大=孔更大） */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cmask id='m'%3E%3Crect width='200' height='100' fill='white'/%3E%3Ccircle cx='0' cy='0' r='14' fill='black'/%3E%3Ccircle cx='200' cy='0' r='14' fill='black'/%3E%3Ccircle cx='0' cy='100' r='14' fill='black'/%3E%3Ccircle cx='200' cy='100' r='14' fill='black'/%3E%3C/mask%3E%3Crect width='200' height='100' fill='white' mask='url(%23m)'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cmask id='m'%3E%3Crect width='200' height='100' fill='white'/%3E%3Ccircle cx='0' cy='0' r='14' fill='black'/%3E%3Ccircle cx='200' cy='0' r='14' fill='black'/%3E%3Ccircle cx='0' cy='100' r='14' fill='black'/%3E%3Ccircle cx='200' cy='100' r='14' fill='black'/%3E%3C/mask%3E%3Crect width='200' height='100' fill='white' mask='url(%23m)'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+/* 底部穿孔虚线 */
+.timeline-header::after {
+  content: '';
+  position: absolute;
+  bottom: 6px;                  /* ← 虚线离底部的距离 */
+  left: 12px;                   /* ← 虚线左边距 */
+  right: 12px;                  /* ← 虚线右边距 */
+  height: 2px;                  /* ← 虚线粗细 */
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255,255,255,0.35) 0px, /* ← 虚线颜色/透明度 */
+    rgba(255,255,255,0.35) 4px, /* ← 实线段长度 */
+    transparent 4px,
+    transparent 8px             /* ← 虚线间距（8-4=4px 空隙） */
+  );
+}
+
+.timeline-header .timeline-meta {
+  margin-bottom: 8px;
+}
+.timeline-header .tag {
+  background: rgba(255,255,255,0.2);
+  color: #FFFFFF;
+}
+.timeline-header .timeline-date {
+  color: rgba(255,255,255,0.8);
+}
+.timeline-header .feed-title {
+  color: #FFFFFF;
+  margin: 0;
+}
+.timeline-header .feed-title::after {
+  display: none;
 }
 
 .timeline-meta {
