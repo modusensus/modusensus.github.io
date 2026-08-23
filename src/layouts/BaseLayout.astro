@@ -6,12 +6,15 @@ interface Props {
   title?: string;
   description?: string;
   activeNav?: 'home' | 'threshold' | 'lab' | 'archive' | 'colophon';
+  /* 是否显示常驻粒子 hero（仅首页开启，避免进入文章时重播） */
+  showHero?: boolean;
 }
 
 const {
   title = 'MODUSENSUS',
   description = 'Exploring ideas, technology and human creativity.',
   activeNav = 'home',
+  showHero = false,
 } = Astro.props;
 
 const navLinks = [
@@ -37,13 +40,15 @@ const navLinks = [
 </head>
 <body>
 
-  <!-- ── Intro hero (persistent, particles follow mouse) ── -->
-  <section class="intro-hero" id="intro-hero">
-    <canvas class="intro-canvas" id="intro-canvas" aria-hidden="true"></canvas>
-    <div class="intro-inner">
-      <div class="intro-tagline">Independent&nbsp;Digital&nbsp;Studio</div>
-    </div>
-  </section>
+  <!-- ── Intro hero (仅首页常驻，粒子跟随鼠标) ── -->
+  {showHero && (
+    <section class="intro-hero" id="intro-hero">
+      <canvas class="intro-canvas" id="intro-canvas" aria-hidden="true"></canvas>
+      <div class="intro-inner">
+        <div class="intro-tagline">Independent&nbsp;Digital&nbsp;Studio</div>
+      </div>
+    </section>
+  )}
 
   <!-- ── Reading progress bar (article pages) ── -->
   <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
@@ -421,6 +426,7 @@ function initIntro() {
   const ink = (getComputedStyle(document.documentElement).getPropertyValue('--ink') || '#111').trim();
   const particles = [];
   let W = 0, H = 0, DPR = 1, raf = null, t0 = 0;
+  // 鼠标位置（像素坐标），用作波纹波源
   let mx = 0, my = 0;
 
   function resize() {
@@ -485,13 +491,23 @@ function initIntro() {
       const settle = Math.min(1, t * 2);
       const dx = Math.sin(p.drift) * settle * 2.6;
       const dy = Math.cos(p.drift * 0.7) * settle * 2.6;
-      // 鼠标引力偏移
-      const mouseInfluence = 30;
-      const mdx = mx * mouseInfluence;
-      const mdy = my * mouseInfluence;
+      // 波纹聚散：以鼠标为波源，粒子沿径向随距离衰减地前后推移
+      const rx = p.tx - mx;
+      const ry = p.ty - my;
+      const dist = Math.max(1, Math.hypot(rx, ry));
+      // 相位随时间推进，形成由内向外扩散的水波
+      const phase = (now / 1000) * 2.4 - dist * 0.035;
+      // 振幅随距离衰减（越靠近鼠标波动越强）
+      const amp = 26 * Math.exp(-dist / 380) * settle;
+      const wob = Math.sin(phase) * amp;
+      // 沿径向方向的偏移（正=远离鼠标，负=靠近鼠标），形成聚散
+      const nx = rx / dist;
+      const ny = ry / dist;
+      const wx = nx * wob;
+      const wy = ny * wob;
       ctx.globalAlpha = Math.min(1, t * 4);
       ctx.beginPath();
-      ctx.arc(p.x + dx + mdx, p.y + dy + mdy, p.size, 0, Math.PI * 2);
+      ctx.arc(p.x + dx + wx, p.y + dy + wy, p.size, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
@@ -517,20 +533,19 @@ function initIntro() {
     console.warn('Intro particle init failed:', err);
   }
 
-  // 鼠标跟随
-  hero.addEventListener('mousemove', (e) => {
+  // 鼠标跟随（记录 hero 内的像素坐标作为波纹波源）
+  function onMove(cx, cy) {
     const r = hero.getBoundingClientRect();
-    mx = ((e.clientX - r.left) / r.width) * 2 - 1;
-    my = ((e.clientY - r.top) / r.height) * 2 - 1;
-  });
-  hero.addEventListener('mouseleave', () => { mx = 0; my = 0; });
+    mx = cx - r.left;
+    my = cy - r.top;
+  }
+  hero.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+  hero.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
   hero.addEventListener('touchmove', (e) => {
-    const touch = e.touches[0];
-    const r = hero.getBoundingClientRect();
-    mx = ((touch.clientX - r.left) / r.width) * 2 - 1;
-    my = ((touch.clientY - r.top) / r.height) * 2 - 1;
+    const t = e.touches[0];
+    if (t) onMove(t.clientX, t.clientY);
   }, { passive: true });
-  hero.addEventListener('touchend', () => { mx = 0; my = 0; });
+  hero.addEventListener('touchend', () => { mx = -9999; my = -9999; });
 }
 
 // ── Initialize on load + View Transitions ──
