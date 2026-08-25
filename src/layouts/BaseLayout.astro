@@ -40,13 +40,19 @@ const navLinks = [
 </head>
 <body>
 
-  <!-- ── Intro hero (仅首页常驻，粒子跟随鼠标) ── -->
+  <!-- ── Intro hero（仅首页常驻，GSAP 开场 + 顶部粒子波浪） ── -->
   {showHero && (
     <section class="intro-hero" id="intro-hero">
-      <canvas class="intro-canvas" id="intro-canvas" aria-hidden="true"></canvas>
-      <div class="intro-inner">
-        <div class="intro-tagline">Independent&nbsp;Digital&nbsp;Studio</div>
+      <canvas class="wave-canvas wave-canvas-top" id="hero-wave-top" aria-hidden="true"></canvas>
+      <div class="intro-stage" id="intro-stage">
+        <div class="intro-dot" id="intro-dot" aria-hidden="true"></div>
+        <h1 class="intro-word" id="intro-word" aria-label="MODUSENSUS">
+          {Array.from('MODUSENSUS').map((ch, i) => (
+            <span class="intro-letter" key={i}>{ch}</span>
+          ))}
+        </h1>
       </div>
+      <div class="intro-tagline">Independent&nbsp;Digital&nbsp;Studio</div>
     </section>
   )}
 
@@ -99,6 +105,7 @@ const navLinks = [
 
   <!-- ── Footer ── -->
   <footer class="footer">
+    <canvas class="wave-canvas wave-canvas-bottom" id="footer-wave-bottom" aria-hidden="true"></canvas>
     <div class="footer-inner">
       <span class="footer-copy">&copy; 2026 MODUSENSUS &middot; Independent Digital Studio</span>
     </div>
@@ -315,6 +322,8 @@ const navLinks = [
 </style>
 
 <script>
+import gsap from 'gsap';
+
 // ── Mobile menu (drawer) toggle ──
 function initMenu() {
   const toggle  = document.getElementById('menu-toggle');
@@ -415,142 +424,90 @@ function initParallax() {
   update();
 }
 
-// ── Intro hero — persistent particle text, mouse-following ──
+// ── Intro hero — GSAP 开场动画：圆点滚入 → 撞空气墙 → 向右展成线 → 向上展成字 ──
 function initIntro() {
   const hero = document.getElementById('intro-hero');
-  const canvas = document.getElementById('intro-canvas');
-  if (!hero || !canvas) return;
+  const dot = document.getElementById('intro-dot');
+  const word = document.getElementById('intro-word');
+  if (!hero || !dot || !word) return;
 
-  const ctx = canvas.getContext('2d');
-  const TEXT = 'MODUSENSUS';
-  const ink = (getComputedStyle(document.documentElement).getPropertyValue('--ink') || '#111').trim();
-  const particles = [];
-  let W = 0, H = 0, DPR = 1, raf = null, t0 = 0;
-  // 鼠标位置（像素坐标），用作波纹波源
-  let mx = 0, my = 0;
+  const tagline = hero.querySelector('.intro-tagline');
+  const letters = Array.from(word.querySelectorAll('.intro-letter'));
 
-  function resize() {
-    const r = hero.getBoundingClientRect();
-    W = r.width; H = r.height;
-    DPR = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(W * DPR);
-    canvas.height = Math.round(H * DPR);
-    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // 尊重系统“减少动态效果”设置：直接显示完整标题，跳过动画
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    letters.forEach(l => { l.style.opacity = 1; });
+    dot.style.opacity = 0;
+    tagline.style.opacity = 1;
+    return;
   }
 
-  function buildTargets() {
-    particles.length = 0;
-    const off = document.createElement('canvas');
-    const octx = off.getContext('2d');
-    const fs = Math.max(28, Math.min(W * 0.11, H * 0.26));
-    octx.font = `700 ${fs}px 'Playfair Display', 'Noto Serif SC', serif`;
-    const padX = fs * 0.18;
-    const padY = fs * 0.3;
-    const oW = Math.max(1, Math.ceil(octx.measureText(TEXT).width + padX * 2));
-    const oH = Math.max(1, Math.ceil(fs + padY * 2));
-    off.width = oW;
-    off.height = oH;
-    octx.fillStyle = '#000';
-    octx.font = `700 ${fs}px 'Playfair Display', 'Noto Serif SC', serif`;
-    octx.textAlign = 'center';
-    octx.textBaseline = 'middle';
-    octx.fillText(TEXT, oW / 2, oH / 2);
+  // 字母初始堆叠在舞台中心，动画时从中心线向上“生长”到各自自然位置
+  gsap.set(letters, { y: 42, opacity: 0, scale: 0.55 });
 
-    const step = Math.max(4, Math.round(fs / 35));
-    const tx = (W - off.width) / 2;
-    const ty = H * 0.42 - off.height / 2;
-    const img = octx.getImageData(0, 0, off.width, off.height).data;
-    for (let y = 0; y < off.height; y += step) {
-      for (let x = 0; x < off.width; x += step) {
-        const i = (y * off.width + x) * 4;
-        if (img[i + 3] > 128) {
-          particles.push({
-            x: tx + x + (Math.random() - 0.5) * W * 0.7,
-            y: ty + y + (Math.random() - 0.5) * H * 0.7,
-            tx: tx + x,
-            ty: ty + y,
-            size: Math.random() * 1.2 + 0.6,
-            drift: Math.random() * Math.PI * 2,
-            delay: Math.random() * 0.7,
-          });
-        }
-      }
-    }
-  }
+  // 圆点初始在屏幕右侧外
+  gsap.set(dot, { x: window.innerWidth * 0.55, scale: 0, rotation: 0, borderRadius: '50%' });
 
-  function frame(now) {
-    const dt = (now - t0) / 1000;
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = ink;
-    for (const p of particles) {
-      const t = Math.max(0, dt - p.delay);
-      const k = 1 - Math.exp(-t * 3.2);
-      p.x += (p.tx - p.x) * k;
-      p.y += (p.ty - p.y) * k;
-      p.drift += 0.035;
-      const settle = Math.min(1, t * 2);
-      const dx = Math.sin(p.drift) * settle * 2.6;
-      const dy = Math.cos(p.drift * 0.7) * settle * 2.6;
-      // 波纹聚散：以鼠标为波源，粒子沿径向随距离衰减地前后推移
-      const rx = p.tx - mx;
-      const ry = p.ty - my;
-      const dist = Math.max(1, Math.hypot(rx, ry));
-      // 相位随时间推进，形成由内向外扩散的水波
-      const phase = (now / 1000) * 2.4 - dist * 0.035;
-      // 振幅随距离衰减（越靠近鼠标波动越强）
-      const amp = 26 * Math.exp(-dist / 380) * settle;
-      const wob = Math.sin(phase) * amp;
-      // 沿径向方向的偏移（正=远离鼠标，负=靠近鼠标），形成聚散
-      const nx = rx / dist;
-      const ny = ry / dist;
-      const wx = nx * wob;
-      const wy = ny * wob;
-      ctx.globalAlpha = Math.min(1, t * 4);
-      ctx.beginPath();
-      ctx.arc(p.x + dx + wx, p.y + dy + wy, p.size, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.globalAlpha = 1;
-    raf = requestAnimationFrame(frame);
-  }
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
-  function start() {
-    resize();
-    buildTargets();
-    t0 = performance.now();
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(frame);
-  }
+  // 1) 圆点从右侧屏幕外滚入，撞向左侧空气墙
+  tl.to(dot, {
+    x: -window.innerWidth * 0.22,
+    scale: 1,
+    rotation: -720,
+    duration: 1.15,
+    ease: 'power2.inOut'
+  });
 
-  try {
-    resize();
-    buildTargets();
-    t0 = performance.now();
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(frame);
-    window.addEventListener('resize', start);
-  } catch (err) {
-    console.warn('Intro particle init failed:', err);
-  }
+  // 2) 撞墙挤压
+  tl.to(dot, {
+    x: -window.innerWidth * 0.26,
+    scaleX: 0.6,
+    scaleY: 1.35,
+    rotation: 0,
+    duration: 0.16,
+    ease: 'power2.in'
+  });
 
-  // 鼠标跟随（记录 hero 内的像素坐标作为波纹波源）
-  function onMove(cx, cy) {
-    const r = hero.getBoundingClientRect();
-    mx = cx - r.left;
-    my = cy - r.top;
-  }
-  hero.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
-  hero.addEventListener('mouseleave', () => { mx = -9999; my = -9999; });
-  hero.addEventListener('touchmove', (e) => {
-    const t = e.touches[0];
-    if (t) onMove(t.clientX, t.clientY);
-  }, { passive: true });
-  hero.addEventListener('touchend', () => { mx = -9999; my = -9999; });
+  // 3) 反弹并向右拉伸成水平黑线
+  tl.to(dot, {
+    x: 0,
+    scaleX: 30,
+    scaleY: 0.05,
+    borderRadius: '2px',
+    duration: 0.7,
+    ease: 'power3.inOut'
+  });
+
+  // 4) 黑线向上收束消失，同时字母从中心线向上绽放成字
+  tl.to(dot, {
+    scaleY: 0,
+    opacity: 0,
+    duration: 0.35,
+    ease: 'power2.in'
+  }, '+=0.08');
+
+  tl.fromTo(
+    letters,
+    { y: 42, opacity: 0, scale: 0.55 },
+    {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      duration: 0.85,
+      stagger: { each: 0.05, from: 'center' },
+      ease: 'elastic.out(1, 0.75)'
+    },
+    '-=0.15'
+  );
+
+  // 5) 标语淡入
+  tl.fromTo(tagline, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.35');
 }
 
 // ── Initialize on load + View Transitions ──
 function initAll() {
-  initIntro();   // 常驻 Hero 粒子动画，鼠标跟随（seen-intro 已标记，会直接 remove）
+  initIntro();   // 常驻 Hero 开场动画（黑点 → 黑线 → 文字）
   initMenu();
   initReveal();
   initReadingProgress();

@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionGrid from '../components/SectionGrid.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -42,6 +43,17 @@ function formatDate(date: Date) {
     day: 'numeric',
   });
 }
+
+// ── 右侧栏日历卡片：构建时按当月生成 ──
+const calNow = new Date();
+const calYear = calNow.getFullYear();
+const calMonth = calNow.toLocaleDateString('en-US', { month: 'long' });
+const calFirstDow = new Date(calYear, calNow.getMonth(), 1).getDay();
+const calDays = new Date(calYear, calNow.getMonth() + 1, 0).getDate();
+const calToday = calNow.getDate();
+const calWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+const calEmpty = Array.from({ length: calFirstDow });
+const calDayCells = Array.from({ length: calDays }, (_, i) => i + 1);
 ---
 
 <BaseLayout activeNav="home" showHero>
@@ -49,11 +61,21 @@ function formatDate(date: Date) {
     <!-- Left: Profile -->
     <aside class="page-col-left">
       <div class="card profile-card">
-        <div class="profile-banner" style="background-image: url('/images/profile-banner.jpg'); background-size: cover; background-position: center;"></div>
         <div class="profile-avatar-wrap"><img src="/images/profile-avatar.gif" alt="MODUSENSUS avatar" /></div>
-        <div style="padding: 0 16px 12px;">
+        <div style="padding: 0 16px 4px;">
           <div class="profile-name"><span class="typewriter-text" aria-live="polite"></span><span class="blink-caret" aria-hidden="true"></span></div>
           <div class="profile-headline">Independent Digital Studio</div>
+        </div>
+        <div class="profile-links">
+          <a href="https://github.com/modusensus" class="profile-link" title="GitHub" aria-label="GitHub">
+            <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          </a>
+          <a href="mailto:hello@modusensus.com" class="profile-link" title="Email" aria-label="Email">
+            <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><path d="M2 4l6 5 6-5"/></svg>
+          </a>
+          <a href="/rss.xml" class="profile-link" title="RSS" aria-label="RSS">
+            <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M2 13.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/><path d="M2 8a6 6 0 016 6H6a4 4 0 00-4-4V8z"/><path d="M2 2a12 12 0 0112 12h-2a10 10 0 00-10-10V2z"/></svg>
+          </a>
         </div>
         <p class="profile-signature">关注城市、数据与创造力的交汇处，在这里记录学习的轨迹。</p>
         <div class="card-divider"></div>
@@ -76,27 +98,29 @@ function formatDate(date: Date) {
     <section class="page-col-main">
       <div class="timeline">
         {sortedPosts.map((post, idx) => (
-          <a href={`/blog/${post.slug}`} class="timeline-card reveal">
+          <a href={`/blog/${post.slug}`} class="timeline-card">
             <div class="timeline-rail">
               <span class="timeline-num">{String(sortedPosts.length - idx).padStart(2, '0')}</span>
             </div>
             <article class="timeline-body">
-              <div class="timeline-header">
+              <div class="timeline-cover-wrap">
+                {post.data.cover ? (
+                  <img src={post.data.cover} alt={post.data.title} class="timeline-cover" />
+                ) : (
+                  <div class={`timeline-cover timeline-placeholder ${sectionColors[post.data.module]}`}></div>
+                )}
+              </div>
+              <div class="timeline-content">
                 <div class="timeline-meta">
                   <span class={`tag tag-${post.data.module}`}>{sectionNames[post.data.module]}</span>
                   <span class="timeline-date">{formatDate(post.data.date)}</span>
                 </div>
                 <h3 class="feed-title">{post.data.title}</h3>
-              </div>
-              <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
-              {post.data.cover ? (
-                <img src={post.data.cover} alt={post.data.title} class="timeline-cover" />
-              ) : (
-                <div class={`timeline-cover timeline-placeholder ${sectionColors[post.data.module]}`}></div>
-              )}
-              <div class="timeline-foot">
-                <span class="feed-read-btn">→ Read</span>
-                <span class="feed-tag">#{post.data.module}</span>
+                <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
+                <div class="timeline-foot">
+                  <span class="feed-read-btn">→ Read</span>
+                  <span class="feed-tag">#{post.data.module}</span>
+                </div>
               </div>
             </article>
           </a>
@@ -104,35 +128,9 @@ function formatDate(date: Date) {
       </div>
     </section>
 
-    <!-- Right: Explore + What's new -->
+    <!-- Right: Explore + What's new + Calendar -->
     <aside class="page-col-right">
-      <div class="card card-padded">
-        <div class="card-label">Explore sections</div>
-        <div class="section-item">
-          <div class="section-avatar">TN</div>
-          <div>
-            <div class="section-name">Threshold Notes</div>
-            <div class="section-desc">数字思想杂志</div>
-            <a href="/threshold-notes"><button class="browse-btn">Browse →</button></a>
-          </div>
-        </div>
-        <div class="section-item">
-          <div class="section-avatar">LB</div>
-          <div>
-            <div class="section-name">Modusensus Lab</div>
-            <div class="section-desc">AI experiments</div>
-            <a href="/lab"><button class="browse-btn">Browse →</button></a>
-          </div>
-        </div>
-        <div class="section-item" style="margin-bottom: 0;">
-          <div class="section-avatar">AR</div>
-          <div>
-            <div class="section-name">Archive</div>
-            <div class="section-desc">知识档案</div>
-            <a href="/archive"><button class="browse-btn">Browse →</button></a>
-          </div>
-        </div>
-      </div>
+      <SectionGrid />
 
       {latestPost && (
         <div class="card card-padded">
@@ -145,12 +143,27 @@ function formatDate(date: Date) {
           </div>
         </div>
       )}
+
+      <div class="card card-padded calendar-card">
+        <div class="card-label">Calendar</div>
+        <div class="cal-head">
+          <span class="cal-month">{calMonth}</span>
+          <span class="cal-year">{calYear}</span>
+        </div>
+        <div class="cal-grid">
+          {calWeek.map(d => <span class="cal-dow">{d}</span>)}
+          {calEmpty.map(() => <span class="cal-empty"></span>)}
+          {calDayCells.map(d => (
+            <span class:list={['cal-day', { 'cal-today': d === calToday }]}>{d}</span>
+          ))}
+        </div>
+      </div>
     </aside>
   </div>
 </BaseLayout>
 
 <style>
-/* ── Timeline: 时间轴 + 卡片 ── */
+/* ── Timeline: 时间轴 + 卡片（封面在左、文字在右） ── */
 .timeline {
   position: relative;
   display: flex;
@@ -192,13 +205,12 @@ function formatDate(date: Date) {
   display: grid;
   grid-template-columns: 54px 1fr;
   gap: 16px;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
   text-decoration: none;
   color: inherit;
 }
 .timeline-card:last-child { margin-bottom: 0; }
 
-/* 滚动浮现 */
 /* 左侧序号节点列 */
 .timeline-rail {
   display: flex;
@@ -208,7 +220,7 @@ function formatDate(date: Date) {
   position: relative;
   z-index: 1;
 }
-/* 序号圆点：顶部对齐卡片，随卡片浮现时弹出 */
+/* 序号圆点：顶部对齐卡片 */
 .timeline-num {
   position: relative;
   width: 32px;
@@ -224,8 +236,6 @@ function formatDate(date: Date) {
   font-weight: 700;
   color: var(--ink);
   letter-spacing: 0.04em;
-  transform: scale(0);
-  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 }
 /* 序号圆点外圈呼吸脉冲 */
 .timeline-num::after {
@@ -240,45 +250,17 @@ function formatDate(date: Date) {
   0%, 100% { transform: scale(1); opacity: 0.35; }
   50%      { transform: scale(1.35); opacity: 0.08; }
 }
-.timeline-card.reveal.visible .timeline-num {
-  transform: scale(1);
-  transition-delay: 0.15s;
-}
-
-/* 标题描边：入场一次性扫入 */
-.timeline-card .feed-title {
-  position: relative;
-  animation: none;
-}
-.timeline-card.reveal.visible .feed-title {
-  animation: ms-sweep 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.25s;
-}
-@keyframes ms-sweep {
-  from { background-size: 0% 2px; }
-  to   { background-size: 100% 2px; }
-}
-/* 选中（hover）标题下划线浮现动效 */
-.timeline-card .feed-title::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0;
-  height: 1px;
-  background: var(--ink);
-  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-}
-.timeline-card:hover .feed-title::after {
-  width: 100%;
-}
-
-/* 右侧卡片 */
+/* 右侧卡片：封面在左、内容在右 —— 长矩形，整体更紧凑 */
 .timeline-body {
   position: relative;
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 14px;
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 18px 20px;
+  padding: 10px;
+  overflow: hidden;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 /* 序号右侧延伸的横线：紧贴卡片上沿 */
@@ -297,59 +279,38 @@ function formatDate(date: Date) {
   border-color: var(--ink);
 }
 
-/*  红色小票裁剪风格头部（四角内凹弧 + 亮红 + 宽边距） ─ */
-.timeline-header {
+.timeline-cover-wrap {
   position: relative;
-  background: #a42d15ff;          /* ← 红色深浅，改这个调颜色 */
-  color: #FFFFFF;
-  padding: 20px 25px 25px;      /* ← 上 左右 下 内边距，改这个调内容离边缘的距离 */
-  margin: -12px -12px 12px;     /* ← 上 左右 下 外边距，负值让 header 撑满卡片宽度 */
-  /* 矩形主体 + 四角各挖一个圆形凹陷孔（r 是圆半径，改大=孔更大） */
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cmask id='m'%3E%3Crect width='200' height='100' fill='white'/%3E%3Ccircle cx='0' cy='0' r='14' fill='black'/%3E%3Ccircle cx='200' cy='0' r='14' fill='black'/%3E%3Ccircle cx='0' cy='100' r='14' fill='black'/%3E%3Ccircle cx='200' cy='100' r='14' fill='black'/%3E%3C/mask%3E%3Crect width='200' height='100' fill='white' mask='url(%23m)'/%3E%3C/svg%3E");
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cmask id='m'%3E%3Crect width='200' height='100' fill='white'/%3E%3Ccircle cx='0' cy='0' r='14' fill='black'/%3E%3Ccircle cx='200' cy='0' r='14' fill='black'/%3E%3Ccircle cx='0' cy='100' r='14' fill='black'/%3E%3Ccircle cx='200' cy='100' r='14' fill='black'/%3E%3C/mask%3E%3Crect width='200' height='100' fill='white' mask='url(%23m)'/%3E%3C/svg%3E");
-  -webkit-mask-size: 100% 100%;
-  mask-size: 100% 100%;
+  height: 136px;
+  min-height: 136px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-/* 底部穿孔虚线 */
-.timeline-header::after {
-  content: '';
-  position: absolute;
-  bottom: 6px;                  /* ← 虚线离底部的距离 */
-  left: 12px;                   /* ← 虚线左边距 */
-  right: 12px;                  /* ← 虚线右边距 */
-  height: 2px;                  /* ← 虚线粗细 */
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255,255,255,0.35) 0px, /* ← 虚线颜色/透明度 */
-    rgba(255,255,255,0.35) 4px, /* ← 实线段长度 */
-    transparent 4px,
-    transparent 8px             /* ← 虚线间距（8-4=4px 空隙） */
-  );
+.timeline-cover-wrap img,
+.timeline-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
 }
+.timeline-placeholder { display: block; width: 100%; height: 100%; }
 
-.timeline-header .timeline-meta {
-  margin-bottom: 8px;
+/* 内容区（右侧） */
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 2px 6px 2px 0;
 }
-.timeline-header .tag {
-  background: rgba(255,255,255,0.2);
-  color: #FFFFFF;
-}
-.timeline-header .timeline-date {
-  color: rgba(255,255,255,0.8);
-}
-.timeline-header .feed-title {
-  color: #FFFFFF;
-  margin: 0;
-}
-.timeline-header .feed-title::after {
-  display: none;
-}
-
 .timeline-meta {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 7px;
 }
 .timeline-date {
   font-family: var(--font-ui);
@@ -359,27 +320,55 @@ function formatDate(date: Date) {
   text-transform: uppercase;
 }
 
-.timeline-cover {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  margin-top: 14px;
+/* 标题：Libre Baskerville + 霞鹜文楷，文艺编辑感 */
+.timeline-card .feed-title {
+  font-family: 'Libre Baskerville', 'LXGW WenKai', 'Noto Serif SC', serif;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--ink);
+  margin-bottom: 7px;
+  position: relative;
+  animation: none;
+  letter-spacing: 0.01em;
 }
-.timeline-placeholder {
-  display: block;
+/* 选中（hover）标题下划线浮现动效 */
+.timeline-card .feed-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  width: 0;
+  height: 1px;
+  background: var(--ink);
+  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.timeline-card:hover .feed-title::after {
+  width: 100%;
 }
 
+.feed-excerpt {
+  font-family: 'Crimson Text', 'LXGW WenKai', 'Noto Serif SC', serif;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--dust);
+  margin-bottom: 10px;
+  flex: 1;
+}
+
+/* 卡片下部：Crimson Text 斜体，文艺杂志感 */
 .timeline-foot {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
   display: flex;
   gap: 16px;
-  font-family: var(--font-ui);
-  font-size: 10px;
+  align-items: baseline;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  font-family: 'Crimson Text', 'LXGW WenKai', 'Noto Serif SC', serif;
+  font-style: italic;
+  font-size: 12px;
 }
+.feed-read-btn { font-weight: 600; color: var(--accent); }
+.feed-tag { color: var(--dust); }
 
 /* 触屏设备禁用悬浮位移 */
 @media (hover: none) {
@@ -387,6 +376,73 @@ function formatDate(date: Date) {
     transform: none;
     box-shadow: none;
   }
+}
+
+/* ── 右侧栏 What's new ── */
+.news-item { margin-bottom: 12px; }
+.news-title {
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.news-meta {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  color: var(--dust);
+  margin-top: 4px;
+  letter-spacing: 0.06em;
+}
+
+/* ── 右侧栏：日历卡片 ── */
+.calendar-card { margin-top: 8px; }
+.cal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.cal-month {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.cal-year {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--dust);
+}
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+.cal-dow {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--dust);
+  padding: 4px 0;
+  letter-spacing: 0.05em;
+}
+.cal-empty { padding: 4px 0; }
+.cal-day {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--ink);
+  padding: 5px 0;
+  border-radius: 2px;
+}
+.cal-today {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
 }
 
 /* 编辑杂志式闪烁光标 */
@@ -407,6 +463,18 @@ function formatDate(date: Date) {
 /* 打字机文字：等宽占位避免居中抖动 */
 .typewriter-text {
   font-variant-numeric: tabular-nums;
+}
+
+/* 移动端：封面缩小、卡片保持横向 */
+@media (max-width: 640px) {
+  .timeline-body {
+    grid-template-columns: 118px 1fr;
+    gap: 12px;
+    padding: 10px;
+  }
+  .timeline-cover-wrap { height: 118px; min-height: 118px; }
+  .timeline-card .feed-title { font-size: 17px; }
+  .feed-excerpt { font-size: 12px; }
 }
 </style>
 

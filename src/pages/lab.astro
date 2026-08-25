@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionGrid from '../components/SectionGrid.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -142,25 +143,7 @@ function formatDate(date: Date) {
     </section>
 
     <aside class="page-col-right">
-      <div class="card card-padded">
-        <div class="card-label">Explore other sections</div>
-        <div class="section-item">
-          <div class="section-avatar">TN</div>
-          <div>
-            <div class="section-name">Threshold Notes</div>
-            <div class="section-desc">数字思想杂志</div>
-            <a href="/threshold-notes"><button class="browse-btn">Browse →</button></a>
-          </div>
-        </div>
-        <div class="section-item" style="margin-bottom: 0;">
-          <div class="section-avatar">AR</div>
-          <div>
-            <div class="section-name">Archive</div>
-            <div class="section-desc">知识档案</div>
-            <a href="/archive"><button class="browse-btn">Browse →</button></a>
-          </div>
-        </div>
-      </div>
+      <SectionGrid active="lab" title="Explore other sections" />
     </aside>
   </div>
 </BaseLayout>

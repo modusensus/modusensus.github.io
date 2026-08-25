@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionGrid from '../components/SectionGrid.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -88,25 +89,7 @@ const projects = [
         <span class="pill">城市</span>
         <span class="pill">工具</span>
       </div>
-      <div class="card card-padded">
-        <div class="card-label">Explore other sections</div>
-        <div class="section-item">
-          <div class="section-avatar">TN</div>
-          <div>
-            <div class="section-name">Threshold Notes</div>
-            <div class="section-desc">数字思想杂志</div>
-            <a href="/threshold-notes"><button class="browse-btn">Browse →</button></a>
-          </div>
-        </div>
-        <div class="section-item" style="margin-bottom: 0;">
-          <div class="section-avatar">LB</div>
-          <div>
-            <div class="section-name">Lab</div>
-            <div class="section-desc">AI experiments / tools</div>
-            <a href="/lab"><button class="browse-btn">Browse →</button></a>
-          </div>
-        </div>
-      </div>
+      <SectionGrid active="archive" title="Explore other sections" />
     </aside>
   </div>
 </BaseLayout>
