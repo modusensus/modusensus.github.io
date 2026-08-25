@@ -79,6 +79,7 @@ body::before {
   align-items: center;
   justify-content: center;
   padding: 0 24px;
+  z-index: 2;
 }
 /* 黑点：开场动画起点，随后横向拉伸成线 */
 .intro-dot {
@@ -120,19 +121,45 @@ body::before {
   opacity: 0;
 }
 
-/* ── Wave particles: flowing lines at hero top & footer bottom ── */
-.wave-canvas {
+/* Enter 按钮：开场动画完成后出现，点击进入主页 */
+.intro-enter {
   position: absolute;
-  left: 0;
-  width: 100%;
-  height: 110px;
+  left: 50%;
+  bottom: 19%;
+  transform: translateX(-50%);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  padding: 10px 34px 9px;
+  cursor: pointer;
+  opacity: 0;
   pointer-events: none;
-  z-index: 1;
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
 }
-.wave-canvas-top { top: 0; }
-.wave-canvas-bottom { bottom: 0; }
-/* Footer 需要相对定位以承载 absolute canvas */
-.footer { position: relative; overflow: hidden; }
+.intro-enter:hover {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 0 4px 14px rgba(26, 26, 26, 0.18);
+}
+.intro-enter:active {
+  transform: translateX(-50%) scale(0.97);
+}
+
+/* ── Hero particle wave: 开场动画上下两条方块粒子波浪 ── */
+.hero-particle-wave {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
 
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }

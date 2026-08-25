@@ -103,23 +103,27 @@ const calDayCells = Array.from({ length: calDays }, (_, i) => i + 1);
               <span class="timeline-num">{String(sortedPosts.length - idx).padStart(2, '0')}</span>
             </div>
             <article class="timeline-body">
-              <div class="timeline-cover-wrap">
-                {post.data.cover ? (
-                  <img src={post.data.cover} alt={post.data.title} class="timeline-cover" />
-                ) : (
-                  <div class={`timeline-cover timeline-placeholder ${sectionColors[post.data.module]}`}></div>
-                )}
-              </div>
-              <div class="timeline-content">
+              <div class="timeline-head">
                 <div class="timeline-meta">
                   <span class={`tag tag-${post.data.module}`}>{sectionNames[post.data.module]}</span>
                   <span class="timeline-date">{formatDate(post.data.date)}</span>
                 </div>
                 <h3 class="feed-title">{post.data.title}</h3>
-                <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
-                <div class="timeline-foot">
-                  <span class="feed-read-btn">→ Read</span>
-                  <span class="feed-tag">#{post.data.module}</span>
+              </div>
+              <div class="timeline-main">
+                <div class="timeline-cover-wrap">
+                  {post.data.cover ? (
+                    <img src={post.data.cover} alt={post.data.title} class="timeline-cover" />
+                  ) : (
+                    <div class={`timeline-cover timeline-placeholder ${sectionColors[post.data.module]}`}></div>
+                  )}
+                </div>
+                <div class="timeline-content">
+                  <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
+                  <div class="timeline-foot">
+                    <span class="feed-read-btn">→ Read</span>
+                    <span class="feed-tag">#{post.data.module}</span>
+                  </div>
                 </div>
               </div>
             </article>
@@ -250,18 +254,29 @@ const calDayCells = Array.from({ length: calDays }, (_, i) => i + 1);
   0%, 100% { transform: scale(1); opacity: 0.35; }
   50%      { transform: scale(1.35); opacity: 0.08; }
 }
-/* 右侧卡片：封面在左、内容在右 —— 长矩形，整体更紧凑 */
+/* 右侧卡片：标题/刊号在上，封面在左、文字在右 —— 长矩形，整体更紧凑 */
 .timeline-body {
   position: relative;
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   background: var(--paper);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 10px;
+  padding: 12px;
   overflow: hidden;
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+/* 卡片顶部：刊号 + 日期 + 标题 */
+.timeline-head {
+  padding: 0 2px;
+}
+/* 卡片下部：左封面、右文字 */
+.timeline-main {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 14px;
+  align-items: center;
 }
 /* 序号右侧延伸的横线：紧贴卡片上沿 */
 .timeline-body::before {
@@ -304,7 +319,7 @@ const calDayCells = Array.from({ length: calDays }, (_, i) => i + 1);
   display: flex;
   flex-direction: column;
   min-width: 0;
-  padding: 2px 6px 2px 0;
+  padding: 0;
 }
 .timeline-meta {
   display: flex;
@@ -465,12 +480,11 @@ const calDayCells = Array.from({ length: calDays }, (_, i) => i + 1);
   font-variant-numeric: tabular-nums;
 }
 
-/* 移动端：封面缩小、卡片保持横向 */
+/* 移动端：封面缩小、卡片保持上下结构 */
 @media (max-width: 640px) {
-  .timeline-body {
+  .timeline-main {
     grid-template-columns: 118px 1fr;
     gap: 12px;
-    padding: 10px;
   }
   .timeline-cover-wrap { height: 118px; min-height: 118px; }
   .timeline-card .feed-title { font-size: 17px; }

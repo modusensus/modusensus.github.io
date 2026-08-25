@@ -43,7 +43,7 @@ const navLinks = [
   <!-- ── Intro hero（仅首页常驻，GSAP 开场 + 顶部粒子波浪） ── -->
   {showHero && (
     <section class="intro-hero" id="intro-hero">
-      <canvas class="wave-canvas wave-canvas-top" id="hero-wave-top" aria-hidden="true"></canvas>
+      <canvas class="hero-particle-wave" id="hero-particle-wave" aria-hidden="true"></canvas>
       <div class="intro-stage" id="intro-stage">
         <div class="intro-dot" id="intro-dot" aria-hidden="true"></div>
         <h1 class="intro-word" id="intro-word" aria-label="MODUSENSUS">
@@ -53,6 +53,7 @@ const navLinks = [
         </h1>
       </div>
       <div class="intro-tagline">Independent&nbsp;Digital&nbsp;Studio</div>
+      <button class="intro-enter" id="intro-enter" type="button" aria-label="Enter site">Enter</button>
     </section>
   )}
 
@@ -105,7 +106,6 @@ const navLinks = [
 
   <!-- ── Footer ── -->
   <footer class="footer">
-    <canvas class="wave-canvas wave-canvas-bottom" id="footer-wave-bottom" aria-hidden="true"></canvas>
     <div class="footer-inner">
       <span class="footer-copy">&copy; 2026 MODUSENSUS &middot; Independent Digital Studio</span>
     </div>
@@ -301,6 +301,8 @@ const navLinks = [
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
+  position: relative;
+  z-index: 2;
 }
 .footer-copy {
   font-family: var(--font-ui);
@@ -425,6 +427,8 @@ function initParallax() {
 }
 
 // ── Intro hero — GSAP 开场动画：圆点滚入 → 撞空气墙 → 向右展成线 → 向上展成字 ──
+// 仅首次访问播放一次：sessionStorage 持久化标记，刷新 / 导航返回均不重播
+// 动画完成后显示“Enter”按钮，点击后隐藏开场区域进入主页；向上滚动不会“回到开场”
 function initIntro() {
   const hero = document.getElementById('intro-hero');
   const dot = document.getElementById('intro-dot');
@@ -432,15 +436,27 @@ function initIntro() {
   if (!hero || !dot || !word) return;
 
   const tagline = hero.querySelector('.intro-tagline');
+  const enterBtn = document.getElementById('intro-enter');
   const letters = Array.from(word.querySelectorAll('.intro-letter'));
 
-  // 尊重系统“减少动态效果”设置：直接显示完整标题，跳过动画
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    letters.forEach(l => { l.style.opacity = 1; });
-    dot.style.opacity = 0;
-    tagline.style.opacity = 1;
+  // 已播放过 / 系统“减少动态效果”：直接隐藏开场区域，跳过动画
+  const played = sessionStorage.getItem('ms-intro-played') === '1';
+  if (played || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    hero.style.display = 'none';
     return;
   }
+
+  // 点击 Enter：淡出开场区域并隐藏，进入主页
+  const enterSite = () => {
+    sessionStorage.setItem('ms-intro-played', '1');
+    gsap.to(hero, {
+      opacity: 0,
+      duration: 0.45,
+      ease: 'power2.inOut',
+      onComplete: () => { hero.style.display = 'none'; }
+    });
+  };
+  if (enterBtn) enterBtn.addEventListener('click', enterSite);
 
   // 字母初始堆叠在舞台中心，动画时从中心线向上“生长”到各自自然位置
   gsap.set(letters, { y: 42, opacity: 0, scale: 0.55 });
@@ -503,11 +519,126 @@ function initIntro() {
 
   // 5) 标语淡入
   tl.fromTo(tagline, { opacity: 0, y: 14 }, { opacity: 1, y: 0, duration: 0.7 }, '-=0.35');
+
+  // 6) Enter 按钮淡入（动画完成后出现，等待用户点击进入主页）
+  tl.fromTo(
+    enterBtn,
+    { opacity: 0, y: 10 },
+    {
+      opacity: 1,
+      y: 0,
+      duration: 0.5,
+      ease: 'power2.out',
+      onComplete: () => { enterBtn.style.pointerEvents = 'auto'; }
+    },
+    '-=0.2'
+  );
 }
+
+// ── Hero particle wave: 开场动画上下两条方块粒子拱门波浪 ──
+let waveRaf = 0;
+function initWaveParticles() {
+  const canvas = document.getElementById('hero-particle-wave');
+  if (!canvas) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  cancelAnimationFrame(waveRaf);
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const W = canvas.clientWidth;
+  const H = canvas.clientHeight;
+  if (!W || !H) return;
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const ink = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || '#1A1A1A';
+
+  // 上下两条拱门波浪：顶部中间向上拱，底部中间向下拱，形成环绕标题的括号
+  // 用密集网格采样，接近 demo 那种连续方块点阵；前面粗而实、后面细而疏，强化层次
+  const waves = [
+    {
+      yBase: H * 0.20,
+      archAmp: H * 0.13,
+      sign: -1,
+      layers: [
+        // 前面：大粒子、慢、偏下（靠基线），最厚实
+        { size: 4.4, alpha: 0.58, speed: 0.55, amp: 24, freq: 0.008, yOffset: 0,   spacing: 9,  density: 0.92 },
+        { size: 3.2, alpha: 0.44, speed: 0.85, amp: 20, freq: 0.012, yOffset: -12, spacing: 7,  density: 0.88 },
+        // 后面：小粒子、快、上移（向中心偏移），更稀疏更虚
+        { size: 1.6, alpha: 0.22, speed: 1.25, amp: 15, freq: 0.017, yOffset: -28, spacing: 5,  density: 0.72 },
+      ]
+    },
+    {
+      yBase: H * 0.80,
+      archAmp: H * 0.13,
+      sign: 1,
+      layers: [
+        { size: 4.4, alpha: 0.58, speed: 0.55, amp: 24, freq: 0.008, yOffset: 0,   spacing: 9,  density: 0.92 },
+        { size: 3.2, alpha: 0.44, speed: 0.85, amp: 20, freq: 0.012, yOffset: 12,  spacing: 7,  density: 0.88 },
+        { size: 1.6, alpha: 0.22, speed: 1.25, amp: 15, freq: 0.017, yOffset: 28,  spacing: 5,  density: 0.72 },
+      ]
+    }
+  ];
+
+  // 确定性伪随机：同一位置始终有/无粒子，仅整体向右流动
+  const pseudoRandom = (n) => {
+    const x = Math.sin(n * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  let t = 0;
+  const draw = () => {
+    ctx.clearRect(0, 0, W, H);
+    t += 1;
+    waves.forEach((wave, waveIdx) => {
+      wave.layers.forEach((layer, layerIdx) => {
+        const span = W + layer.spacing * 8;
+        const offset = (t * layer.speed) % span;
+        const count = Math.ceil(span / layer.spacing) + 6;
+        ctx.fillStyle = ink;
+        for (let i = 0; i < count; i++) {
+          const px = ((i * layer.spacing + offset) % span) - layer.spacing * 4;
+          const seed = waveIdx * 1000 + layerIdx * 100 + i;
+          // 拱门基线：中间拱起，两边回落
+          const arch = Math.sin((px / W) * Math.PI);
+          const archY = wave.sign * arch * wave.archAmp;
+          // 多层正弦 + 流动相位制造不规则波浪
+          const waveY =
+            Math.sin(px * layer.freq + t * 0.02) * layer.amp +
+            Math.sin(px * layer.freq * 1.8 + t * 0.035) * layer.amp * 0.55 +
+            Math.sin(px * layer.freq * 0.55 + t * 0.012) * layer.amp * 0.35;
+
+          // 沿拱门法线方向（上下）按网格生成多个粒子，形成带状点阵
+          const bandHalf = 3; // 每条线厚度方向的粒子数
+          for (let b = -bandHalf; b <= bandHalf; b++) {
+            const subSeed = seed + b * 3.7;
+            // 按层密度跳过，前面厚实、后面稀疏
+            if (pseudoRandom(subSeed) > layer.density) continue;
+            const band = b * layer.size * 0.85 + (pseudoRandom(subSeed + 1) - 0.5) * layer.size * 0.5;
+            const py = wave.yBase + archY + waveY + layer.yOffset + band;
+            // 左右边缘淡出
+            const edgeFade = Math.min(1, px / 70, (W - px) / 70);
+            ctx.globalAlpha = layer.alpha * edgeFade;
+            const half = layer.size / 2;
+            ctx.fillRect(px - half, py - half, layer.size, layer.size);
+          }
+        }
+      });
+    });
+    ctx.globalAlpha = 1;
+    waveRaf = requestAnimationFrame(draw);
+  };
+  draw();
+}
+window.addEventListener('resize', () => initWaveParticles());
 
 // ── Initialize on load + View Transitions ──
 function initAll() {
-  initIntro();   // 常驻 Hero 开场动画（黑点 → 黑线 → 文字）
+  initIntro();  // 开场动画仅首次访问播放一次（sessionStorage 持久化）
+  initWaveParticles();
   initMenu();
   initReveal();
   initReadingProgress();
