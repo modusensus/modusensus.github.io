@@ -61,6 +61,13 @@ const tocItems = headings.filter(h => h.depth === 2);
         </div>
       </header>
 
+      {post.data.cover && (
+        <figure class="art-cover">
+          <img src={post.data.cover} alt={post.data.title} loading="eager" />
+          <figcaption class="mono-meta">COVER · {post.data.category ?? 'IMAGE'}</figcaption>
+        </figure>
+      )}
+
       {tocItems.length > 0 && (
         <details class="toc">
           <summary>CONTENTS</summary>
@@ -103,6 +110,20 @@ const tocItems = headings.filter(h => h.depth === 2);
       </div>
     )}
   </article>
+
+  {tocItems.length > 0 && (
+    <aside class="art-sidebar" id="art-sidebar" aria-label="阅读进度与目录">
+      <div class="art-sidebar-progress">
+        <span class="mono-meta">READING</span>
+        <span class="art-sidebar-num" id="sidebar-progress-num">0%</span>
+      </div>
+      <div class="art-sidebar-bar"><i id="sidebar-progress-fill"></i></div>
+      <div class="mono-label art-sidebar-toc-label">CONTENTS</div>
+      <nav class="art-toc">
+        {tocItems.map(h => <a class="art-toc-link" href={`#${h.slug}`}>{h.text}</a>)}
+      </nav>
+    </aside>
+  )}
 </BaseLayout>
 
 <script data-astro-rerun>
@@ -138,5 +159,42 @@ const tocItems = headings.filter(h => h.depth === 2);
     });
 
     renderLike();
+  }
+
+  // ── 侧边栏：阅读百分比 + 目录 scrollspy（纯 JS） ──
+  var sidebar = document.getElementById('art-sidebar');
+  if (sidebar) {
+    var numEl = document.getElementById('sidebar-progress-num');
+    var fillEl = document.getElementById('sidebar-progress-fill');
+    var tocLinks = sidebar.querySelectorAll('.art-toc-link');
+    var tocItems = [];
+    for (var i = 0; i < tocLinks.length; i++) {
+      var hid = tocLinks[i].getAttribute('href').slice(1);
+      var hel = document.getElementById(hid);
+      if (hel) tocItems.push({ link: tocLinks[i], el: hel });
+    }
+    var activeIdx = -1;
+    var syncSidebar = function () {
+      var de = document.documentElement;
+      var max = de.scrollHeight - de.clientHeight;
+      var pct = max > 0 ? Math.round((de.scrollTop / max) * 100) : 0;
+      pct = Math.max(0, Math.min(100, pct));
+      if (numEl) numEl.textContent = pct + '%';
+      if (fillEl) fillEl.style.width = pct + '%';
+      var line = window.innerHeight * 0.35;
+      var idx = -1;
+      for (var j = 0; j < tocItems.length; j++) {
+        if (tocItems[j].el.getBoundingClientRect().top <= line) idx = j;
+      }
+      if (idx !== activeIdx) {
+        activeIdx = idx;
+        for (var k = 0; k < tocItems.length; k++) {
+          tocItems[k].link.classList.toggle('active', k === idx);
+        }
+      }
+    };
+    document.addEventListener('scroll', syncSidebar, { passive: true });
+    window.addEventListener('resize', syncSidebar);
+    syncSidebar();
   }
 </script>

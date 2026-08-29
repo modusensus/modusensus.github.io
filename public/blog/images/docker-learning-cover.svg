@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900">
+  <!-- Paper background -->
+  <rect width="1600" height="900" fill="#F1EEE5"/>
+
+  <!-- Outer frame -->
+  <rect x="28" y="28" width="1544" height="844" fill="none" stroke="#1A1A1A" stroke-width="2"/>
+
+  <!-- Masthead -->
+  <line x1="28" y1="118" x2="1572" y2="118" stroke="#1A1A1A" stroke-width="1.5"/>
+  <line x1="28" y1="122" x2="1572" y2="122" stroke="#1A1A1A" stroke-width="0.6"/>
+
+  <text x="70" y="86" font-family="Georgia, 'Times New Roman', serif" font-size="22" letter-spacing="4" fill="#1A1A1A">MODUSENSUS <tspan font-size="13" fill="#9E2B25">ARCHIVE · NOTES</tspan></text>
+  <text x="1570" y="86" text-anchor="end" font-family="Georgia, serif" font-size="15" letter-spacing="2" fill="#55524A">VOL. 2026 · NO. 02</text>
+
+  <!-- Left red spine -->
+  <rect x="70" y="178" width="8" height="300" fill="#9E2B25"/>
+  <text x="70" y="165" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="3" fill="#9E2B25">KNOWLEDGE · DOCKER · DEVOPS</text>
+
+  <!-- Headline -->
+  <text x="70" y="470" font-family="Georgia, 'Times New Roman', serif" font-size="200" font-weight="bold" letter-spacing="8" fill="#1A1A1A">DOCKER</text>
+
+  <!-- Rule under headline -->
+  <line x1="76" y1="512" x2="660" y2="512" stroke="#9E2B25" stroke-width="3"/>
+
+  <!-- Subtitle -->
+  <text x="70" y="562" font-family="'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif" font-size="26" font-weight="bold" letter-spacing="3" fill="#1A1A1A">知识档案：镜像 · 容器 · 网络 · Compose</text>
+  <text x="70" y="600" font-family="Helvetica, Arial, sans-serif" font-size="16" letter-spacing="3" fill="#55524A">A SELF-STUDY FIELD MANUAL — FROM PULL TO COMPOSE UP</text>
+
+  <!-- Description -->
+  <text x="70" y="662" font-family="'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif" font-size="14" letter-spacing="1" fill="#55524A">类比 + 命令双轨记录 · 每条知识点 = 一句话定义 + 类比助记 + 命令</text>
+  <text x="70" y="686" font-family="'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif" font-size="14" letter-spacing="1" fill="#55524A">镜像 ≠ 镜像网站 · 容器天生健忘 · 数据必须挂卷</text>
+
+  <!-- Red issue block bottom-left -->
+  <rect x="70" y="740" width="160" height="56" fill="#9E2B25"/>
+  <text x="150" y="766" text-anchor="middle" font-family="Georgia, serif" font-size="20" font-weight="bold" fill="#F1EEE5">ARCHIVE 02</text>
+  <text x="150" y="786" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="10" letter-spacing="2" fill="#F1EEE5">2026 · EDITION</text>
+
+  <!-- Bottom meta -->
+  <text x="700" y="772" font-family="Helvetica, Arial, sans-serif" font-size="12" letter-spacing="2" fill="#55524A">BUILD ONCE · RUN ANYWHERE</text>
+  <text x="700" y="794" font-family="'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif" font-size="12" letter-spacing="2" fill="#55524A">“在我电脑上能跑” → “在哪都能跑”</text>
+
+  <!-- ── Right graphic: whale carrying containers ── -->
+  <g opacity="0.95">
+    <!-- faint grid backdrop -->
+    <g stroke="#C9C4B8" stroke-width="1" opacity="0.5">
+      <line x1="1000" y1="180" x2="1000" y2="540"/>
+      <line x1="1150" y1="180" x2="1150" y2="540"/>
+      <line x1="1300" y1="180" x2="1300" y2="540"/>
+      <line x1="1450" y1="180" x2="1450" y2="540"/>
+      <line x1="1000" y1="180" x2="1450" y2="180"/>
+      <line x1="1000" y1="300" x2="1450" y2="300"/>
+      <line x1="1000" y1="420" x2="1450" y2="420"/>
+    </g>
+    <text x="1000" y="168" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="2" fill="#55524A">CONTAINERS ALL THE WAY DOWN</text>
+
+    <!-- top container -->
+    <rect x="1215" y="425" width="120" height="62" fill="#F1EEE5" stroke="#1A1A1A" stroke-width="3"/>
+    <line x1="1275" y1="425" x2="1275" y2="487" stroke="#1A1A1A" stroke-width="1.5"/>
+    <text x="1275" y="462" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="2" fill="#1A1A1A">IMAGE</text>
+
+    <!-- bottom-left container (red) -->
+    <rect x="1130" y="497" width="120" height="62" fill="#9E2B25" stroke="#1A1A1A" stroke-width="3"/>
+    <line x1="1190" y1="497" x2="1190" y2="559" stroke="#F1EEE5" stroke-width="1.5"/>
+    <text x="1190" y="534" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="2" fill="#F1EEE5">RUN</text>
+
+    <!-- bottom-right container -->
+    <rect x="1300" y="497" width="120" height="62" fill="#F1EEE5" stroke="#1A1A1A" stroke-width="3"/>
+    <line x1="1360" y1="497" x2="1360" y2="559" stroke="#1A1A1A" stroke-width="1.5"/>
+    <text x="1360" y="534" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="2" fill="#1A1A1A">COMPOSE</text>
+
+    <!-- whale (line doodle, head left / tail right) -->
+    <path d="M 1030 655
+             Q 1045 590 1180 572
+             Q 1330 554 1425 612
+             Q 1450 626 1472 622
+             Q 1505 615 1522 588
+             Q 1533 620 1512 646
+             Q 1533 668 1526 700
+             Q 1500 686 1478 666
+             Q 1380 716 1200 712
+             Q 1075 708 1030 655 Z"
+          fill="#F1EEE5" stroke="#1A1A1A" stroke-width="3" stroke-linejoin="round"/>
+    <!-- eye -->
+    <circle cx="1092" cy="634" r="6" fill="#1A1A1A"/>
+    <!-- smile -->
+    <path d="M 1052 660 Q 1070 672 1092 670" fill="none" stroke="#1A1A1A" stroke-width="2" stroke-linecap="round"/>
+    <!-- belly lines -->
+    <path d="M 1180 700 Q 1185 688 1198 686 M 1240 704 Q 1245 692 1258 690 M 1300 702 Q 1305 690 1318 688" fill="none" stroke="#1A1A1A" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+    <!-- spout -->
+    <path d="M 1068 566 Q 1058 532 1036 516 M 1082 562 Q 1086 526 1106 508" fill="none" stroke="#9E2B25" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="1030" cy="508" r="4" fill="#9E2B25"/>
+    <circle cx="1112" cy="500" r="4" fill="#9E2B25"/>
+
+    <!-- water line -->
+    <path d="M 980 742 Q 1020 728 1060 742 T 1140 742 T 1220 742 T 1300 742 T 1380 742 T 1460 742" fill="none" stroke="#1A1A1A" stroke-width="2" opacity="0.55"/>
+  </g>
+
+  <!-- Bottom frame -->
+  <line x1="28" y1="828" x2="1572" y2="828" stroke="#1A1A1A" stroke-width="1.5"/>
+  <text x="70" y="852" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="3" fill="#1A1A1A">MODUSENSUS.ARCHIVE</text>
+  <text x="1570" y="852" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="11" letter-spacing="3" fill="#1A1A1A">DOCKER · FIELD NOTES</text>
+</svg>

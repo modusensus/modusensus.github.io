@@ -137,9 +137,11 @@ const navGroups = [
         const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
         document.documentElement.dataset.theme = next;
         try { localStorage.setItem('modusensus_theme', next); } catch (e) { /* ignore */ }
+        // 同步 giscus iframe 到对应的自定义主题 CSS（public/giscus/），?v= 用于更新后失效缓存
+        const giscusTheme = `${location.origin}/giscus/modusensus-${next}.css?v=1`;
         document.querySelectorAll('iframe.giscus-frame').forEach((frame) => {
           frame.contentWindow?.postMessage(
-            { giscus: { setConfig: { theme: next } } },
+            { giscus: { setConfig: { theme: giscusTheme } } },
             'https://giscus.app',
           );
         });

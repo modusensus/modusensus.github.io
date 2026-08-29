@@ -41,8 +41,10 @@ const giscusReady = Boolean(giscus.repoId && giscus.categoryId);
     (function () {
       var mount = document.querySelector('.giscus');
       if (!mount) return;
-      // 按当前站点主题初始化 giscus，切换主题时由 BaseLayout postMessage 同步
-      var theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      // 按当前站点主题加载自定义 giscus 主题 CSS（public/giscus/），切换主题时由 BaseLayout postMessage 同步
+      // ?v= 用于主题 CSS 更新后立即失效缓存
+      var giscusThemeUrl = function (t) { return location.origin + '/giscus/modusensus-' + t + '.css?v=1'; };
+      var theme = giscusThemeUrl(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
       var s = document.createElement('script');
       s.src = 'https://giscus.app/client.js';
       s.setAttribute('data-repo', giscusRepo);

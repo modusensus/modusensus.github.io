@@ -1,0 +1,122 @@
+/*! MODUSENSUS giscus theme — DARK（墨面反白）
+ * Derived from GitHub dark theme, MIT License © 2018 GitHub Inc.
+ * https://github.com/primer/primitives/blob/main/LICENSE
+ * 站点 token：paper #1B1B19 · raise #242422 · ink #ECECE8 · muted #98988F · pink #E8618C
+ */
+
+/* 强制深色画布 + 墨面底色（否则 iframe 画布跟随系统偏好，浅色系统下会发白） */
+html {
+  color-scheme: dark;
+  background-color: #1B1B19;
+}
+
+main {
+  /* 站点字体 */
+  font-family: 'Noto Sans SC', 'Archivo', -apple-system, 'Segoe UI', sans-serif;
+
+  --color-prettylights-syntax-comment: #8b949e;
+  --color-prettylights-syntax-constant: #79c0ff;
+  --color-prettylights-syntax-entity: #d2a8ff;
+  --color-prettylights-syntax-storage-modifier-import: #c9d1d9;
+  --color-prettylights-syntax-entity-tag: #7ee787;
+  --color-prettylights-syntax-keyword: #ff7b72;
+  --color-prettylights-syntax-string: #a5d6ff;
+  --color-prettylights-syntax-variable: #ffa657;
+  --color-prettylights-syntax-brackethighlighter-unmatched: #f85149;
+  --color-prettylights-syntax-invalid-illegal-text: #f0f6fc;
+  --color-prettylights-syntax-invalid-illegal-bg: #8e1519;
+  --color-prettylights-syntax-carriage-return-text: #f0f6fc;
+  --color-prettylights-syntax-carriage-return-bg: #b62324;
+  --color-prettylights-syntax-string-regexp: #7ee787;
+  --color-prettylights-syntax-markup-list: #f2cc60;
+  --color-prettylights-syntax-markup-heading: #1f6feb;
+  --color-prettylights-syntax-markup-italic: #c9d1d9;
+  --color-prettylights-syntax-markup-bold: #c9d1d9;
+  --color-prettylights-syntax-markup-deleted-text: #ffdcd7;
+  --color-prettylights-syntax-markup-deleted-bg: #67060c;
+  --color-prettylights-syntax-markup-inserted-text: #aff5b4;
+  --color-prettylights-syntax-markup-inserted-bg: #033a16;
+  --color-prettylights-syntax-markup-changed-text: #ffdfb6;
+  --color-prettylights-syntax-markup-changed-bg: #5a1e02;
+  --color-prettylights-syntax-markup-ignored-text: #c9d1d9;
+  --color-prettylights-syntax-markup-ignored-bg: #1158c7;
+  --color-prettylights-syntax-meta-diff-range: #d2a8ff;
+  --color-prettylights-syntax-brackethighlighter-angle: #8b949e;
+  --color-prettylights-syntax-sublimelinter-gutter-mark: #484f58;
+  --color-prettylights-syntax-constant-other-reference-link: #a5d6ff;
+
+  /* 按钮（次级）：墨面抬升色 + 细纸线 */
+  --color-btn-text: #ECECE8;
+  --color-btn-bg: #242422;
+  --color-btn-border: rgb(236 236 232 / 16%);
+  --color-btn-shadow: 0 0 transparent;
+  --color-btn-inset-shadow: 0 0 transparent;
+  --color-btn-hover-bg: #2D2D2A;
+  --color-btn-hover-border: rgb(236 236 232 / 25%);
+  --color-btn-active-bg: #2D2D2A;
+  --color-btn-active-border: #98988F;
+  --color-btn-selected-bg: #1B1B19;
+
+  /* 主按钮：站点式纸块（纸底墨字） */
+  --color-btn-primary-text: #1B1B19;
+  --color-btn-primary-bg: #ECECE8;
+  --color-btn-primary-border: rgb(236 236 232 / 16%);
+  --color-btn-primary-shadow: 0 0 transparent;
+  --color-btn-primary-inset-shadow: 0 0 transparent;
+  --color-btn-primary-hover-bg: #C4C4BE;
+  --color-btn-primary-hover-border: rgb(236 236 232 / 16%);
+  --color-btn-primary-selected-bg: #ECECE8;
+  --color-btn-primary-selected-shadow: 0 0 transparent;
+  --color-btn-primary-disabled-text: rgb(27 27 25 / 50%);
+  --color-btn-primary-disabled-bg: rgb(236 236 232 / 40%);
+  --color-btn-primary-disabled-border: rgb(236 236 232 / 16%);
+
+  --color-action-list-item-default-hover-bg: rgb(236 236 232 / 6%);
+  --color-segmented-control-bg: rgb(236 236 232 / 10%);
+  --color-segmented-control-button-bg: #1B1B19;
+  --color-segmented-control-button-selected-border: #98988F;
+
+  --color-fg-default: #ECECE8;
+  --color-fg-muted: #98988F;
+  --color-fg-subtle: #98988F;
+
+  /* 画布：与页面墨面无缝相接 */
+  --color-canvas-default: #1B1B19;
+  --color-canvas-overlay: #242422;
+  --color-canvas-inset: #141412;
+  --color-canvas-subtle: #242422;
+
+  --color-border-default: rgb(236 236 232 / 22%);
+  --color-border-muted: rgb(236 236 232 / 12%);
+  --color-neutral-muted: rgb(236 236 232 / 10%);
+
+  /* 强调色：站点粉 */
+  --color-accent-fg: #E8618C;
+  --color-accent-emphasis: #E8618C;
+  --color-accent-muted: rgb(232 97 140 / 40%);
+  --color-accent-subtle: rgb(232 97 140 / 12%);
+
+  --color-success-fg: #3FA34D;
+  --color-attention-fg: #F2A14E;
+  --color-attention-muted: rgb(242 161 78 / 40%);
+  --color-attention-subtle: rgb(242 161 78 / 15%);
+  --color-danger-fg: #F85149;
+  --color-danger-muted: rgb(248 81 73 / 40%);
+  --color-danger-subtle: rgb(248 81 73 / 12%);
+
+  --color-primer-shadow-inset: 0 0 transparent;
+  --color-scale-gray-7: #2D2D2A;
+  --color-scale-blue-8: rgb(232 97 140 / 20%);
+
+  /*! Extensions from @primer/css/alerts/flash.scss */
+  --color-social-reaction-bg-hover: var(--color-scale-gray-7);
+  --color-social-reaction-bg-reacted-hover: var(--color-scale-blue-8);
+}
+
+main .pagination-loader-container {
+  background-image: url("https://github.com/images/modules/pulls/progressive-disclosure-line-dark.svg");
+}
+
+main .gsc-loading-image {
+  background-image: url("https://github.githubassets.com/images/mona-loading-dark.gif");
+}

@@ -68,11 +68,19 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
       <div class="mono-label group-label">06 — DESIGN ARCHIVE</div>
       <div class="about-block">
+        <a class="lab-row" href="/" >
+          <span class="lab-year">V4</span>
+          <span>
+            <span class="lab-name">Doodle Editorial</span><br />
+            <span class="lab-desc">当前版本 · 深色涂鸦 Hero × 浅色编辑排版，杂志式正文与阅读侧栏。</span>
+          </span>
+          <span class="badge">NOW</span>
+        </a>
         <a class="lab-row" href="/works/v3-blog/index.html" target="_blank" rel="noopener">
           <span class="lab-year">V3</span>
           <span>
-            <span class="lab-name">Doodle Editorial</span><br />
-            <span class="lab-desc">当前版本快照 · 深色涂鸦 Hero × 浅色编辑排版。</span>
+            <span class="lab-name">Three-Column Feed</span><br />
+            <span class="lab-desc">LinkedIn 式三栏布局 · 导航栏 + 内容流 + 视觉侧栏。</span>
           </span>
           <span class="badge">2026</span>
         </a>
@@ -88,7 +96,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <span class="lab-year">V1</span>
           <span>
             <span class="lab-name">Original Blog</span><br />
-            <span class="lab-desc">站点最初版本 · LinkedIn 三栏布局。</span>
+            <span class="lab-desc">站点最初版本 · 杂志感静态风格。</span>
           </span>
           <span class="badge">2025</span>
         </a>
@@ -125,6 +133,27 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         <span class="pill">空间公平与城市可达性</span>
         <span class="pill">数字治理与 AI 政策</span>
         <span class="pill">人机协作与自动化工作流</span>
+      </div>
+
+      <div class="mono-label group-label">09 — PRIVACY &amp; SECURITY</div>
+      <div class="about-block legal-block">
+        <div class="legal-row">
+          <span class="mono-meta">PRIVACY · 隐私声明</span>
+          <ul class="legal-list">
+            <li>本站为纯静态站点，不使用任何追踪或分析工具，不收集个人数据。</li>
+            <li>浏览器本地存储（localStorage）仅用于保存主题偏好与文章点赞记录，数据不出本机。</li>
+            <li>留言板由 giscus 提供支持，评论内容存储于 GitHub Discussions，受 GitHub 隐私政策约束。</li>
+          </ul>
+        </div>
+        <div class="legal-row">
+          <span class="mono-meta">SECURITY · 安全协议</span>
+          <ul class="legal-list">
+            <li>全站通过 HTTPS 加密传输，由 GitHub Pages 托管。</li>
+            <li>无服务器端数据库与账号系统，不存储任何用户凭证。</li>
+            <li>第三方脚本仅来自官方域名（giscus.app），跨域资源启用 CORS 校验。</li>
+            <li>如发现安全问题，欢迎通过上方 Email 联系。</li>
+          </ul>
+        </div>
       </div>
 
     </div>
@@ -186,7 +215,30 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   margin-bottom: 0;
 }
 
+.legal-row {
+  display: grid; grid-template-columns: 170px 1fr; gap: 14px;
+  align-items: start;
+  padding: 10px 0;
+}
+.legal-row + .legal-row { border-top: 1px solid var(--rule-soft); }
+.legal-row .mono-meta { padding-top: 4px; white-space: nowrap; }
+.legal-list {
+  list-style: none;
+  padding: 0; margin: 0;
+}
+.legal-list li {
+  padding-left: 20px; position: relative;
+  margin-bottom: 8px;
+}
+.legal-list li:last-child { margin-bottom: 0; }
+.legal-list li::before {
+  content: '■';
+  position: absolute; left: 0; top: 0.5em;
+  font-size: 8px; color: var(--muted);
+}
+
 @media (max-width: 640px) {
   .stack-row { grid-template-columns: 1fr; gap: 8px; }
+  .legal-row { grid-template-columns: 1fr; gap: 6px; }
 }
 </style>

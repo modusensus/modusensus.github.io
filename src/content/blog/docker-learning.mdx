@@ -1,0 +1,411 @@
+---
+title: "Docker 知识档案：镜像 · 容器 · 网络 · Compose"
+subtitle: "从零开始的自学笔记，类比 + 命令双轨记录，归档自 2026-08-29 网课与实操"
+issue: "02"
+category: "KNOWLEDGE / DOCKER / DEVOPS"
+date: 2026-08-29
+readingTime: "14"
+cover: "/blog/images/docker-learning-cover.svg"
+module: archive
+---
+
+<div class="archive-card">
+  <p><strong>档案编号</strong>ARCHIVE-02 · <strong>归档日期</strong>2026-08-29</p>
+  <p><strong>档案来源</strong>Docker 入门网课 + 亲手部署 Dify / n8n 时踩的坑</p>
+  <p><strong>读者定位</strong>完全没接触过容器的编程初学者</p>
+  <p><strong>阅读约定</strong>每条知识点 = 一句话定义 + 类比助记 + 命令/表格。类比是理解的抓手，命令是落地的工具。</p>
+</div>
+
+---
+
+## 索引
+
+- 01 · 核心概念：镜像 / 容器 / 仓库 / 卷 / 网络
+- 02 · 环境认知：遥控器与机器人（CLI vs Engine）
+- 03 · 镜像操作：pull / images / rmi 与完整地址
+- 04 · 构建镜像：Dockerfile 与分层缓存
+- 05 · 容器操作：生命周期 / run 参数 / 调试
+- 06 · 数据卷：为什么容器"记不住"东西
+- 07 · 网络：三种模式 / 端口映射 / 容器互访
+- 08 · Compose：一支舰队的点名单
+- 附录 A · 常用命令速查表
+- 附录 B · 档案中的待办
+
+---
+
+## 01 · 核心概念
+
+Docker 是把"程序 + 运行环境"一起打包、随处运行的工具。
+
+| 概念 | 一句话定义 | 类比助记 |
+| --- | --- | --- |
+| 镜像 image | 打包好的"程序 + 环境 + 配置"，**只读模板** | 菜谱 + 食材包；拍立得快照 |
+| 容器 container | 镜像**跑起来**的实例，互相独立 | 照菜谱做出来的那盘菜 |
+| 仓库 repository | 存放、分享镜像的地方 | 菜谱图书馆 / 应用商店 |
+| 卷 volume | 存到容器外的数据，容器删了数据还在 | 外置硬盘 / 冰箱 |
+| 网络 network | 容器之间、容器与外界通信的通道 | 房间之间的电话线 |
+
+**核心关系一句话：**
+
+> 从仓库拉镜像 → 用镜像跑容器 → 容器间靠网络通信 → 数据用卷保存
+
+**镜像 vs 容器（重点）：**
+
+- 镜像 = "母盘" / 快照：**只读、可复制无限份**。装好环境后"咔嚓"拍一张，照片从此定格（**定格 / 可恢复 / 可复制**）
+- 容器 = "子盘" / 活实例：一个镜像能生出多个容器，各自独立互不影响
+
+**⚠️ 命名误区：镜像 ≠ 镜像网站。** "镜像"中文常指 mirror（网站副本），Docker 的 image（图像/快照）是另一回事，别混。
+
+**Docker 解决的核心痛点：**
+
+> "在我电脑上能跑" → "在哪都能跑"
+
+---
+
+## 02 · 环境认知：遥控器与机器人
+
+**docker 命令只是"遥控器"，真正干活的是"机器人本体" Docker Engine。**
+
+| 角色 | 是什么 | 装在哪 |
+| --- | --- | --- |
+| docker CLI | 遥控器：只把命令发送出去 | 任何终端（PowerShell / WSL 都行） |
+| Docker Engine | 机器人：真正拉镜像、跑容器 | **必须跑在 Linux**（WSL2 / Hyper-V 虚拟机里） |
+
+```
+PowerShell 里敲 docker compose up
+      ↓ 遥控器发指令
+Windows 里的 Linux 虚拟机（WSL2 / Hyper-V）
+      ↓ 机器人本体干活
+拉镜像 / 起容器 / 存数据 → 全存在虚拟机的虚拟磁盘里
+```
+
+**推论（都是踩过的坑）：**
+
+- 卸载 Docker Desktop = 遥控器 + 藏着数据的虚拟机**一起删** → 数据"凭空消失"的真凶
+- 在哪个终端敲命令无所谓，**Engine 在哪跑才决定数据存哪**
+- 配国内镜像源时，WSL 里能看到生效、PowerShell 里看不到——配置在机器人身上，不在遥控器上
+- 验证后端：`wsl -l -v`，出现 `docker-desktop` 发行版 = WSL2 后端
+
+---
+
+## 03 · 镜像操作：三连与完整地址
+
+### 3.1 镜像三连
+
+```bash
+docker pull <镜像名>    # 拉取镜像（从仓库下载）
+docker images           # 查看本地镜像
+docker rmi <镜像ID>     # 删除镜像（要先删掉使用它的容器）
+```
+
+### 3.2 完整地址（pull 背后的"收货地址"）
+
+```bash
+docker pull nginx
+# 实际被 Docker 补全成：
+docker pull docker.io/library/nginx:latest
+```
+
+| 部分 | 名字 | 意思 | 快递类比 |
+| --- | --- | --- | --- |
+| `docker.io` | 仓库地址 Registry | 去哪个下载中心 | 哪个快递网点 |
+| `library` | 命名空间 namespace | 官方专属书架；个人镜像这里是**用户名** | 哪个小区 |
+| `nginx` | 镜像名 | 光盘的名字 | 哪栋楼 |
+| `:latest` | 标签 tag | 版本号 | 几零几室 |
+
+**三处默认值（所以平时能简写）：** 仓库默认 `docker.io`，官方镜像默认 `library` 书架，版本默认 `latest`。
+
+**⚠️ 经典拼写错误对照：**
+
+| 写错 | 报错 | 规律 |
+| --- | --- | --- |
+| `;ibrary`（标点错） | `invalid reference format` | 地址格式错 |
+| `ngnix`（名字错） | `pull access denied / not found` | 镜像名错 → 整个仓库找不到 |
+| `lastest`（版本错） | `manifest not found` | tag 错 → 仓库在，但没这个版本 |
+
+---
+
+## 04 · 构建镜像：Dockerfile 与分层缓存
+
+Dockerfile 把"菜谱"写成文字，让任何机器照着做出一模一样的环境。
+
+```dockerfile
+# 用现成的 Python 3.10 环境当底子（买现成的半成品）
+FROM python:3.10
+
+# 容器里的默认工作目录（进去以后在哪个房间干活）
+WORKDIR /app
+
+# 先把依赖清单复制进去（先运食材，再运菜）
+COPY requirements.txt .
+
+# 安装依赖（把食材加工成能用的状态）
+RUN pip install -r requirements.txt
+
+# 再把我的代码复制进去
+COPY . .
+
+# 容器启动时要执行的命令（上菜）
+CMD ["python", "app.py"]
+```
+
+**分层缓存（最重要的一条经验）：**
+
+```
+先 COPY requirements.txt + pip install   ← 依赖不变就永远走缓存（重建项目时秒过）
+再 COPY . .                              ← 代码天天改，只重建这一层（秒级）
+
+反例：开头就 COPY . . → 改一行代码 → 依赖重装一遍 → 构建几分钟起步
+```
+
+**理解方式：** Dockerfile 每条指令生成一层，改了第 N 层，第 N 层之后全部重建。像一盘千层饼——不常变的东西放下面当底座，天天变的东西放最上面当奶油。
+
+**构建 + 运行：**
+
+```bash
+docker build -t <镜像名>:<tag> .   # . = 构建上下文（当前目录），千万别漏
+docker run <镜像名>                # run 只自动 pull，不自动 build
+```
+
+---
+
+## 05 · 容器操作：生命周期 / run 参数 / 调试
+
+### 5.1 生命周期命令
+
+```bash
+docker run <镜像名>       # run = pull + create + start 三合一
+docker ps                 # 正在运行的容器
+docker ps -a              # 所有容器（含已停止）
+docker stop <容器ID>      # 停止
+docker rm <容器ID>        # 删除（要先停止）
+docker create <镜像名>    # 只创建不启动（run 的拆解）
+docker start <容器ID>     # 启动已创建的容器
+docker restart <容器名>   # 重启（改配置后重新加载）
+docker container prune    # 一键清理所有已退出/停止的容器
+```
+
+**容器名 vs 镜像名（stop/rm 只认左边和右边）：**
+
+- `docker stop` / `rm` / `restart` / `logs` 后面填**容器名或 ID**（`docker ps -a` 第一列 / 最后一列）
+- `docker rmi` / `docker run` 后面填**镜像名**（IMAGE 列）
+- 容器 ID 不用输全，前几位就行（如 `docker stop 3a2f`）
+
+### 5.2 docker run 参数全解
+
+```bash
+docker run -d --name <容器名> -p 宿主机端口:容器端口 -v 宿主机路径:容器路径 <镜像名>
+```
+
+| 参数 | 作用 | 例子 |
+| --- | --- | --- |
+| `-d` | 后台运行（不占用终端） | |
+| `--name` | 给容器起名（**不能重复**） | `--name myapp` |
+| `-p` | 端口映射：把容器端口暴露给外面 | `-p 8080:80`（外部 8080 → 容器 80） |
+| `-v` | 挂载目录：本机文件夹塞进容器 | `-v /host/data:/container/data` |
+| `-e` | 传环境变量（MongoDB 账号密码就靠它） | `-e MONGO_INITDB_ROOT_USERNAME=admin` |
+| `-it` | 交互模式：把控制台"伸进"容器里 | 和 `--rm` 连用是临时调试神器 |
+| `--rm` | 容器一停止就自动删除 | `docker run -it --rm <镜像>` 用完即走 |
+| `--restart always` | 容器一停就自动拉起（崩溃、断电都拉） | |
+| `--restart unless-stopped` | 同上，但手动 stop 的不拉起 | 我亲手停的就让它装死 |
+
+**`--restart` 一句话：** `always` 死都要活；`unless-stopped` 我亲手按停的就乖乖装死。
+
+**⚠️ run 的语法铁律：** 选项必须在镜像名**前面**。镜像名右边的都会被原样传进容器，不再被当选项解析。
+
+```bash
+docker run -d nginx     # ✅ 正确
+docker run nginx -d     # ❌ -d 被当成传给 nginx 的参数（等于没写）
+```
+
+### 5.3 日志与调试
+
+```bash
+docker logs -f <容器ID>             # 看日志（-f 实时滚动；Ctrl+C 只是退出"看"）
+docker exec <容器ID> ps -ef         # 看容器里在跑什么进程
+docker exec -it <容器名> bash       # 钻进容器；极简镜像没 bash 就换 /bin/sh
+docker inspect <容器名>             # 体检报告：挂载/端口/网络/环境变量，全记得（档案袋）
+```
+
+**读 `docker ps -a` 的 STATUS 列：**
+
+| 状态 | 含义 | 下一步 |
+| --- | --- | --- |
+| `Up x minutes` | 正在运行 | 直接用 |
+| `Exited (0)` | 正常退出（没报错） | 不用 stop，直接 `rm` |
+| `Exited (非0)` | 异常退出 | `docker logs` 查死因 |
+| `Restarting` | 反复崩溃重启中 | `docker logs` 查死因 |
+
+**体检三件套（都只读观察，不动容器）：**
+
+| 命令 | 回答的问题 | 类比助记 |
+| --- | --- | --- |
+| `docker top <容器>` | 容器里都有谁（进程）在跑？ | 隔着玻璃数人头 |
+| `docker stats` | 容器吃掉多少 CPU / 内存？ | 心电监护仪（实时跳动） |
+| `docker diff <容器>` | 容器里动过哪些文件？（A 新增 / C 修改 / D 删除） | 搬家前后对比照 |
+
+---
+
+## 06 · 数据卷：为什么容器"记不住"东西
+
+**最反直觉的真相：镜像是只读的。容器一启动，Docker 在上面盖一层"可写层"——像一张描图纸盖在照片上。**
+
+- 你在容器里增 / 删 / 改的所有文件，全写在这张描图纸上
+- `docker rm` 删容器 = 连描图纸一起扔掉，改动**灰飞烟灭**
+- 结论：容器天生"什么都记不住"，重要数据必须挂卷
+
+### 6.1 三种挂载方式
+
+| 类型 | 写法 | 左边是什么 | 数据存哪 |
+| --- | --- | --- | --- |
+| 绑定挂载 | `-v /宿主机路径:/容器路径` | 真实路径 | 我指定的文件夹（自己管） |
+| 命名卷 | `-v 卷名:/容器路径` | 一个名字 | Docker 统一保管 |
+| 匿名卷 | `-v /容器路径`（只写右边） | 没有左边 | Docker 随机起名（难管理，不推荐） |
+
+**分工直觉：绑定挂载管"我想放哪"，命名卷管"Docker 帮我保管"。**
+
+### 6.2 挂载后的行为（两种性格）
+
+- **绑定挂载 = 用海报盖住墙上的画**：宿主机内容盖住容器路径；宿主机路径拼错时，Docker **不报错**，悄悄建个空目录挂上去 → 容器内容"神秘消失"（挂载后变空，先查宿主机路径）
+- **命名卷 = 首次拷贝**：卷是空的 → Docker 先把容器里该路径的现有内容拷进卷再挂载（这就是 `-v n8n_data:/home/node/.n8n` 能保住初始配置的原因）
+
+### 6.3 volume 命令家族
+
+```bash
+docker volume create <卷名>   # 创建命名卷
+docker volume ls              # 列出所有卷
+docker volume inspect <卷名>  # 看详情：真实存放路径、被谁挂载
+docker volume rm <卷名>       # 删除指定卷
+docker volume prune           # 清理"没人用"的卷
+docker volume prune -a        # 狠招：清掉所有没被使用的卷（连命名卷也清，数据无价，想清楚再按）
+```
+
+---
+
+## 07 · 网络：三种模式 / 端口映射 / 容器互访
+
+### 7.1 为什么必须写两个端口：`-p 8080:80`
+
+**容器网络是隔离的 → 宿主机和容器各有一套门牌号（端口），冒号就是"转接规则"。**
+
+| 部分 | 是谁的端口 | 谁说了算 | 类比 |
+| --- | --- | --- | --- |
+| 左 8080 | 宿主机 | 我随便挑（没被占用就行） | 前台总机号码 |
+| 右 80 | 容器 | nginx 定死的（它出生就监听 80） | 房间分机号 |
+
+- 冒号 = "从 A 转到 B"的箭头，两边缺一不可
+- 只写一个数字（`-p 8080`）：Docker 把它当**容器端口**，宿主机端口随机分配——但容器里 8080 没人监听，转过去没人接 ❌
+- 宿主机端口三个规矩：范围 0~65535、避开 0~1023（特权端口，选 1024+）、别撞车（占用了报 `port is already allocated`）
+
+### 7.2 三种网络模式
+
+| 模式 | 特点 | 类比助记 |
+| --- | --- | --- |
+| `bridge`（默认） | 虚拟网桥，每个容器分到独立内网 IP，出网靠 NAT | 大楼公共走廊，每间房有门牌 |
+| `host` | 直接共用宿主机网络栈，没有独立 IP，**不需要也不能用 `-p`** | 直接住进大楼前台 |
+| `none` | 不配网络，完全断网 | 关小黑屋 |
+
+### 7.3 docker network 命令家族
+
+```bash
+docker network ls                          # 列出所有网络
+docker network create <网络名>             # 创建自定义 bridge 网络
+docker network inspect <网络名>            # 体检：谁在里面、子网是多少
+docker network rm <网络名>                 # 删除网络
+docker network connect <网络名> <容器>     # 把运行中的容器"拉进群聊"
+docker network disconnect <网络名> <容器>  # 退群
+```
+
+### 7.4 自定义 bridge vs 默认 bridge（关键差异）
+
+| | 默认 bridge（docker0） | 自定义 bridge |
+| --- | --- | --- |
+| 容器互访 | 只能靠 IP 地址 | **容器名就是域名，直接拨** |
+| DNS 自动解析 | ❌ 没有 | ✅ 自动配好 |
+| 隔离性 | 所有容器挤一个大群 | 一个项目一个群，互不干扰 |
+
+> `--link` 是老古董（compose 普及前的容器互联老办法），官方已不推荐，知道有这个东西就行。
+
+---
+
+## 08 · Compose：一支舰队的点名单
+
+**为什么需要 compose：** Dify 这类应用不是一个镜像，而是几十个容器组成的舰队（API + Worker + 数据库 + Redis + nginx……）。一个个 `docker run` 敲到手软还容易错 → compose 用一个 yaml 文件写成"点名单"，一条命令全员拉起。
+
+> 踩过的坑：`docker run dify` 报错——dify 根本不是镜像名，它是"一个文件夹 + 一个 docker-compose.yaml"组成的应用。好比对着整支舰队喊"请你一个人上前一步"。
+
+### 8.1 一个 yaml 示例
+
+```yaml
+services:
+  web:              # 应用服务（依赖数据库）
+    image: myapp
+    ports:
+      - "8080:80"   # 把容器 80 端口映射到宿主机 8080
+    depends_on:
+      - mongo       # 先拉起 mongo，再拉起 web
+  mongo:            # 数据库服务
+    image: mongo
+    volumes:
+      - mongo-data:/data/db   # 数据挂卷，容器删了数据还在
+
+volumes:
+  mongo-data:       # 声明一个命名卷（外置冰箱）
+```
+
+### 8.2 三个特性
+
+1. **点名册（自动命名）**：容器自动命名成 `项目名-服务名-序号`（如 `docker-nginx-1`），一眼看出谁是谁
+2. **内线电话（服务名互访）**：同一舰队里直接用**服务名当域名**互访（如 `db:5432`），不用记 IP
+3. **增量重建**：改配置再跑 `up -d`，只重建受影响的容器，不推倒重来
+
+### 8.3 核心命令（在 yaml 所在目录执行）
+
+```bash
+docker compose up -d       # 照 yaml 拉起整支舰队（-d 后台）
+docker compose ps          # 只看这支舰队的成员（比 docker ps 干净）
+docker compose logs        # 舰队日志（可加 -f 跟踪）
+docker compose down        # 收摊：删容器和网络，但数据卷默认保留（冰箱不打烊）
+docker compose up -d -f <文件名>   # -f 指定非标准文件名（默认找 docker-compose.yaml）
+```
+
+**Dify 部署标准套路（真实案例）：**
+
+```bash
+cd D:\dify-main\docker       # 进到 yaml 所在目录
+cp .env.example .env         # 首次部署先复制配置
+docker compose up -d         # 拉起
+docker compose ps            # 全部 Up 才算成功
+```
+
+---
+
+## 附录 A · 常用命令速查表
+
+| 想做什么 | 命令 |
+| --- | --- |
+| 拉镜像 | `docker pull <镜像名>` |
+| 看本地镜像 | `docker images` |
+| 删镜像 | `docker rmi <镜像ID>` |
+| 跑容器（后台） | `docker run -d --name <名> -p 8080:80 <镜像>` |
+| 看运行中容器 | `docker ps` |
+| 看所有容器 | `docker ps -a` |
+| 停 / 删容器 | `docker stop <ID>` → `docker rm <ID>` |
+| 看日志 | `docker logs -f <容器>` |
+| 钻进容器 | `docker exec -it <容器> bash` |
+| 容器体检 | `docker inspect <容器>` |
+| 查进程 / 资源 / 文件改动 | `docker top` / `docker stats` / `docker diff <容器>` |
+| 挂卷 | `docker run -v 宿主机路径:容器路径 <镜像>` |
+| 卷列表 / 清理 | `docker volume ls` / `docker volume prune` |
+| 建自定义网络 | `docker network create <名>` |
+| 舰队拉起 / 收摊 | `docker compose up -d` / `docker compose down` |
+
+## 附录 B · 档案中的待办
+
+- [ ] 项目：hello-docker 自制镜像并推到 Docker Hub
+- [ ] 实操：`docker diff` 验证"可写层"，再配合卷体会数据外置
+- [ ] 复盘：compose 部署一个真实项目（如 n8n）并写数据备份方案
+
+---
+
+*本档案由个人学习笔记整理而成，源笔记保存在学习路线图仓库中。类比均为自创助记，帮助初学者建立直觉——容器概念抽象，直觉先行，细节在后。*
