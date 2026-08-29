@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SectionGrid from '../components/SectionGrid.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -8,69 +7,33 @@ const posts = allPosts
   .filter(p => p.data.module === 'threshold')
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+function fmtShort(date: Date) {
+  const m = date.toLocaleDateString('en-US', { month: 'short' });
+  return `${m}. ${String(date.getDate()).padStart(2, '0')}`;
 }
 ---
 
 <BaseLayout activeNav="threshold" title="Threshold Notes — MODUSENSUS">
-  <header class="page-header">
-    <h1 class="page-header-title">THRESHOLD NOTES</h1>
-    <p class="page-header-subtitle">数字思想杂志 — Essay / Humanity / Technology</p>
+  <header class="container page-header">
+    <div class="mono-label">02 — MAGAZINE</div>
+    <h1 class="page-header-title">THRESHOLD<br />NOTES</h1>
+    <p class="page-header-subtitle">数字思想杂志 — ESSAY / HUMANITY / TECHNOLOGY</p>
   </header>
 
-  <div class="page-layout">
-    <aside class="page-col-left">
-      <div class="card card-padded">
-        <div class="card-label">About this section</div>
-        <p style="font-size: 12px; color: var(--dust); line-height: 1.6; margin-bottom: 12px;">长期关注的思想议题，关于技术、城市与人类的交叉地带。</p>
-        <div class="card-divider"></div>
-        <div class="card-stat-row"><span>Articles</span><span>{posts.length}</span></div>
-        <div class="card-stat-row"><span>Latest</span><span>{posts[0] ? formatDate(posts[0].data.date) : '—'}</span></div>
-      </div>
-      <div class="card card-padded">
-        <div class="card-label">Categories</div>
-        <span class="pill">算法</span>
-        <span class="pill">城市</span>
-        <span class="pill">人文</span>
-      </div>
-    </aside>
-
-    <section class="page-col-main">
+  <div class="container board">
+    <hr class="board-rule" />
+    <div class="list-narrow">
       {posts.map((post, idx) => (
-        <article class="article-feed-card">
-          <a href={`/blog/${post.slug}`} style="display: block;">
-            <div class="article-feed-header">
-              <div class="feed-avatar">TN</div>
-              <div>
-                <div class="feed-meta-name">Threshold Notes</div>
-                <div class="feed-meta-date">{formatDate(post.data.date)} · NO.{post.data.issue || String(idx + 1).padStart(2, '0')}</div>
-              </div>
-            </div>
-            <div class="feed-body">
-              <h3 class="feed-title">{post.data.title}</h3>
-              <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
-            </div>
-            {post.data.cover ? (
-              <img src={post.data.cover} alt={post.data.title} class="feed-cover" />
-            ) : (
-              <div class="feed-cover-placeholder threshold-gradient"></div>
-            )}
-            <div class="feed-footer">
-              <span class="feed-read-btn">→ Read</span>
-              <span class="feed-tag">#essay</span>
-            </div>
-          </a>
-        </article>
+        <a class="tn-item" href={`/blog/${post.slug}`}>
+          <div class="tn-meta">
+            <span>No. {post.data.issue || String(posts.length - idx).padStart(2, '0')}</span>
+            <span>{fmtShort(post.data.date)}</span>
+          </div>
+          <div class="tn-title">{post.data.title}</div>
+          {post.data.subtitle && <div class="tn-desc">{post.data.subtitle}</div>}
+        </a>
       ))}
-    </section>
-
-    <aside class="page-col-right">
-      <SectionGrid active="threshold" title="Explore other sections" />
-    </aside>
+      {posts.length === 0 && <p class="mono-meta">NO ENTRIES YET.</p>}
+    </div>
   </div>
 </BaseLayout>

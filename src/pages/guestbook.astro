@@ -1,0 +1,84 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import giscus from '../config/giscus.json';
+
+const giscusReady = Boolean(giscus.repoId && giscus.categoryId);
+---
+
+<BaseLayout activeNav="guestbook" title="Guestbook — MODUSENSUS">
+  <header class="container page-header">
+    <div class="mono-label">GUESTBOOK</div>
+    <h1 class="page-header-title">OPEN<br />CHANNEL</h1>
+    <p class="page-header-subtitle">留言板 — LEAVE A NOTE / SAY HELLO</p>
+  </header>
+
+  <div class="container board">
+    <hr class="board-rule" />
+    <div class="community-page">
+      <div class="guestbook-intro">
+        <p>如果你有想说的话，欢迎留下来。</p>
+        <p class="mono-meta">需要使用 GitHub 登录。留言公开显示，内容通过 GitHub Discussions 管理。</p>
+      </div>
+
+      <div class="giscus-shell">
+        {giscusReady ? (
+          <div class="giscus" aria-label="Guestbook comments"></div>
+        ) : (
+          <div class="community-setup">
+            <div class="community-setup-title">CHANNEL NOT CONFIGURED</div>
+            <p class="community-setup-copy">留言板页面已经准备好，但 GitHub Discussions 还没有完成连接。</p>
+            <p class="community-setup-copy">开启仓库 Discussions、安装 Giscus App，并把 Repository ID 和 Category ID 填入 `src/config/giscus.json` 后，留言功能会自动启用。</p>
+            <a class="community-setup-link" href="https://github.com/modusensus/modusensus.github.io" target="_blank" rel="noopener noreferrer">OPEN REPOSITORY ↗</a>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+{giscusReady && (
+  <script is:inline define:vars={{ giscusRepo: giscus.repo, giscusRepoId: giscus.repoId, giscusCategory: giscus.category, giscusCategoryId: giscus.categoryId }}>
+    (function () {
+      var mount = document.querySelector('.giscus');
+      if (!mount) return;
+      // 按当前站点主题初始化 giscus，切换主题时由 BaseLayout postMessage 同步
+      var theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      var s = document.createElement('script');
+      s.src = 'https://giscus.app/client.js';
+      s.setAttribute('data-repo', giscusRepo);
+      s.setAttribute('data-repo-id', giscusRepoId);
+      s.setAttribute('data-category', giscusCategory);
+      s.setAttribute('data-category-id', giscusCategoryId);
+      s.setAttribute('data-mapping', 'pathname');
+      s.setAttribute('data-strict', '0');
+      s.setAttribute('data-reactions-enabled', '1');
+      s.setAttribute('data-emit-metadata', '0');
+      s.setAttribute('data-input-position', 'top');
+      s.setAttribute('data-theme', theme);
+      s.setAttribute('data-lang', 'zh-CN');
+      s.setAttribute('data-loading', 'lazy');
+      s.crossOrigin = 'anonymous';
+      s.async = true;
+      mount.appendChild(s);
+    })();
+  </script>
+)}
+
+<style>
+.guestbook-intro {
+  max-width: 560px;
+  padding: 0 0 22px;
+  border-bottom: 1px solid var(--rule);
+}
+.guestbook-intro p:first-child {
+  font-family: var(--font-cn);
+  font-size: 21px;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.guestbook-intro .mono-meta {
+  line-height: 1.8;
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+</style>

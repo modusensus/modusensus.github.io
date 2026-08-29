@@ -3,77 +3,190 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
 <BaseLayout activeNav="colophon" title="Colophon — MODUSENSUS">
-  <header class="page-header">
+  <header class="container page-header">
+    <div class="mono-label">04 — ABOUT</div>
     <h1 class="page-header-title">COLOPHON</h1>
-    <p class="page-header-subtitle">About MODUSENSUS</p>
+    <p class="page-header-subtitle">ABOUT MODUSENSUS</p>
   </header>
 
-  <div class="page-layout">
-    <aside class="page-col-left">
-      <div class="card card-padded">
-        <div class="card-label">Subscribe</div>
-        <p style="font-size: 11px; color: var(--dust); line-height: 1.6; margin-bottom: 10px;">Get notified when new articles are published.</p>
-        <form action="/rss.xml" method="get" style="display: flex; flex-direction: column; gap: 8px;">
-          <input type="email" placeholder="your@email.com" style="width: 100%; padding: 8px; border: 1px solid var(--border-strong); border-radius: 4px; font-size: 11px;" />
-          <button type="submit" style="width: 100%; padding: 8px; background: var(--ink); color: #fff; border: none; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;">Subscribe</button>
-        </form>
-      </div>
-      <div class="card card-padded">
-        <div class="card-label">Contact</div>
-        <a href="https://github.com/modusensus" class="card-list-item" style="display: block;">GitHub</a>
-        <a href="mailto:hello@modusensus.com" class="card-list-item" style="display: block;">Email</a>
-        <a href="/rss.xml" class="card-list-item" style="display: block;">RSS</a>
-      </div>
-    </aside>
+  <div class="container board">
+    <hr class="board-rule" />
+    <div class="list-narrow">
 
-    <section class="page-col-main">
-      <div class="card card-padded" style="margin-bottom: 16px;">
-        <div class="card-label">01 — Studio</div>
-        <p style="font-family: var(--font-body); font-size: 15px; line-height: 1.85; color: #333; margin-bottom: 12px;">MODUSENSUS 是一个长期运营的数字思想工作室。</p>
-        <p style="font-family: var(--font-body); font-size: 15px; line-height: 1.85; color: #333;"><strong>Modus</strong>：方式、方法、模式。<br><strong>Sensus</strong>：感知、理解、意义。</p>
+      <div class="mono-label group-label">01 — STUDIO</div>
+      <div class="about-block">
+        <p>MODUSENSUS 是一个长期运营的独立数字工作室，关注城市、数据与创造力的交汇处。</p>
+        <p><strong>Modus</strong>：方式、方法、模式。<br /><strong>Sensus</strong>：感知、理解、意义。</p>
+        <p>以慢思考对抗信息过载，以清晰结构承载复杂议题。</p>
       </div>
 
-      <div class="card card-padded" style="margin-bottom: 16px;">
-        <div class="card-label">02 — Typography</div>
-        <div class="info-row">
-          <span style="color: var(--dust);">Display</span>
-          <span style="font-family: var(--font-display); color: var(--ink);">Space Grotesk</span>
+      <div class="mono-label group-label">02 — BACKGROUND</div>
+      <div class="about-block">
+        <p>城市规划 · 公共管理背景，着迷于空间设计、数据分析与 AI 的交叉地带。</p>
+        <p>正在用 Python 做空间数据分析，搭建个人知识系统与自动化工作流；在这里写下关于城市、技术与创造性思考的文字。</p>
+      </div>
+
+      <div class="mono-label group-label">03 — TECH STACK</div>
+      <div class="about-block stack-block">
+        <div class="stack-row">
+          <span class="mono-meta">DATA &amp; BACKEND</span>
+          <div class="pills-row">
+            <span class="pill">Python</span><span class="pill">FastAPI</span><span class="pill">pandas</span><span class="pill">NumPy</span><span class="pill">Matplotlib</span><span class="pill">SQLite</span><span class="pill">Anaconda</span>
+          </div>
         </div>
-        <div class="info-row">
-          <span style="color: var(--dust);">Body</span>
-          <span style="font-family: var(--font-body); color: var(--ink);">Noto Serif SC</span>
+        <div class="stack-row">
+          <span class="mono-meta">FRONTEND &amp; AGENT</span>
+          <div class="pills-row">
+            <span class="pill">HTML5</span><span class="pill">CSS3</span><span class="pill">JavaScript</span><span class="pill">Node.js</span><span class="pill">NestJS</span>
+          </div>
         </div>
-        <div class="info-row">
-          <span style="color: var(--dust);">UI</span>
-          <span style="font-family: var(--font-ui); color: var(--ink);">Inter</span>
+        <div class="stack-row">
+          <span class="mono-meta">TOOLS</span>
+          <div class="pills-row">
+            <span class="pill">Figma</span><span class="pill">Docker</span><span class="pill">GIS</span>
+          </div>
         </div>
       </div>
 
-      <div class="card card-padded">
-        <div class="card-label">03 — Principles</div>
-        <p style="font-family: var(--font-body); font-size: 15px; line-height: 1.85; color: #333;">以慢思考对抗信息过载，以清晰结构承载复杂议题。关注城市、技术与人的交叉地带。</p>
+      <div class="mono-label group-label">04 — EXPLORING</div>
+      <div class="about-block">
+        <ul class="explore-list">
+          <li><strong>城市设计与空间公平</strong> — 基于 GIS 可达性分析的毕业设计</li>
+          <li><strong>Python 空间数据分析</strong> — 在城市场景中应用数据分析与可视化</li>
+          <li><strong>AI 辅助工作流</strong> — 用工具自动化研究与创作流程</li>
+          <li><strong>数字出版</strong> — 通过博客与笔记构建个人知识系统</li>
+        </ul>
+        <p class="explore-quote">"Exploring how cities, data, and design can come together."</p>
       </div>
-    </section>
 
-    <aside class="page-col-right">
-      <div class="card card-padded">
-        <div class="card-label">Tech Stack</div>
-        <div>
-          <span class="pill">Astro</span>
-          <span class="pill">Markdown</span>
-          <span class="pill">GitHub Pages</span>
-          <span class="pill">Python</span>
-          <span class="pill">Obsidian</span>
+      <div class="mono-label group-label">05 — TYPOGRAPHY</div>
+      <div class="about-block">
+        <div class="type-row"><span class="mono-meta">DISPLAY</span><span class="type-sample">Archivo — 900</span></div>
+        <div class="type-row"><span class="mono-meta">MONO</span><span class="type-sample mono">Space Mono — 700</span></div>
+        <div class="type-row"><span class="mono-meta">BODY</span><span class="type-sample cn">Noto Sans SC — 400/900</span></div>
+      </div>
+
+      <div class="mono-label group-label">06 — DESIGN ARCHIVE</div>
+      <div class="about-block">
+        <a class="lab-row" href="/works/v3-blog/index.html" target="_blank" rel="noopener">
+          <span class="lab-year">V3</span>
+          <span>
+            <span class="lab-name">Doodle Editorial</span><br />
+            <span class="lab-desc">当前版本快照 · 深色涂鸦 Hero × 浅色编辑排版。</span>
+          </span>
+          <span class="badge">2026</span>
+        </a>
+        <a class="lab-row" href="/works/v2-blog/index.html" target="_blank" rel="noopener">
+          <span class="lab-year">V2</span>
+          <span>
+            <span class="lab-name">Digital Magazine</span><br />
+            <span class="lab-desc">数字杂志版 · 衬线编辑风与自动滚动卡片。</span>
+          </span>
+          <span class="badge">2026</span>
+        </a>
+        <a class="lab-row" href="/works/original-site/index.html" target="_blank" rel="noopener">
+          <span class="lab-year">V1</span>
+          <span>
+            <span class="lab-name">Original Blog</span><br />
+            <span class="lab-desc">站点最初版本 · LinkedIn 三栏布局。</span>
+          </span>
+          <span class="badge">2025</span>
+        </a>
+      </div>
+
+      <div class="mono-label group-label">07 — CONTACT</div>
+      <div class="about-block">
+        <div class="contact-row">
+          <a href="https://github.com/modusensus" class="footer-icon" target="_blank" rel="noopener">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            <span>GITHUB</span>
+          </a>
+          <a href="mailto:hello@modusensus.com" class="footer-icon">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><path d="M2 4l6 5 6-5"/></svg>
+            <span>EMAIL</span>
+          </a>
+          <a href="/rss.xml" class="footer-icon">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M2 13.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/><path d="M2 8a6 6 0 016 6H6a4 4 0 00-4-4V8z"/><path d="M2 2a12 12 0 0112 12h-2a10 10 0 00-10-10V2z"/></svg>
+            <span>RSS</span>
+          </a>
+          <a href="https://www.linkedin.com/in/modusensus/" class="footer-icon" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+            <span>LINKEDIN</span>
+          </a>
+          <a href="https://modusensus.substack.com/" class="footer-icon" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 4h18v2.2H3zM3 8.6h18v2.2H3zM3 13.2h18V21l-9-4.4L3 21z"/></svg>
+            <span>SUBSTACK</span>
+          </a>
         </div>
       </div>
-      <div class="card card-padded">
-        <div class="card-label">Research Interests</div>
-        <div style="font-size: 11px; color: var(--dust); line-height: 1.7;">
-          <div>空间公平与城市可达性</div>
-          <div>数字治理与 AI 政策</div>
-          <div>人机协作与自动化工作流</div>
-        </div>
+
+      <div class="mono-label group-label">08 — RESEARCH</div>
+      <div class="about-block pills-row">
+        <span class="pill">空间公平与城市可达性</span>
+        <span class="pill">数字治理与 AI 政策</span>
+        <span class="pill">人机协作与自动化工作流</span>
       </div>
-    </aside>
+
+    </div>
   </div>
 </BaseLayout>
+
+<style>
+.about-block {
+  padding: 20px 0 8px;
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-cn);
+  font-size: 15px; line-height: 1.9; color: var(--ink-soft);
+}
+.about-block p { margin-bottom: 1rem; }
+.about-block strong { color: var(--ink); }
+.about-block .lab-row:first-of-type { border-top: none; }
+.about-block .lab-row { border-bottom: 1px solid var(--rule-soft); }
+.about-block .lab-row:last-of-type { border-bottom: none; }
+
+.type-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  padding: 10px 0; border-bottom: 1px solid var(--rule-soft);
+}
+.type-row:last-of-type { border-bottom: none; }
+.type-sample { font-family: var(--font-grot); font-weight: 900; font-size: 20px; }
+.type-sample.mono { font-family: var(--font-mono); font-weight: 700; font-size: 16px; }
+.type-sample.cn { font-family: var(--font-cn); font-weight: 400; font-size: 17px; }
+
+.contact-row { display: flex; gap: 28px; padding: 4px 0; }
+.pills-row { display: flex; gap: 10px; flex-wrap: wrap; padding-bottom: 20px; }
+
+.stack-row {
+  display: grid; grid-template-columns: 150px 1fr; gap: 14px;
+  align-items: start;
+  padding: 10px 0;
+}
+.stack-row + .stack-row { border-top: 1px solid var(--rule-soft); }
+.stack-row .pills-row { padding-bottom: 6px; }
+
+.explore-list {
+  list-style: none;
+  padding: 0; margin: 0 0 14px;
+}
+.explore-list li {
+  padding-left: 20px; position: relative;
+  margin-bottom: 8px;
+}
+.explore-list li::before {
+  content: '■';
+  position: absolute; left: 0; top: 0.5em;
+  font-size: 8px; color: var(--muted);
+}
+.explore-list strong { color: var(--ink); }
+.explore-quote {
+  font-family: var(--font-grot);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+
+@media (max-width: 640px) {
+  .stack-row { grid-template-columns: 1fr; gap: 8px; }
+}
+</style>

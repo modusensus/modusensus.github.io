@@ -6,62 +6,42 @@ const allPosts = await getCollection('blog');
 const posts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
 const sectionNames: Record<string, string> = {
-  threshold: 'Threshold Notes',
-  lab: 'Modusensus Lab',
-  archive: 'Archive',
+  threshold: 'THRESHOLD',
+  lab: 'LAB',
+  archive: 'ARCHIVE',
 };
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).replace(/\//g, '.');
+function fmtYear(date: Date) {
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
 const years = [...new Set(posts.map(p => p.data.date.getFullYear()))].sort((a, b) => b - a);
 ---
 
-<BaseLayout title="All Publications — MODUSENSUS">
-  <header class="page-header">
-    <h1 class="page-header-title">ALL PUBLICATIONS</h1>
-    <p class="page-header-subtitle">Complete archive of all essays, lab logs and notes.</p>
+<BaseLayout activeNav="home" title="All Publications — MODUSENSUS">
+  <header class="container page-header">
+    <div class="mono-label">INDEX</div>
+    <h1 class="page-header-title">ALL<br />PUBLICATIONS</h1>
+    <p class="page-header-subtitle">COMPLETE ARCHIVE — {posts.length} ENTRIES</p>
   </header>
 
-  <div class="page-layout">
-    <aside class="page-col-left">
-      <div class="card card-padded">
-        <div class="card-label">Filter</div>
-        <a href="/blog" class="card-list-item" style="display: block; color: var(--ink); font-weight: 600;">All publications</a>
-        <a href="/threshold-notes" class="card-list-item" style="display: block;">Threshold Notes</a>
-        <a href="/lab" class="card-list-item" style="display: block;">Modusensus Lab</a>
-        <a href="/archive" class="card-list-item" style="display: block;">Archive</a>
-      </div>
-      <div class="card card-padded">
-        <div class="card-label">Stats</div>
-        <div class="card-stat-row"><span>Total</span><span>{posts.length}</span></div>
-      </div>
-    </aside>
-
-    <section class="page-col-main">
-      {posts.map((post, idx) => (
-        <a href={`/blog/${post.slug}`} class="list-card">
-          <div>
-            <div class="list-card-title">{post.data.title}</div>
-            <div class="list-card-meta">{formatDate(post.data.date)} · {sectionNames[post.data.module].toUpperCase()} · NO.{post.data.issue || String(idx + 1).padStart(2, '0')}</div>
-          </div>
-          <div class="list-card-num">{String(idx + 1).padStart(2, '0')}</div>
-        </a>
-      ))}
-    </section>
-
-    <aside class="page-col-right">
-      <div class="card card-padded">
-        <div class="card-label">Browse by year</div>
-        {years.map(year => (
-          <div class="card-list-item">{year}</div>
-        ))}
-      </div>
-    </aside>
+  <div class="container board">
+    <hr class="board-rule" />
+    {years.map(year => (
+      <section>
+        <div class="mono-label group-label">{year}</div>
+        <div>
+          {posts.filter(p => p.data.date.getFullYear() === year).map(post => (
+            <a class="ar-item" href={`/blog/${post.slug}`}>
+              <div class="ar-meta">
+                <span>{sectionNames[post.data.module]}{post.data.issue ? ` · NO.${post.data.issue}` : ''}</span>
+                <span>{fmtYear(post.data.date)}</span>
+              </div>
+              <div class="ar-title">{post.data.title}</div>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
   </div>
 </BaseLayout>

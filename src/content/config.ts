@@ -18,4 +18,14 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+const fragments = defineCollection({
+  type: 'content',
+  schema: z.object({
+    date:  z.date(),
+    mood:  z.string().optional(),
+    color: z.enum(['pink', 'blue', 'yellow', 'green', 'purple']).default('pink'),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { blog, fragments };

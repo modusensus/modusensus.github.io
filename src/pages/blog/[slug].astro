@@ -20,111 +20,123 @@ const related = allPosts
   .slice(0, 2);
 
 const sectionNames: Record<string, string> = {
-  threshold: 'Threshold Notes',
-  lab: 'Modusensus Lab',
-  archive: 'Archive',
+  threshold: 'THRESHOLD NOTES',
+  lab: 'MODUSENSUS LAB',
+  archive: 'ARCHIVE',
 };
-
 const sectionLinks: Record<string, string> = {
   threshold: '/threshold-notes',
   lab: '/lab',
   archive: '/archive',
 };
+const activeNavMap: Record<string, 'threshold' | 'lab' | 'archive'> = {
+  threshold: 'threshold',
+  lab: 'lab',
+  archive: 'archive',
+};
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+function fmtLong(date: Date) {
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: '2-digit' });
 }
+
+const tocItems = headings.filter(h => h.depth === 2);
 ---
 
-<BaseLayout title={`${post.data.title} — MODUSENSUS`} description={post.data.subtitle || post.data.excerpt}>
-  <div class="page-layout">
-    <aside class="page-col-left">
-      {headings.length > 0 && (
-        <div class="card card-padded">
-          <div class="card-label">Contents</div>
-          {headings.filter(h => h.depth <= 2).map(h => (
-            <a href={`#${h.slug}`} class="toc-item" style="display: block;">{h.text}</a>
+<BaseLayout
+  title={`${post.data.title} — MODUSENSUS`}
+  description={post.data.subtitle || post.data.excerpt}
+  activeNav={activeNavMap[post.data.module]}
+>
+  <article class="container">
+    <div class="article">
+      <header>
+        <div class="mono-label art-label">
+          {sectionNames[post.data.module]}{post.data.issue ? ` · NO.${post.data.issue}` : ''}
+        </div>
+        <h1 class="art-title">{post.data.title}</h1>
+        {post.data.subtitle && <p class="art-subtitle">{post.data.subtitle}</p>}
+        <div class="art-meta-line">
+          <span class="mono-meta">{fmtLong(post.data.date)}</span>
+          {post.data.readingTime && <span class="mono-meta">{post.data.readingTime} MIN READ</span>}
+        </div>
+      </header>
+
+      {tocItems.length > 0 && (
+        <details class="toc">
+          <summary>CONTENTS</summary>
+          <nav>
+            {tocItems.map(h => <a href={`#${h.slug}`}>{h.text}</a>)}
+          </nav>
+        </details>
+      )}
+
+      <div class="prose">
+        <Content />
+      </div>
+
+      <div class="art-actions">
+        <div class="art-back">
+          <a href={sectionLinks[post.data.module]}>← {sectionNames[post.data.module]}</a>
+          <a href="/blog">← ALL</a>
+        </div>
+        <button id="like-btn" class="like-btn" type="button" data-slug={post.slug}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+          <span id="like-count">0</span>
+        </button>
+      </div>
+    </div>
+
+    {related.length > 0 && (
+      <div class="related">
+        <div class="mono-label group-label">MORE FROM {sectionNames[post.data.module]}</div>
+        <div>
+          {related.map(rel => (
+            <a class="ar-item" href={`/blog/${rel.slug}`}>
+              <div class="ar-meta">
+                <span>{rel.data.issue ? `NO.${rel.data.issue}` : sectionNames[rel.data.module]}</span>
+                <span>{fmtLong(rel.data.date)}</span>
+              </div>
+              <div class="ar-title">{rel.data.title}</div>
+            </a>
           ))}
         </div>
-      )}
-      <div class="card card-padded">
-        <div class="card-label">Back to</div>
-        <a href={sectionLinks[post.data.module]} class="card-list-item" style="display: block;">← {sectionNames[post.data.module]}</a>
-        <a href="/blog" class="card-list-item" style="display: block;">← All Publications</a>
       </div>
-    </aside>
-
-    <article class="page-col-main">
-      <div class="article-detail">
-        <div class="article-detail-header">{sectionNames[post.data.module].toUpperCase()} · NO.{post.data.issue || '01'}</div>
-        <h1 class="article-detail-title">{post.data.title}</h1>
-        <div class="article-detail-byline">
-          {formatDate(post.data.date)}
-          {post.data.readingTime && ` · ${post.data.readingTime} min read`}
-        </div>
-        <div class="article-meta-bar">
-          <span class="meta-view">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span id="busuanzi_value_page_pv">0</span> views
-          </span>
-          <button id="like-btn" class="like-btn" type="button" data-slug={post.slug}>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-            <span id="like-count">0</span>
-          </button>
-        </div>
-        {post.data.cover && (
-          <img src={post.data.cover} alt={post.data.title} class="article-detail-cover" />
-        )}
-        <div class="prose">
-          <Content />
-        </div>
-      </div>
-    </article>
-
-    <aside class="page-col-right">
-      {related.length > 0 && (
-        <div class="card card-padded">
-          <div class="card-label">More from {sectionNames[post.data.module]}</div>
-          {related.map(post => (
-            <div class="news-item">
-              <a href={`/blog/${post.slug}`}>
-                <div class="news-title">{post.data.title}</div>
-                <div class="news-meta">{formatDate(post.data.date).toUpperCase()}</div>
-              </a>
-            </div>
-          ))}
-        </div>
-      )}
-    </aside>
-  </div>
+    )}
+  </article>
 </BaseLayout>
 
-<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-<script>
-  // 点赞：localStorage 本地记录
-  const likeBtn = document.getElementById('like-btn');
-  if (likeBtn) {
-    const slug = likeBtn.dataset.slug;
-    const key = 'modusensus_like_' + slug;
-    let state = JSON.parse(localStorage.getItem(key) || '{"liked":false,"count":0}');
-    const countEl = document.getElementById('like-count');
+<script data-astro-rerun>
+  // ── 阅读进度条（纯 JS：data-astro-rerun 脚本不经编译，不能使用 TS 语法） ──
+  var progress = document.getElementById('reading-progress');
+  function onScroll() {
+    if (!progress) return;
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    progress.style.width = max > 0 ? (h.scrollTop / max) * 100 + '%' : '0%';
+  }
+  document.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
 
-    const render = () => {
-      countEl.textContent = state.count;
+  // ── 点赞（localStorage 本地记录） ──
+  var likeBtn = document.getElementById('like-btn');
+  if (likeBtn) {
+    var slug = likeBtn.dataset.slug || '';
+    var key = 'modusensus_like_' + slug;
+    var state = JSON.parse(localStorage.getItem(key) || '{"liked":false,"count":0}');
+    var countEl = document.getElementById('like-count');
+
+    var renderLike = function () {
+      countEl.textContent = String(state.count);
       likeBtn.classList.toggle('liked', state.liked);
     };
 
-    likeBtn.addEventListener('click', () => {
+    likeBtn.addEventListener('click', function () {
       state.liked = !state.liked;
       state.count += state.liked ? 1 : -1;
       localStorage.setItem(key, JSON.stringify(state));
-      render();
+      renderLike();
     });
 
-    render();
+    renderLike();
   }
 </script>

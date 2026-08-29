@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const fragments = (await getCollection('fragments'))
+  .filter(fragment => !fragment.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const renderedFragments = await Promise.all(
+  fragments.map(async fragment => {
+    const { Content } = await fragment.render();
+    return { fragment, Content };
+  }),
+);
+
+const accentColors: Record<string, string> = {
+  pink: 'var(--c-pink)',
+  blue: 'var(--c-blue)',
+  yellow: 'var(--c-yellow)',
+  green: 'var(--c-green)',
+  purple: 'var(--c-purple)',
+};
+
+function formatDate(date: Date) {
+  return date.toLocaleDateString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).replace(/\//g, '.');
+}
+---
+
+<BaseLayout activeNav="fragments" title="Fragments — MODUSENSUS">
+  <header class="container page-header">
+    <div class="mono-label">FRAGMENTS</div>
+    <h1 class="page-header-title">SMALL<br />SIGNALS</h1>
+    <p class="page-header-subtitle">片段 — SHORT THOUGHTS / UNFINISHED OBSERVATIONS</p>
+  </header>
+
+  <div class="container board">
+    <hr class="board-rule" />
+    <div class="fragment-list">
+      {renderedFragments.length > 0 ? renderedFragments.map(({ fragment, Content }, index) => (
+          <article
+          class="fragment-item"
+          style={`--fragment-accent: ${accentColors[fragment.data.color]}`}
+        >
+          <div class="fragment-meta">
+            <span class="mono-meta">SIGNAL_{String(renderedFragments.length - index).padStart(2, '0')}</span>
+            <time class="mono-meta" datetime={fragment.data.date.toISOString()}>{formatDate(fragment.data.date)}</time>
+            {fragment.data.mood && <span class="mono-meta fragment-mood">{fragment.data.mood}</span>}
+          </div>
+          <div class="fragment-body"><Content /></div>
+        </article>
+      )) : (
+        <div class="empty-state">
+          <div class="empty-state-title">NO SIGNALS YET</div>
+          <p class="empty-state-copy">这里还没有片段。下一条想法会从 `src/content/fragments/` 出现。</p>
+        </div>
+      )}
+    </div>
+  </div>
+</BaseLayout>

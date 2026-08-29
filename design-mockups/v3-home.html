@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>V3 Mockup — MODUSENSUS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,500;0,700;0,900;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Caveat:wght@700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+/* ═══ V3 Design Tokens — Dark Doodle Hero × Light Editorial ═══ */
+:root {
+  --hero-bg: #2B2B28;
+  --bg: #E9E9E7;
+  --ink: #1A1A1A;
+  --muted: #6E6E6B;
+  --rule: #1A1A1A;
+  --rule-soft: rgba(26, 26, 26, 0.18);
+  --c-orange: #F2A14E;
+  --c-yellow: #F5D547;
+  --c-green:  #3FA34D;
+  --c-purple: #9B7EDE;
+  --c-pink:   #E8618C;
+  --c-blue:   #5B8DEF;
+  --font-grot: 'Archivo', 'Noto Sans SC', sans-serif;
+  --font-mono: 'Space Mono', 'Noto Sans SC', monospace;
+  --font-script: 'Caveat', cursive;
+  --font-cn: 'Noto Sans SC', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-grot); color: var(--ink); background: var(--bg); -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+
+/* ── Top nav (over hero, mono) ── */
+.topnav {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 22px 40px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+  color: #F4F4F2;
+}
+.topnav .brand { font-weight: 700; }
+.topnav nav { display: flex; gap: 26px; }
+.topnav nav a { opacity: 0.75; transition: opacity .2s; }
+.topnav nav a:hover { opacity: 1; }
+
+/* ═══ HERO — dark noise + colorful split letters + doodles ═══ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  background: var(--hero-bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+/* grain */
+.hero::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.16; mix-blend-mode: overlay;
+}
+.hero-script {
+  position: relative; z-index: 2;
+  font-family: var(--font-script); font-weight: 700;
+  font-size: clamp(30px, 4.2vw, 56px);
+  color: var(--c-pink);
+  transform: rotate(-3deg);
+  margin-bottom: 0.4em;
+}
+.hero-word {
+  position: relative; z-index: 2;
+  display: flex; align-items: baseline;
+  font-family: var(--font-grot); font-weight: 900;
+  font-size: clamp(44px, 8.6vw, 132px);
+  line-height: 1; letter-spacing: -0.01em;
+  user-select: none;
+}
+.hero-word span { display: inline-block; }
+/* 彩色拆字：交替旋转 + 黑描边 + 双层错位投影（模拟参考图的叠层轮廓） */
+.hero-word span {
+  -webkit-text-stroke: 2px #1A1A1A;
+  text-shadow: 0.045em 0.045em 0 var(--c-green), 0.09em 0.09em 0 #1A1A1A;
+}
+.hero-word span:nth-child(odd)  { transform: rotate(-4deg) translateY(0.02em); }
+.hero-word span:nth-child(even) { transform: rotate(3deg) translateY(-0.03em); }
+.hero-word span:nth-child(1) { color: var(--c-orange); }
+.hero-word span:nth-child(2) { color: var(--c-yellow); }
+.hero-word span:nth-child(3) { color: var(--c-purple); }
+.hero-word span:nth-child(4) { color: var(--c-green);  text-shadow: 0.045em 0.045em 0 var(--c-yellow), 0.09em 0.09em 0 #1A1A1A; }
+.hero-word span:nth-child(5) { color: var(--c-pink); }
+.hero-word span:nth-child(6) { color: var(--c-blue); }
+.hero-word span:nth-child(7) { color: var(--c-orange); }
+.hero-word span:nth-child(8) { color: var(--c-yellow); }
+.hero-word span:nth-child(9) { color: var(--c-purple); }
+.hero-word span:nth-child(10){ color: var(--c-green);  text-shadow: 0.045em 0.045em 0 var(--c-yellow), 0.09em 0.09em 0 #1A1A1A; }
+
+/* doodles */
+.doodle { position: absolute; z-index: 2; color: #F4F4F2; opacity: 0.92; }
+.doodle svg { display: block; }
+.d-float { animation: dfloat 5s ease-in-out infinite; }
+.d-float.d2 { animation-delay: -1.6s; }
+.d-float.d3 { animation-delay: -3.2s; }
+@keyframes dfloat { 0%,100% { transform: translateY(0) rotate(var(--r, 0deg)); } 50% { transform: translateY(-10px) rotate(var(--r, 0deg)); } }
+@media (prefers-reduced-motion: reduce) { .d-float { animation: none; } }
+
+.hero-foot {
+  position: absolute; bottom: 34px; left: 0; right: 0; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em;
+  color: rgba(244,244,242,0.65);
+}
+.hero-foot .scroll { animation: nudge 2.2s ease-in-out infinite; }
+@keyframes nudge { 0%,100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+@media (prefers-reduced-motion: reduce) { .hero-foot .scroll { animation: none; } }
+
+/* ═══ LIGHT EDITORIAL — three columns ═══ */
+.sheet { background: var(--bg); }
+.container { max-width: 1440px; margin: 0 auto; padding: 0 40px; }
+.board { padding: 56px 0 96px; }
+.board-rule { border: none; border-top: 2px solid var(--rule); margin-bottom: 40px; }
+
+.cols {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+.col-head {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.14em;
+  margin-bottom: 8px;
+}
+.col-head::before { content: ''; width: 10px; height: 10px; background: var(--ink); flex: none; }
+.col-head a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.col-sub { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 18px; }
+
+/* Col 1 — Threshold Notes：No. + 日期 + 大标题（参考图右栏） */
+.tn-item { padding: 18px 0; border-bottom: 1px solid var(--rule-soft); display: block; }
+.tn-item:first-of-type { border-top: 1px solid var(--rule); }
+.tn-meta { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+.tn-title { font-family: var(--font-grot); font-weight: 900; font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 8px; }
+.tn-desc { font-family: var(--font-cn); font-size: 13.5px; line-height: 1.75; color: var(--muted); }
+.tn-item:hover .tn-title { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px; }
+
+/* Col 2 — Lab：年份 + 标题/描述 + 黑标签（参考图中栏） */
+.lab-row {
+  display: grid; grid-template-columns: 52px 1fr auto; gap: 16px;
+  padding: 20px 0; border-bottom: 1px solid var(--rule); align-items: start;
+}
+.lab-row:first-of-type { border-top: 1px solid var(--rule); }
+.lab-year { font-family: var(--font-mono); font-size: 12px; color: var(--muted); padding-top: 3px; }
+.lab-name { font-family: var(--font-grot); font-weight: 700; font-size: 17px; letter-spacing: -0.01em; margin-bottom: 5px; }
+.lab-desc { font-family: var(--font-cn); font-size: 12.5px; line-height: 1.7; color: var(--muted); }
+.badge {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+  background: var(--ink); color: #F4F4F2; padding: 4px 8px; white-space: nowrap; margin-top: 2px;
+}
+.lab-row:hover .lab-name { text-decoration: underline; text-underline-offset: 4px; }
+
+/* Col 3 — Archive：编号列表 */
+.ar-item { padding: 16px 0; border-bottom: 1px solid var(--rule-soft); display: block; }
+.ar-item:first-of-type { border-top: 1px solid var(--rule); }
+.ar-meta { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+.ar-title { font-family: var(--font-grot); font-weight: 700; font-size: 17px; line-height: 1.35; letter-spacing: -0.01em; }
+.ar-item:hover .ar-title { text-decoration: underline; text-underline-offset: 4px; }
+
+.col-more {
+  display: inline-block; margin-top: 16px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--ink); padding-bottom: 2px;
+}
+.col-more:hover { background: var(--ink); color: var(--bg); }
+
+/* ── Footer ── */
+.footer { border-top: 3px solid var(--rule); }
+.footer-inner {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 22px 0 26px;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700; letter-spacing: 0.12em;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .cols { grid-template-columns: 1fr; gap: 48px; }
+  .topnav { padding: 18px 22px; }
+  .topnav nav { display: none; }
+  .container { padding: 0 22px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <div class="topnav">
+    <span class="brand">MODUSENSUS</span>
+    <nav>
+      <a href="#">THRESHOLD</a><a href="#">LAB</a><a href="#">ARCHIVE</a><a href="#">COLOPHON</a>
+    </nav>
+  </div>
+
+  <!-- doodles -->
+  <div class="doodle d-float" style="top:16%; left:12%; --r:-8deg;">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z"/></svg>
+  </div>
+  <div class="doodle d-float d2" style="top:24%; right:14%; --r:10deg;">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18"/><path d="M3 3l18 18M21 3L3 21"/></svg>
+  </div>
+  <div class="doodle d-float d3" style="top:56%; left:7%; --r:0deg;">
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>
+  </div>
+  <div class="doodle d-float d2" style="bottom:26%; right:8%; --r:6deg;">
+    <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M4 2l16 8-7 2-2 7z"/></svg>
+  </div>
+  <div class="doodle d-float d3" style="top:12%; right:30%; --r:-6deg;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z"/></svg>
+  </div>
+  <div class="doodle d-float" style="bottom:18%; left:22%; --r:4deg;">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.5" y="5" width="19" height="14" rx="1"/><path d="M3 6l9 7 9-7"/></svg>
+  </div>
+  <div class="doodle d-float d2" style="bottom:34%; left:38%; --r:-4deg;">
+    <svg width="46" height="46" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="14" r="7"/><path d="M12 11v0M9.8 13a3 3 0 014.4 0" stroke-linecap="round"/><path d="M20 22l6 5M23 20l4 6" stroke-linecap="round"/></svg>
+  </div>
+
+  <p class="hero-script">the quiet urge to sense</p>
+  <h1 class="hero-word" aria-label="MODUSENSUS">
+    <span>M</span><span>O</span><span>D</span><span>U</span><span>S</span><span>E</span><span>N</span><span>S</span><span>U</span><span>S</span>
+  </h1>
+
+  <div class="hero-foot">
+    <span>INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力</span>
+    <span class="scroll">SCROLL ↓</span>
+  </div>
+</section>
+
+<!-- ═══ LIGHT EDITORIAL BOARD ═══ -->
+<section class="sheet">
+  <div class="container board">
+    <hr class="board-rule" />
+    <div class="cols">
+
+      <!-- 01 Threshold Notes -->
+      <div class="col">
+        <div class="col-head"><a href="#">01 — THRESHOLD NOTES</a></div>
+        <div class="col-sub">数字思想杂志 · ESSAY</div>
+        <a class="tn-item" href="#">
+          <div class="tn-meta"><span>No. 04</span><span>Nov. 29</span></div>
+          <div class="tn-title">算法之外：城市空间的隐性门槛</div>
+          <div class="tn-desc">当推荐系统决定我们看见什么，城市与数字空间共享同一种排斥逻辑。</div>
+        </a>
+        <a class="tn-item" href="#">
+          <div class="tn-meta"><span>No. 03</span><span>Oct. 12</span></div>
+          <div class="tn-title">慢思考作为一种抵抗</div>
+          <div class="tn-desc">信息过载时代，注意力是最稀缺的城市资源。</div>
+        </a>
+        <a class="tn-item" href="#">
+          <div class="tn-meta"><span>No. 02</span><span>Sep. 05</span></div>
+          <div class="tn-title">门槛笔记：写在创刊之际</div>
+          <div class="tn-desc">关于技术、城市与人的交叉地带，一份长期议题清单。</div>
+        </a>
+        <a class="col-more" href="#">ALL ESSAYS →</a>
+      </div>
+
+      <!-- 02 Lab -->
+      <div class="col">
+        <div class="col-head"><a href="#">02 — LAB</a></div>
+        <div class="col-sub">AI EXPERIMENTS · TOOLS · SYSTEMS</div>
+        <a class="lab-row" href="#">
+          <span class="lab-year">2026</span>
+          <span>
+            <span class="lab-name">Nest</span><br />
+            <span class="lab-desc">对话驱动的个人 AI 工作台，聊天即可管理项目、任务与习惯。</span>
+          </span>
+          <span class="badge">AI/APP</span>
+        </a>
+        <a class="lab-row" href="#">
+          <span class="lab-year">2026</span>
+          <span>
+            <span class="lab-name">dsh-mneme</span><br />
+            <span class="lab-desc">跨会话记忆插件，SQLite + Markdown 双写，梦境巩固记忆。</span>
+          </span>
+          <span class="badge">MEMORY</span>
+        </a>
+        <a class="lab-row" href="#">
+          <span class="lab-year">2025</span>
+          <span>
+            <span class="lab-name">CaseForge</span><br />
+            <span class="lab-desc">学术论文深度拆解框架，8 字段结构化提取 + 4 格式输出。</span>
+          </span>
+          <span class="badge">LLM</span>
+        </a>
+        <a class="lab-row" href="#">
+          <span class="lab-year">2025</span>
+          <span>
+            <span class="lab-name">Ponte</span><br />
+            <span class="lab-desc">SSH 反向隧道守护进程，指数退避自动重连。</span>
+          </span>
+          <span class="badge">CLI</span>
+        </a>
+        <a class="col-more" href="#">ALL BUILDS →</a>
+      </div>
+
+      <!-- 03 Archive -->
+      <div class="col">
+        <div class="col-head"><a href="#">03 — ARCHIVE</a></div>
+        <div class="col-sub">知识档案 · NOTES</div>
+        <a class="ar-item" href="#">
+          <div class="ar-meta"><span>No. 06</span><span>2026.08</span></div>
+          <div class="ar-title">Python 自学地图：项目驱动式学习档案</div>
+        </a>
+        <a class="ar-item" href="#">
+          <div class="ar-meta"><span>No. 05</span><span>2026.06</span></div>
+          <div class="ar-title">Astro 博客搭建实录</div>
+        </a>
+        <a class="ar-item" href="#">
+          <div class="ar-meta"><span>No. 04</span><span>2026.04</span></div>
+          <div class="ar-title">Obsidian × Claude Code 工作流</div>
+        </a>
+        <a class="col-more" href="#">FULL ARCHIVE →</a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="container footer-inner">
+      <span>MODUSENSUS // INDEPENDENT STUDIO</span>
+      <span>VOL. 3 — 2026 EDITION</span>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

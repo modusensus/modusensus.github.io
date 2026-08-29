@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SectionGrid from '../components/SectionGrid.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -9,141 +8,55 @@ const posts = allPosts
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
 const projects = [
-  {
-    name: 'Nest',
-    desc: '对话驱动的个人 AI 工作台。聊天即可管理项目、任务、习惯、文章，React + FastAPI + SQLite，支持 Function Calling 与记忆库，多端部署。',
-    tags: ['React', 'FastAPI', 'AI'],
-    link: 'https://github.com/modusensus/nest',
-  },
-  {
-    name: 'CaseForge',
-    desc: '学术论文深度拆解框架。8 字段结构化提取 + 4 格式输出。',
-    tags: ['Python', 'LLM'],
-    link: 'https://github.com/modusensus/CaseForge',
-  },
-  {
-    name: 'MindOS',
-    desc: 'AI 驱动的个人成长系统。8 模块单文件 HTML Widget。',
-    tags: ['HTML/JS', 'Multi-AI'],
-    link: 'https://github.com/modusensus/Mindos',
-  },
-  {
-    name: 'dsh-mneme',
-    desc: '为 DeepSeek Harness 打造的跨会话记忆插件。SQLite + 可人工编辑的 Markdown 双写，autoDream 梦境巩固记忆，140 个测试护航。',
-    tags: ['Cordis', 'Node', 'Memory'],
-    link: 'https://github.com/modusensus/dsh-mneme',
-  },
-  {
-    name: 'Ponte',
-    desc: 'Persistent SSH reverse tunnel daemon CLI. Auto-reconnect with exponential backoff + jitter. ',
-    tags: ['Python', 'Powershell','SSH'],
-    link: 'https://github.com/modusensus/ponte',
-  },
+  { name: 'Nest',       year: '2026', badge: 'AI/APP',  desc: '对话驱动的个人 AI 工作台。聊天即可管理项目、任务、习惯、文章，React + FastAPI + SQLite，支持 Function Calling 与记忆库。', link: 'https://github.com/modusensus/nest' },
+  { name: 'dsh-mneme',  year: '2026', badge: 'MEMORY',  desc: '为 DeepSeek Harness 打造的跨会话记忆插件。SQLite + Markdown 双写，autoDream 梦境巩固记忆，140 个测试护航。', link: 'https://github.com/modusensus/dsh-mneme' },
+  { name: 'CaseForge',  year: '2026', badge: 'LLM',     desc: '学术论文深度拆解框架。8 字段结构化提取 + 4 格式输出。', link: 'https://github.com/modusensus/CaseForge' },
+  { name: 'MindOS',     year: '2026', badge: 'WIDGET',  desc: 'AI 驱动的个人成长系统。8 模块单文件 HTML Widget。', link: 'https://github.com/modusensus/Mindos' },
+  { name: 'Ponte',      year: '2026', badge: 'CLI',     desc: 'Persistent SSH reverse tunnel daemon CLI. Auto-reconnect with exponential backoff + jitter.', link: 'https://github.com/modusensus/ponte' },
 ];
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+function fmtShort(date: Date) {
+  const m = date.toLocaleDateString('en-US', { month: 'short' });
+  return `${m}. ${String(date.getDate()).padStart(2, '0')}`;
 }
 ---
 
 <BaseLayout activeNav="lab" title="Modusensus Lab — MODUSENSUS">
-  <header class="page-header">
-    <h1 class="page-header-title">MODUSENSUS LAB</h1>
-    <p class="page-header-subtitle">AI experiments / tools / automation / systems</p>
+  <header class="container page-header">
+    <div class="mono-label">01 — BUILDS</div>
+    <h1 class="page-header-title">MODUSENSUS<br />LAB</h1>
+    <p class="page-header-subtitle">AI EXPERIMENTS · TOOLS · AUTOMATION · SYSTEMS</p>
   </header>
 
-  <div class="page-layout">
-    <aside class="page-col-left">
-      <div class="card card-padded">
-        <div class="card-label">Featured Projects</div>
-        {projects.map(p => (
-          <div style="margin-bottom: 14px;">
-            <div style="font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px;">
-              {p.link ? <a href={p.link} target="_blank" style="color: inherit; text-decoration: none;">{p.name} ↗</a> : p.name}
-            </div>
-            <div style="font-size: 11px; color: var(--dust);">{p.desc}</div>
-          </div>
-        ))}
-      </div>
-      <div class="card card-padded">
-        <div class="card-label">Lab stats</div>
-        <div class="card-stat-row"><span>Projects</span><span>{projects.length}</span></div>
-        <div class="card-stat-row"><span>Logs</span><span>{posts.length}</span></div>
-      </div>
-      <div class="card card-padded">
-        <div class="card-label">Design Archive</div>
-        <div class="section-item">
-          <div class="section-avatar">V1</div>
-          <div>
-            <div class="section-name">Original Blog Site</div>
-            <div class="section-desc">站点最初版本 · 完整网站作品集</div>
-            <a href="/works/original-site/index.html" target="_blank"><button class="browse-btn">Visit →</button></a>
-          </div>
-        </div>
-        <div class="section-item" style="margin-bottom: 0;">
-          <div class="section-avatar">V2</div>
-          <div>
-            <div class="section-name">Digital Magazine Site</div>
-            <div class="section-desc">数字杂志升级版 · 完整网站作品集</div>
-            <a href="/works/v2-blog/index.html" target="_blank"><button class="browse-btn">Visit →</button></a>
-          </div>
-        </div>
-      </div>
-    </aside>
+  <div class="container board">
+    <hr class="board-rule" />
 
-    <section class="page-col-main">
-      <div class="card card-padded" style="margin-bottom: 16px;">
-        <div class="card-label">Featured Projects</div>
-        <div class="project-grid">
-          {projects.map(p => (
-            <div class="project-card">
-              <div class="project-card-name">
-                {p.link ? <a href={p.link} target="_blank" style="color: inherit; text-decoration: none;">{p.name} ↗</a> : p.name}
-              </div>
-              <div class="project-card-desc">{p.desc}</div>
-              <div>
-                {p.tags.map(t => <span class="pill">{t}</span>)}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {posts.map(post => (
-        <article class="article-feed-card">
-          <a href={`/blog/${post.slug}`} style="display: block;">
-            <div class="article-feed-header">
-              <div class="feed-avatar">LB</div>
-              <div>
-                <div class="feed-meta-name">Modusensus Lab</div>
-                <div class="feed-meta-date">{formatDate(post.data.date)}</div>
-              </div>
-            </div>
-            <div class="feed-body">
-              <h3 class="feed-title">{post.data.title}</h3>
-              <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
-            </div>
-            {post.data.cover ? (
-              <img src={post.data.cover} alt={post.data.title} class="feed-cover" />
-            ) : (
-              <div class="feed-cover-placeholder lab-gradient"></div>
-            )}
-            <div class="feed-footer">
-              <span class="feed-read-btn">→ Read</span>
-              <span class="feed-tag">#AI</span>
-              <span class="feed-tag">#project</span>
-            </div>
-          </a>
-        </article>
+    <div class="mono-label group-label">BUILDS</div>
+    <div>
+      {projects.map(p => (
+        <a class="lab-row" href={p.link} target="_blank" rel="noopener">
+          <span class="lab-year">{p.year}</span>
+          <span>
+            <span class="lab-name">{p.name}</span><br />
+            <span class="lab-desc">{p.desc}</span>
+          </span>
+          <span class="badge">{p.badge}</span>
+        </a>
       ))}
-    </section>
+    </div>
 
-    <aside class="page-col-right">
-      <SectionGrid active="lab" title="Explore other sections" />
-    </aside>
+    <div class="mono-label group-label">LOGS</div>
+    <div>
+      {posts.map((post, idx) => (
+        <a class="ar-item" href={`/blog/${post.slug}`}>
+          <div class="ar-meta">
+            <span>LOG — {String(posts.length - idx).padStart(2, '0')}</span>
+            <span>{fmtShort(post.data.date)}</span>
+          </div>
+          <div class="ar-title">{post.data.title}</div>
+        </a>
+      ))}
+      {posts.length === 0 && <p class="mono-meta">NO LOGS YET.</p>}
+    </div>
   </div>
 </BaseLayout>

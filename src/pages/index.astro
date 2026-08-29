@@ -1,530 +1,450 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SectionGrid from '../components/SectionGrid.astro';
 import { getCollection } from 'astro:content';
+import { announcements } from '../data/announcements';
 
 const allPosts = await getCollection('blog');
-const sortedPosts = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const sorted = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const thresholdPosts = sortedPosts.filter(p => p.data.module === 'threshold');
-const labPosts = sortedPosts.filter(p => p.data.module === 'lab');
-const archivePosts = sortedPosts.filter(p => p.data.module === 'archive');
+const recent = sorted.slice(0, 3);
 
-const latestPost = sortedPosts[0];
-
-const sectionColors: Record<string, string> = {
-  threshold: 'threshold-gradient',
-  lab: 'lab-gradient',
-  archive: 'archive-gradient',
+const moduleNames: Record<string, string> = {
+  threshold: 'THRESHOLD',
+  lab: 'LAB',
+  archive: 'ARCHIVE',
 };
 
-const sectionNames: Record<string, string> = {
-  threshold: 'Threshold Notes',
-  lab: 'Modusensus Lab',
-  archive: 'Archive',
-};
+const letters = 'MODUSENSUS'.split('');
+const letterColors = ['orange', 'yellow', 'purple', 'green', 'pink', 'blue'];
+const cardColors = ['var(--c-pink)', 'var(--c-blue)', 'var(--c-yellow)'];
 
-const sectionDesc: Record<string, string> = {
-  threshold: '数字思想杂志',
-  lab: 'AI experiments',
-  archive: '知识档案',
-};
-
-const sectionAbbr: Record<string, string> = {
-  threshold: 'TN',
-  lab: 'LB',
-  archive: 'AR',
-};
-
-function formatDate(date: Date) {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+function fmtYear(date: Date) {
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
-
-// ── 右侧栏日历卡片：构建时按当月生成 ──
-const calNow = new Date();
-const calYear = calNow.getFullYear();
-const calMonth = calNow.toLocaleDateString('en-US', { month: 'long' });
-const calFirstDow = new Date(calYear, calNow.getMonth(), 1).getDay();
-const calDays = new Date(calYear, calNow.getMonth() + 1, 0).getDate();
-const calToday = calNow.getDate();
-const calWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const calEmpty = Array.from({ length: calFirstDow });
-const calDayCells = Array.from({ length: calDays }, (_, i) => i + 1);
 ---
 
-<BaseLayout activeNav="home" showHero>
-  <div class="page-layout">
-    <!-- Left: Profile -->
-    <aside class="page-col-left">
-      <div class="card profile-card">
-        <div class="profile-avatar-wrap"><img src="/images/profile-avatar.gif" alt="MODUSENSUS avatar" /></div>
-        <div style="padding: 0 16px 4px;">
-          <div class="profile-name"><span class="typewriter-text" aria-live="polite"></span><span class="blink-caret" aria-hidden="true"></span></div>
-          <div class="profile-headline">Independent Digital Studio</div>
-        </div>
-        <div class="profile-links">
-          <a href="https://github.com/modusensus" class="profile-link" title="GitHub" aria-label="GitHub">
-            <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+<BaseLayout activeNav="home">
+  <Fragment slot="hero">
+    <!-- ═══ HERO — 深色噪点 + 彩色拆字 + 头像贴纸 + 涂鸦 ═══ -->
+    <section class="hero">
+      <div class="hero-inner">
+        <img src="/images/profile-avatar.gif" alt="MODUSENSUS avatar" class="hero-avatar" width="112" height="112" />
+
+        <p class="hero-script">the quiet urge to sense</p>
+
+        <h1 class="hero-word" aria-label="MODUSENSUS">
+          {letters.map((ch, i) => (
+            <span class={`lc-${letterColors[i % letterColors.length]}`}>{ch}</span>
+          ))}
+        </h1>
+
+        <!-- 社交图标：GitHub / Email / RSS / LinkedIn / Substack -->
+        <div class="hero-icons">
+          <a href="https://github.com/modusensus" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
           </a>
-          <a href="mailto:hello@modusensus.com" class="profile-link" title="Email" aria-label="Email">
-            <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><path d="M2 4l6 5 6-5"/></svg>
+          <a href="mailto:hello@modusensus.com" aria-label="Email" title="Email">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="1.5" y="2.5" width="13" height="11" rx="1"/><path d="M2 4l6 5 6-5"/></svg>
           </a>
-          <a href="/rss.xml" class="profile-link" title="RSS" aria-label="RSS">
-            <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor"><path d="M2 13.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/><path d="M2 8a6 6 0 016 6H6a4 4 0 00-4-4V8z"/><path d="M2 2a12 12 0 0112 12h-2a10 10 0 00-10-10V2z"/></svg>
+          <a href="/rss.xml" aria-label="RSS" title="RSS 订阅">
+            <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M2 13.5a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/><path d="M2 8a6 6 0 016 6H6a4 4 0 00-4-4V8z"/><path d="M2 2a12 12 0 0112 12h-2a10 10 0 00-10-10V2z"/></svg>
           </a>
-        </div>
-        <p class="profile-signature">关注城市、数据与创造力的交汇处，在这里记录学习的轨迹。</p>
-        <div class="card-divider"></div>
-        <div style="padding: 10px 16px; text-align: left;">
-          <div class="card-stat-row"><span>Articles</span><span>{allPosts.length}</span></div>
-          <div class="card-stat-row"><span>Projects</span><span>2</span></div>
-        </div>
-        <div class="card-divider"></div>
-        <div style="padding: 10px 16px; text-align: left;">
-          <div style="font-size: 10px; color: var(--ink); font-weight: 600; margin-bottom: 6px;">Sections</div>
-          <a href="/threshold-notes" class="card-list-item" style="display: block;">Threshold Notes</a>
-          <a href="/lab" class="card-list-item" style="display: block;">Modusensus Lab</a>
-          <a href="/archive" class="card-list-item" style="display: block;">Archive</a>
-          <a href="/colophon" class="card-list-item" style="display: block;">Colophon</a>
+          <a href="https://www.linkedin.com/in/modusensus/" target="_blank" rel="noopener" aria-label="LinkedIn" title="LinkedIn">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 1 1 0-4.12 2.06 2.06 0 0 1 0 4.12zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.55C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.72C24 .77 23.2 0 22.22 0z"/></svg>
+          </a>
+          <a href="https://modusensus.substack.com/" target="_blank" rel="noopener" aria-label="Substack" title="Substack">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M3 4h18v2.2H3zM3 8.6h18v2.2H3zM3 13.2h18V21l-9-4.4L3 21z"/></svg>
+          </a>
         </div>
       </div>
-    </aside>
 
-    <!-- Main: Timeline + Cards -->
-    <section class="page-col-main">
-      <div class="timeline">
-        {sortedPosts.map((post, idx) => (
-          <a href={`/blog/${post.slug}`} class="timeline-card">
-            <div class="timeline-rail">
-              <span class="timeline-num">{String(sortedPosts.length - idx).padStart(2, '0')}</span>
-            </div>
-            <article class="timeline-body">
-              <div class="timeline-head">
-                <div class="timeline-meta">
-                  <span class={`tag tag-${post.data.module}`}>{sectionNames[post.data.module]}</span>
-                  <span class="timeline-date">{formatDate(post.data.date)}</span>
-                </div>
-                <h3 class="feed-title">{post.data.title}</h3>
-              </div>
-              <div class="timeline-main">
-                <div class="timeline-cover-wrap">
-                  {post.data.cover ? (
-                    <img src={post.data.cover} alt={post.data.title} class="timeline-cover" />
-                  ) : (
-                    <div class={`timeline-cover timeline-placeholder ${sectionColors[post.data.module]}`}></div>
-                  )}
-                </div>
-                <div class="timeline-content">
-                  <p class="feed-excerpt">{post.data.subtitle || post.data.excerpt || ''}</p>
-                  <div class="timeline-foot">
-                    <span class="feed-read-btn">→ Read</span>
-                    <span class="feed-tag">#{post.data.module}</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-          </a>
-        ))}
+      <!-- doodles -->
+      <div class="doodle d-float" style="top:16%; left:10%; --r:-8deg;">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z"/></svg>
+      </div>
+      <div class="doodle d-float d2" style="top:22%; right:12%; --r:10deg;">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18"/><path d="M3 3l18 18M21 3L3 21"/></svg>
+      </div>
+      <div class="doodle d-float d3" style="top:56%; left:6%; --r:0deg;">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>
+      </div>
+      <div class="doodle d-float d2" style="bottom:24%; right:7%; --r:6deg;">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor"><path d="M4 2l16 8-7 2-2 7z"/></svg>
+      </div>
+      <div class="doodle d-float d3" style="top:12%; right:32%; --r:-6deg;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0l2.4 9.6L24 12l-9.6 2.4L12 24l-2.4-9.6L0 12l9.6-2.4z"/></svg>
+      </div>
+      <div class="doodle d-float" style="bottom:16%; left:20%; --r:4deg;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="2.5" y="5" width="19" height="14" rx="1"/><path d="M3 6l9 7 9-7"/></svg>
+      </div>
+      <div class="doodle d-float d2" style="bottom:36%; left:36%; --r:-4deg;">
+        <svg width="46" height="46" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="14" r="7"/><path d="M9.8 13a3 3 0 014.4 0" stroke-linecap="round"/><path d="M20 22l6 5M23 20l4 6" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="hero-foot">
+        <span>INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力</span>
+        <span class="scroll">SCROLL ↓</span>
       </div>
     </section>
+  </Fragment>
 
-    <!-- Right: Explore + What's new + Calendar -->
-    <aside class="page-col-right">
-      <SectionGrid />
+  <!-- ═══ SITE PANEL — 时间轴 + 公告 + 留言 ═══ -->
+  <div class="container board">
+    <hr class="board-rule" />
+    <div class="home-grid">
 
-      {latestPost && (
-        <div class="card card-padded">
-          <div class="card-label">What's new</div>
-          <div class="news-item">
-            <a href={`/blog/${latestPost.slug}`}>
-              <div class="news-title">{latestPost.data.title}</div>
-              <div class="news-meta">{formatDate(latestPost.data.date).toUpperCase()} · {sectionNames[latestPost.data.module].toUpperCase()}</div>
+      <!-- 01 近期更新：时间轴 -->
+      <section class="home-main">
+        <div class="section-head">
+          <span class="mono-label">01 — RECENT UPDATES</span>
+          <span class="col-sub">近期更新</span>
+        </div>
+        <div class="timeline">
+          {recent.map(post => (
+            <a class="tl-item" href={`/blog/${post.slug}`}>
+              <span class="tl-node" aria-hidden="true"></span>
+              <div class="tl-meta">
+                <span class="mono-meta">{fmtYear(post.data.date)} — {moduleNames[post.data.module]}{post.data.issue ? ` · NO.${post.data.issue}` : ''}</span>
+              </div>
+              <div class="tl-title">{post.data.title}</div>
+              {post.data.subtitle && <div class="tl-desc">{post.data.subtitle}</div>}
             </a>
-          </div>
-        </div>
-      )}
-
-      <div class="card card-padded calendar-card">
-        <div class="card-label">Calendar</div>
-        <div class="cal-head">
-          <span class="cal-month">{calMonth}</span>
-          <span class="cal-year">{calYear}</span>
-        </div>
-        <div class="cal-grid">
-          {calWeek.map(d => <span class="cal-dow">{d}</span>)}
-          {calEmpty.map(() => <span class="cal-empty"></span>)}
-          {calDayCells.map(d => (
-            <span class:list={['cal-day', { 'cal-today': d === calToday }]}>{d}</span>
           ))}
         </div>
-      </div>
-    </aside>
+        <a class="col-more" href="/blog">ALL POSTS →</a>
+      </section>
+
+      <!-- 右栏：公告 + 留言 -->
+      <aside class="home-rail">
+        <div class="rail-card">
+          <div class="section-head">
+            <span class="mono-label">02 — ANNOUNCEMENTS</span>
+            <span class="col-sub">公告</span>
+          </div>
+          <div class="announce-cards">
+            {announcements.map((a, i) => (
+              <div class="announce-card" style={`--card-accent: ${cardColors[i % cardColors.length]}`}>
+                <div class="announce-card-top">
+                  <span class="announce-tag">NOTICE</span>
+                  <span class="mono-meta">{a.date}</span>
+                </div>
+                <p class="announce-text">{a.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="rail-card">
+          <div class="section-head">
+            <span class="mono-label">03 — GUESTBOOK</span>
+            <span class="col-sub">留言板</span>
+          </div>
+          <p class="announce-text">路过就留句话吧。使用 GitHub 登录后留言，公开可见。</p>
+          <a class="col-more" href="/guestbook">SIGN THE BOOK →</a>
+        </div>
+      </aside>
+
+    </div>
   </div>
 </BaseLayout>
 
 <style>
-/* ── Timeline: 时间轴 + 卡片（封面在左、文字在右） ── */
+/* ═══ HERO ═══ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  background: var(--hero-bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.16; mix-blend-mode: overlay;
+}
+.hero-inner {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 24px;
+}
+
+/* 头像贴纸 */
+.hero-avatar {
+  width: 112px; height: 112px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--hero-fg);
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.45);
+  transform: rotate(-6deg);
+  margin-bottom: 26px;
+}
+
+.hero-script {
+  font-family: var(--font-script); font-weight: 700;
+  font-size: clamp(30px, 4.2vw, 56px);
+  color: var(--c-pink);
+  transform: rotate(-3deg);
+  margin-bottom: 0.35em;
+}
+
+/* 彩色拆字 */
+.hero-word {
+  display: flex; align-items: baseline; flex-wrap: wrap; justify-content: center;
+  font-family: var(--font-grot); font-weight: 900;
+  font-size: clamp(44px, 8.6vw, 132px);
+  line-height: 1; letter-spacing: -0.01em;
+  user-select: none;
+}
+.hero-word span {
+  display: inline-block;
+  -webkit-text-stroke: 2px #1A1A1A;
+  text-shadow: 0.045em 0.045em 0 var(--c-green), 0.09em 0.09em 0 #1A1A1A;
+  transition: transform 0.3s var(--ease-out);
+}
+.hero-word span:nth-child(odd)  { rotate: -4deg; }
+.hero-word span:nth-child(even) { rotate: 3deg; translate: 0 -0.03em; }
+.hero-word span:hover { transform: translateY(-0.06em) scale(1.07); }
+
+.lc-orange { color: var(--c-orange); }
+.lc-yellow { color: var(--c-yellow); text-shadow: 0.045em 0.045em 0 var(--c-purple), 0.09em 0.09em 0 #1A1A1A; }
+.lc-purple { color: var(--c-purple); text-shadow: 0.045em 0.045em 0 var(--c-yellow), 0.09em 0.09em 0 #1A1A1A; }
+.lc-green  { color: var(--c-green);  text-shadow: 0.045em 0.045em 0 var(--c-yellow), 0.09em 0.09em 0 #1A1A1A; }
+.lc-pink   { color: var(--c-pink);   text-shadow: 0.045em 0.045em 0 var(--c-blue), 0.09em 0.09em 0 #1A1A1A; }
+.lc-blue   { color: var(--c-blue);   text-shadow: 0.045em 0.045em 0 var(--c-pink), 0.09em 0.09em 0 #1A1A1A; }
+
+/* doodles */
+.doodle { position: absolute; z-index: 2; color: var(--hero-fg); opacity: 0.92; }
+.doodle svg { display: block; }
+.d-float { animation: dfloat 5s ease-in-out infinite; }
+.d-float.d2 { animation-delay: -1.6s; }
+.d-float.d3 { animation-delay: -3.2s; }
+@keyframes dfloat {
+  0%, 100% { translate: 0 0; }
+  50%      { translate: 0 -10px; }
+}
+
+.hero-foot {
+  position: absolute; bottom: 34px; left: 0; right: 0; z-index: 2;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em;
+  color: rgba(244, 244, 242, 0.65); text-transform: uppercase;
+}
+.hero-foot .scroll { animation: nudge 2.2s ease-in-out infinite; }
+@keyframes nudge { 0%, 100% { translate: 0 0; } 50% { translate: 0 5px; } }
+
+/* 社交图标行 */
+.hero-icons {
+  display: flex; gap: 13px; margin-top: 32px;
+}
+.hero-icons a {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px;
+  border: 1px solid rgba(244, 244, 242, 0.4); border-radius: 999px;
+  color: var(--hero-fg);
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.25s var(--ease-out);
+}
+.hero-icons a:hover {
+  color: #1A1A1A; background: var(--hero-fg); border-color: var(--hero-fg);
+  transform: translateY(-3px);
+}
+
+/* ═══ SITE PANEL ═══ */
+.home-grid {
+  display: grid; grid-template-columns: 1.6fr 1fr;
+  gap: 72px; align-items: start;
+}
+.section-head {
+  display: flex; align-items: baseline; gap: 14px;
+  margin-bottom: 30px;
+}
+.section-head .col-sub { margin-bottom: 0; }
+
+/* 时间轴 */
 .timeline {
   position: relative;
-  display: flex;
-  flex-direction: column;
+  padding-left: 28px;
 }
-/* 贯穿整列的时间轴竖线（静态可见） */
 .timeline::before {
   content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 27px;
-  width: 1px;
-  background: var(--border-strong);
+  position: absolute; left: 5px; top: 10px; bottom: 10px;
+  width: 1px; background: var(--rule-soft);
 }
-/* 时间轴竖线上的流动光点：沿竖线循环下移 */
-.timeline::after {
-  content: '';
-  position: absolute;
-  left: 25px;
-  top: 0;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent);
-  z-index: 2;
-  animation: ms-flow 5s linear infinite;
-}
-@keyframes ms-flow {
-  0%   { top: 0; opacity: 0; }
-  5%   { opacity: 0.9; }
-  95%  { opacity: 0.9; }
-  100% { top: 100%; opacity: 0; }
-}
-
-.timeline-card {
+.tl-item {
   position: relative;
-  display: grid;
-  grid-template-columns: 54px 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-  text-decoration: none;
-  color: inherit;
+  display: block;
+  padding: 24px 0;
 }
-.timeline-card:last-child { margin-bottom: 0; }
-
-/* 左侧序号节点列 */
-.timeline-rail {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 0;
-  position: relative;
-  z-index: 1;
-}
-/* 序号圆点：顶部对齐卡片 */
-.timeline-num {
-  position: relative;
-  width: 32px;
-  height: 32px;
+.tl-item + .tl-item { border-top: 1px solid transparent; }
+.tl-node {
+  position: absolute; left: -28px; top: 32px;
+  width: 11px; height: 11px;
   border-radius: 50%;
   background: var(--paper);
-  border: 1px solid var(--ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-ui);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: 0.04em;
+  border: 2px solid var(--ink);
+  transition: background 0.2s, border-color 0.2s, transform 0.25s var(--ease-out);
 }
-/* 序号圆点外圈呼吸脉冲 */
-.timeline-num::after {
+.tl-item:hover .tl-node {
+  background: var(--c-pink);
+  border-color: var(--c-pink);
+  transform: scale(1.25);
+}
+.tl-meta { margin-bottom: 9px; }
+.tl-title {
+  font-family: var(--font-grot); font-weight: 700; font-size: 19px;
+  line-height: 1.35; letter-spacing: -0.01em;
+  position: relative; display: inline-block;
+}
+.tl-title::after {
   content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px solid var(--accent);
-  animation: ms-pulse 2.6s ease-in-out infinite;
-}
-@keyframes ms-pulse {
-  0%, 100% { transform: scale(1); opacity: 0.35; }
-  50%      { transform: scale(1.35); opacity: 0.08; }
-}
-/* 右侧卡片：标题/刊号在上，封面在左、文字在右 —— 长矩形，整体更紧凑 */
-.timeline-body {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background: var(--paper);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 12px;
-  overflow: hidden;
-  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
-}
-/* 卡片顶部：刊号 + 日期 + 标题 */
-.timeline-head {
-  padding: 0 2px;
-}
-/* 卡片下部：左封面、右文字 */
-.timeline-main {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 14px;
-  align-items: center;
-}
-/* 序号右侧延伸的横线：紧贴卡片上沿 */
-.timeline-body::before {
-  content: '';
-  position: absolute;
-  top: 16px;
-  right: 100%;
-  width: 27px;
-  height: 1px;
-  background: var(--border-strong);
-}
-.timeline-card:hover .timeline-body {
-  transform: translateY(-2px) scale(1.01);
-  box-shadow: 0 6px 18px rgba(26, 26, 26, 0.08);
-  border-color: var(--ink);
-}
-
-.timeline-cover-wrap {
-  position: relative;
-  height: 136px;
-  min-height: 136px;
-  border-radius: 4px;
-  overflow: hidden;
-  background: var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.timeline-cover-wrap img,
-.timeline-cover {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center center;
-}
-.timeline-placeholder { display: block; width: 100%; height: 100%; }
-
-/* 内容区（右侧） */
-.timeline-content {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  padding: 0;
-}
-.timeline-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 7px;
-}
-.timeline-date {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  color: var(--dust);
-  text-transform: uppercase;
-}
-
-/* 标题：Libre Baskerville + 霞鹜文楷，文艺编辑感 */
-.timeline-card .feed-title {
-  font-family: 'Libre Baskerville', 'LXGW WenKai', 'Noto Serif SC', serif;
-  font-size: 19px;
-  font-weight: 700;
-  line-height: 1.35;
-  color: var(--ink);
-  margin-bottom: 7px;
-  position: relative;
-  animation: none;
-  letter-spacing: 0.01em;
-}
-/* 选中（hover）标题下划线浮现动效 */
-.timeline-card .feed-title::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -2px;
-  width: 0;
-  height: 1px;
+  position: absolute; left: 0; bottom: -3px;
+  width: 0; height: 2px;
   background: var(--ink);
-  transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 0.35s var(--ease-out);
 }
-.timeline-card:hover .feed-title::after {
-  width: 100%;
-}
-
-.feed-excerpt {
-  font-family: 'Crimson Text', 'LXGW WenKai', 'Noto Serif SC', serif;
-  font-size: 13px;
-  line-height: 1.75;
-  color: var(--dust);
-  margin-bottom: 10px;
-  flex: 1;
+.tl-item:hover .tl-title::after { width: 100%; }
+.tl-desc {
+  font-family: var(--font-cn); font-size: 13.5px; line-height: 1.75;
+  color: var(--muted); margin-top: 8px;
 }
 
-/* 卡片下部：Crimson Text 斜体，文艺杂志感 */
-.timeline-foot {
-  display: flex;
-  gap: 16px;
-  align-items: baseline;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-  font-family: 'Crimson Text', 'LXGW WenKai', 'Noto Serif SC', serif;
-  font-style: italic;
-  font-size: 12px;
-}
-.feed-read-btn { font-weight: 600; color: var(--accent); }
-.feed-tag { color: var(--dust); }
+.rail-card { border-top: 2px solid var(--rule); padding-top: 16px; }
+.rail-card + .rail-card { margin-top: 52px; }
 
-/* 触屏设备禁用悬浮位移 */
-@media (hover: none) {
-  .timeline-card:hover .timeline-body {
-    transform: none;
-    box-shadow: none;
-  }
+/* 公告卡片 */
+.announce-cards { display: flex; flex-direction: column; gap: 14px; }
+.announce-card {
+  position: relative;
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--card-accent, var(--ink));
+  padding: 14px 16px 12px;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), border-color 0.25s;
 }
-
-/* ── 右侧栏 What's new ── */
-.news-item { margin-bottom: 12px; }
-.news-title {
-  font-family: var(--font-serif);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--ink);
-  line-height: 1.35;
+.announce-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(26, 26, 26, 0.08);
+  border-color: var(--card-accent, var(--ink));
 }
-.news-meta {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  color: var(--dust);
-  margin-top: 4px;
-  letter-spacing: 0.06em;
-}
-
-/* ── 右侧栏：日历卡片 ── */
-.calendar-card { margin-top: 8px; }
-.cal-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding-bottom: 8px;
+.announce-card-top {
+  display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 8px;
-  border-bottom: 1px solid var(--border);
 }
-.cal-month {
-  font-family: var(--font-serif);
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ink);
+.announce-tag {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--paper); background: var(--card-accent, var(--ink));
+  padding: 2px 7px;
 }
-.cal-year {
-  font-family: var(--font-ui);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: var(--dust);
-}
-.cal-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px;
-  text-align: center;
-}
-.cal-dow {
-  font-family: var(--font-ui);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--dust);
-  padding: 4px 0;
-  letter-spacing: 0.05em;
-}
-.cal-empty { padding: 4px 0; }
-.cal-day {
-  font-family: var(--font-ui);
-  font-size: 11px;
-  color: var(--ink);
-  padding: 5px 0;
-  border-radius: 2px;
-}
-.cal-today {
-  background: var(--accent);
-  color: #fff;
-  font-weight: 700;
+.announce-text {
+  font-family: var(--font-cn); font-size: 13.5px; line-height: 1.75;
+  color: var(--ink-soft); margin-bottom: 0;
 }
 
-/* 编辑杂志式闪烁光标 */
-.blink-caret {
-  display: inline-block;
-  width: 1px;
-  height: 1em;
-  margin-left: 4px;
-  vertical-align: -0.15em;
-  background: var(--accent);
-  animation: ms-blink 1.1s steps(1) infinite;
+/* ═══ Scroll reveal（html.js 才隐藏，无 JS 时内容照常显示） ═══ */
+html.js .rv {
+  opacity: 0; transform: translateY(26px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  transition-delay: var(--rv-delay, 0ms);
 }
-@keyframes ms-blink {
-  0%, 100% { opacity: 1; }
-  50%      { opacity: 0; }
-}
+html.js .rv.rv-visible { opacity: 1; transform: none; }
 
-/* 打字机文字：等宽占位避免居中抖动 */
-.typewriter-text {
-  font-variant-numeric: tabular-nums;
+/* 黑色分隔线：从左往右画出 */
+html.js hr.board-rule.rv {
+  opacity: 1;
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform 0.9s var(--ease-out);
 }
+html.js hr.board-rule.rv.rv-visible { transform: scaleX(1); }
 
-/* 移动端：封面缩小、卡片保持上下结构 */
-@media (max-width: 640px) {
-  .timeline-main {
-    grid-template-columns: 118px 1fr;
-    gap: 12px;
-  }
-  .timeline-cover-wrap { height: 118px; min-height: 118px; }
-  .timeline-card .feed-title { font-size: 17px; }
-  .feed-excerpt { font-size: 12px; }
+/* 时间轴竖线：从上往下生长 */
+html.js .timeline::before {
+  transform: scaleY(0); transform-origin: top;
+  transition: transform 1s var(--ease-out) 0.15s;
+}
+html.js .timeline.tl-draw::before { transform: scaleY(1); }
+
+@media (max-width: 1024px) {
+  .home-grid { grid-template-columns: 1fr; gap: 48px; }
+}
+@media (max-width: 899px) {
+  .hero { min-height: 88vh; }
+  .hero-avatar { width: 92px; height: 92px; }
+  .hero-icons { margin-top: 24px; gap: 10px; }
+  .hero-icons a { width: 34px; height: 34px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-float, .hero-foot .scroll { animation: none; }
+  html.js .rv, html.js hr.board-rule.rv { opacity: 1; transform: none; transition: none; }
+  html.js .timeline::before { transform: none; transition: none; }
 }
 </style>
 
 <script>
-// ── 左侧名字打字机：打字 → 停顿 → 删除 → 再打（循环） ──
-function initTypewriter() {
-  const el = document.querySelector('.profile-name .typewriter-text');
-  if (!el) return;
+import gsap from 'gsap';
 
-  const text = 'MODUSENSUS';
-  const typeSpeed = 150;   // 打字每字间隔
-  const deleteSpeed = 80;  // 删除每字间隔
-  const hold = 2000;       // 打满 / 删除完后的停顿
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // 尊重系统“减少动态效果”设置
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    el.textContent = text;
-    return;
-  }
+// ── 滚动显现：分隔线画出、时间轴生长、区块上浮错峰 ──
+// （无论是否减动效都绑定类，CSS 的 reduce 媒体查询会强制显示）
+document.documentElement.classList.add('js');
+const revealEls = [...document.querySelectorAll('.board-rule, .section-head, .tl-item, .rail-card')];
+revealEls.forEach(el => el.classList.add('rv'));
+document.querySelectorAll('.home-main .tl-item').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 90}ms`));
+document.querySelectorAll('.home-rail .rail-card').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 120}ms`));
 
-  let index = 0;
-  let deleting = false;
-
-  function tick() {
-    if (!deleting) {
-      el.textContent = text.slice(0, ++index);
-      if (index === text.length) { deleting = true; setTimeout(tick, hold); return; }
-      setTimeout(tick, typeSpeed);
+const io = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    if (entry.target.classList.contains('timeline')) {
+      entry.target.classList.add('tl-draw');
     } else {
-      el.textContent = text.slice(0, --index);
-      if (index === 0) { deleting = false; setTimeout(tick, hold); return; }
-      setTimeout(tick, deleteSpeed);
+      entry.target.classList.add('rv-visible');
     }
+    io.unobserve(entry.target);
   }
-  tick();
+}, { threshold: 0.2 });
+revealEls.forEach(el => io.observe(el));
+const timeline = document.querySelector('.timeline');
+if (timeline) io.observe(timeline);
+
+if (!reduce) {
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+  tl.from('.hero-avatar', { scale: 0, rotate: -30, duration: 0.7, ease: 'back.out(1.8)' }, 0.15)
+    .from('.hero-script', { y: 24, opacity: 0, duration: 0.5 }, 0.35)
+    .from('.hero-word span',
+      { y: 90, opacity: 0, rotate: () => gsap.utils.random(-14, 14), duration: 0.8, stagger: 0.055, ease: 'back.out(1.6)' },
+      0.5)
+    .from('.hero-icons a', { y: 16, opacity: 0, duration: 0.4, stagger: 0.06 }, 1.05)
+    .from('.doodle', { opacity: 0, duration: 0.5, stagger: 0.07 }, 1.15)
+    .from('.hero-foot', { opacity: 0, y: 12, duration: 0.5 }, 1.35);
+
+  // 动画结束后清除内联样式，让 CSS :hover 接管字母交互
+  tl.then(() => {
+    gsap.set('.hero-word span', { clearProps: 'all' });
+  });
+
+  // 兜底：rAF 被节流时（后台标签页 / 预渲染），1.6s 后直接跳到终态，内容永不隐形
+  setTimeout(() => { if (tl.progress() < 1) tl.progress(1); }, 1600);
+
+  // ── Hero 涂鸦鼠标视差（仅精确指针设备） ──
+  const hero = document.querySelector('.hero');
+  const doodles = [...document.querySelectorAll('.doodle')];
+  if (hero && doodles.length && window.matchMedia('(pointer: fine)').matches) {
+    let raf = 0;
+    hero.addEventListener('mousemove', (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const r = hero.getBoundingClientRect();
+        const x = e.clientX / r.width - 0.5;
+        const y = e.clientY / r.height - 0.5;
+        doodles.forEach((d, i) => {
+          const depth = 10 + (i % 3) * 7;
+          d.style.transform = `translate(${(-x * depth).toFixed(1)}px, ${(-y * depth).toFixed(1)}px)`;
+        });
+      });
+    });
+  }
 }
-document.addEventListener('astro:after-swap', initTypewriter);
-initTypewriter();
 </script>

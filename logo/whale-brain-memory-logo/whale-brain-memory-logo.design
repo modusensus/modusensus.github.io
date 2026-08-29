@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "id": "image-001",
+      "title": "鲸鱼脑回路记忆库 Logo",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1786708800000,
+      "canvasData": {
+        "x": 0,
+        "y": 0,
+        "naturalSize": {
+          "width": 1920,
+          "height": 1920
+        }
+      },
+      "devMetadata": {
+        "imageSrc": "assets/whale-brain-memory-logo.jpg"
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "freeSize",
+    "projectName": "记忆库插件 Logo"
+  }
+}

@@ -1,0 +1,286 @@
+<!DOCTYPE html><html lang="zh-CN" data-astro-cid-37fxchfa> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="一篇开发日志，记录从 4 层架构到 8 个 tab、从单一 Claude API 到多 provider 兼容、从想法到上线的过程"><title>我做了个 AI 个人成长 Widget，把脑子里乱七八糟的想法交给 AI 整理 — MODUSENSUS</title><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="alternate" type="application/rss+xml" title="MODUSENSUS" href="/rss.xml"><meta name="astro-view-transitions-enabled" content="true"><meta name="astro-view-transitions-fallback" content="animate"><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><link rel="stylesheet" href="/works/v3-blog/_astro/archive.CmsIH7Wd.css"><script type="module" src="/works/v3-blog/_astro/hoisted.CJdaKfrq.js"></script></head> <body data-astro-cid-37fxchfa> <!-- ── Intro hero（仅首页常驻，GSAP 开场 + 顶部粒子波浪） ── -->  <!-- ── Reading progress bar (article pages) ── --> <div class="reading-progress" id="reading-progress" aria-hidden="true" data-astro-cid-37fxchfa></div> <!-- ── Navbar ── --> <nav class="navbar entrance entrance-1" data-astro-cid-37fxchfa> <div class="navbar-inner" data-astro-cid-37fxchfa> <a href="/" class="navbar-link active" data-astro-cid-37fxchfa> Home </a><a href="/threshold-notes" class="navbar-link" data-astro-cid-37fxchfa> Threshold Notes </a><a href="/lab" class="navbar-link" data-astro-cid-37fxchfa> Lab </a><a href="/archive" class="navbar-link" data-astro-cid-37fxchfa> Archive </a><a href="/colophon" class="navbar-link" data-astro-cid-37fxchfa> Colophon </a> </div> <button class="navbar-menu" aria-label="Menu" id="menu-toggle" data-astro-cid-37fxchfa> <span data-astro-cid-37fxchfa></span><span data-astro-cid-37fxchfa></span><span data-astro-cid-37fxchfa></span> </button> </nav> <!-- ── Mobile menu (drawer) ── --> <div class="mobile-overlay" id="mobile-overlay" hidden data-astro-cid-37fxchfa></div> <div class="mobile-menu" id="mobile-menu" aria-hidden="true" data-astro-cid-37fxchfa> <div class="mobile-menu-head" data-astro-cid-37fxchfa> <span class="mobile-menu-brand" data-astro-cid-37fxchfa>MODUSENSUS</span> <button class="mobile-close" id="mobile-close" aria-label="Close menu" data-astro-cid-37fxchfa> <span data-astro-cid-37fxchfa></span><span data-astro-cid-37fxchfa></span> </button> </div> <nav class="mobile-menu-nav" data-astro-cid-37fxchfa> <a href="/" class="mobile-link active" data-astro-cid-37fxchfa> Home </a><a href="/threshold-notes" class="mobile-link" data-astro-cid-37fxchfa> Threshold Notes </a><a href="/lab" class="mobile-link" data-astro-cid-37fxchfa> Lab </a><a href="/archive" class="mobile-link" data-astro-cid-37fxchfa> Archive </a><a href="/colophon" class="mobile-link" data-astro-cid-37fxchfa> Colophon </a> </nav> <div class="mobile-menu-foot" data-astro-cid-37fxchfa>&copy; 2026 MODUSENSUS</div> </div> <!-- ── Page content ── --> <main data-astro-cid-37fxchfa>  <div class="page-layout"> <aside class="page-col-left"> <div class="card card-padded"> <div class="card-label">Contents</div> <a href="#i--起因" class="toc-item" style="display: block;">I · 起因</a><a href="#ii--架构从-4-层到-8-个-tab" class="toc-item" style="display: block;">II · 架构：从 4 层到 8 个 tab</a><a href="#iii--多-api-兼容为什么不用-claude-一家" class="toc-item" style="display: block;">III · 多 API 兼容：为什么不用 Claude 一家</a><a href="#iv--关键技术决策" class="toc-item" style="display: block;">IV · 关键技术决策</a><a href="#v--语音输入浏览器原生-vs-云端-api-的取舍" class="toc-item" style="display: block;">V · 语音输入：浏览器原生 vs 云端 API 的取舍</a><a href="#vi--ui-精修被忽视的细节决定质感" class="toc-item" style="display: block;">VI · UI 精修：被忽视的细节决定质感</a><a href="#vii--技术栈选型理由" class="toc-item" style="display: block;">VII · 技术栈选型理由</a><a href="#viii--踩过的坑" class="toc-item" style="display: block;">VIII · 踩过的坑</a><a href="#结语" class="toc-item" style="display: block;">结语</a> </div> <div class="card card-padded"> <div class="card-label">Back to</div> <a href="/lab" class="card-list-item" style="display: block;">← Modusensus Lab</a> <a href="/blog" class="card-list-item" style="display: block;">← All Publications</a> </div> </aside> <article class="page-col-main"> <div class="article-detail"> <div class="article-detail-header">MODUSENSUS LAB · NO.01</div> <h1 class="article-detail-title">我做了个 AI 个人成长 Widget，把脑子里乱七八糟的想法交给 AI 整理</h1> <div class="article-detail-byline"> July 23, 2026  · 15 min read </div> <div class="article-meta-bar"> <span class="meta-view"> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"></path><circle cx="12" cy="12" r="3"></circle></svg> <span id="busuanzi_value_page_pv">0</span> views
+</span> <button id="like-btn" class="like-btn" type="button" data-slug="lab-01"> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"></path></svg> <span id="like-count">0</span> </button> </div> <img src="/blog/images/lab-cover.jpg" alt="我做了个 AI 个人成长 Widget，把脑子里乱七八糟的想法交给 AI 整理" class="article-detail-cover"> <div class="prose"> <h2 id="i--起因">I · 起因</h2>
+<p>我脑子里经常比手头做的事多得多。</p>
+<p>读书时冒出一个论文选题想法，地铁上突然想通一个设计问题，凌晨焦虑明天该怎么安排——这些想法像潮水一样来去，留下来的是零碎的便签、聊天记录、和”我好像之前想到过什么但忘了”。</p>
+<p>试过 Notion、Obsidian、各种日记 app。<strong>都败在同一件事上</strong>：它们要求我先想清楚怎么分类，再写。但想法来的时候，我不想分类，我只想把它记下来。等我事后想整理，几百条原始记录摊在那里，整理成本高到让我直接放弃。</p>
+<p>所以我想做一个工具，满足三件事：</p>
+<ul>
+<li><strong>记的时候零摩擦</strong>——不用选标签、不用选 notebook、不用想标题，打开就写。</li>
+<li><strong>AI 帮我整理</strong>——不是我去看几百条记录找规律，是 AI 读完后告诉我：“你最近一直在想 X，但你嘴上说在意 Y，行为上却在做 Z。”</li>
+<li><strong>最终落到行动</strong>——不是给我 10 条 todo，而是告诉我今天最该做的那一件事。</li>
+</ul>
+<p>这就是 MindOS 的起点。</p>
+<h2 id="ii--架构从-4-层到-8-个-tab">II · 架构：从 4 层到 8 个 tab</h2>
+<h3 id="4-层的起点">4 层的起点</h3>
+<p>最早的设计是 4 层，很纯粹：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>01 CAPTURE → 02 UNDERSTAND → 03 GROWTH → 04 ACTION</span></span>
+<span class="line"><span>  记录         理解            成长         行动</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>每层只做一件事，单向流动：<strong>chaos → clarity → action</strong>。这是我从 Tiago Forte 的 PARA 那套里偷的灵感，但砍掉了所有”分类”环节——分类是后置的，由 AI 来做，不是用户做。</p>
+<h3 id="为什么加到-8-个">为什么加到 8 个</h3>
+<p>但实际做下来发现 4 层不够。最明显的问题是 <strong>04 ACTION 缺乏监督</strong>：AI 每天给我推荐一件事，我做没做？没人管。一周下来回看，发现 AI 推的事我压根没动——它就成了装饰品。</p>
+<p>于是加了 <strong>07 COACH</strong>：一个 AI 教练，每天读我的任务完成率，按完成度给三档反馈：</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>完成率</th><th>tone</th><th>风格</th></tr></thead><tbody><tr><td>≥ 70%</td><td>encourage</td><td>鼓励，但不浮夸</td></tr><tr><td>30–70%</td><td>push</td><td>推一把，指出卡点</td></tr><tr><td>&lt; 30%</td><td>critique</td><td>批评，但不羞辱</td></tr></tbody></table>
+<p>不是 habit tracker 那种打卡+streak，是真正的”读你的数据+说实话”。</p>
+<p>然后又发现回顾这件事必须有结构。光”理解”是当下的、即时的，但人需要周期性的回顾——日回顾、周回顾、月回顾、年回顾。所以加了 <strong>04 REVIEW</strong>，AI 基于用户的记录生成结构化的周期回顾。</p>
+<p>加了 review 之后又发现，review 里 AI 经常会推荐”下周可以试试 X”——那这个 X 总不能让它飘在回顾里吧？得有个地方承接。于是加了 <strong>05 SCHEDULE</strong>，最简的任务清单，可以从周报里一键导入下一步。</p>
+<p>最后再加 <strong>08 CONFIG</strong> 放设置。</p>
+<p>最终 8 个 tab：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="plaintext"><code><span class="line"><span>01 CAPTURE    →  02 UNDERSTAND  →  03 GROWTH   →  04 REVIEW</span></span>
+<span class="line"><span>   记录             理解               成长           回顾</span></span>
+<span class="line"><span>05 SCHEDULE   →  06 ACTION       →  07 COACH    →  08 CONFIG</span></span>
+<span class="line"><span>   日程             行动               教练           设置</span></span>
+<span class="line"><span></span></span></code></pre>
+<p>设计原则始终是单向流动：从混乱到清晰，从思考到行动，从行动到监督。<strong>没有任何 tab 是为了”管理”而存在的</strong>——每个 tab 都对应认知链路上的一个真实环节。</p>
+<h2 id="iii--多-api-兼容为什么不用-claude-一家">III · 多 API 兼容：为什么不用 Claude 一家</h2>
+<p>最早这玩意是设计在 claude.ai 里跑的 artifact。但很快遇到问题：</p>
+<ol>
+<li><strong>Claude API 在国内访问不便</strong>，普通用户用不了。</li>
+<li><strong>Claude API 收费</strong>，而且不便宜。</li>
+<li><strong>claude.ai 的 artifact 用 Claude 自己的模型</strong>，但用户没法插自己的 key。</li>
+</ol>
+<p>我想让这个 widget 给更多人用，所以做了一件笨但正确的事：<strong>把所有 AI 调用统一成 OpenAI Chat Completions 协议</strong>，然后维护一个 PROVIDERS 注册表：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="js"><code><span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> PROVIDERS</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">  deepseek: {</span></span>
+<span class="line"><span style="color:#E1E4E8">    label:</span><span style="color:#9ECBFF">&#39;DeepSeek&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    base_url:</span><span style="color:#9ECBFF">&#39;https://api.deepseek.com/v1&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    model:</span><span style="color:#9ECBFF">&#39;deepseek-chat&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    keyHint:</span><span style="color:#9ECBFF">&#39;申请：platform.deepseek.com → API Keys...&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    keyUrl:</span><span style="color:#9ECBFF">&#39;https://platform.deepseek.com/api_keys&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  },</span></span>
+<span class="line"><span style="color:#E1E4E8">  zhipu: {</span></span>
+<span class="line"><span style="color:#E1E4E8">    label:</span><span style="color:#9ECBFF">&#39;智谱 GLM-4-Flash&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    base_url:</span><span style="color:#9ECBFF">&#39;https://open.bigmodel.cn/api/paas/v4&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    model:</span><span style="color:#9ECBFF">&#39;glm-4-flash&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    keyHint:</span><span style="color:#9ECBFF">&#39;GLM-4-Flash 完全免费，无需付费即可使用全部功能。&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    keyUrl:</span><span style="color:#9ECBFF">&#39;https://open.bigmodel.cn/usercenter/apikeys&#39;</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  },</span></span>
+<span class="line"><span style="color:#E1E4E8">  claude: { </span><span style="color:#F97583">...</span><span style="color:#E1E4E8"> },</span></span>
+<span class="line"><span style="color:#E1E4E8">  openai: { </span><span style="color:#F97583">...</span><span style="color:#E1E4E8"> },</span></span>
+<span class="line"><span style="color:#E1E4E8">};</span></span>
+<span class="line"></span></code></pre>
+<p>架构上抄了 CaseForge 的 <code>config.example.py</code> 思路：<strong>一个注册表，每个 provider 一行 <code>base_url</code> + <code>model</code></strong>，运行时根据用户选的 provider 解析端点。要加新 provider，注册表里加一行 + dropdown 里加一个 <code>&lt;option&gt;</code> 就完事了。</p>
+<p>只要对方暴露 OpenAI 兼容的 <code>/chat/completions</code> 端点，就能直接接入。</p>
+<p>实测过的：</p>
+<ul>
+<li><strong>DeepSeek</strong>：完美兼容，端到端真实调用通过，价格感人（输入 ¥0.27/百万 tokens）</li>
+<li><strong>智谱 GLM-4-Flash</strong>：完美兼容，<strong>完全免费</strong>——这是我最推荐的方案，普通用户注册就能用</li>
+<li><strong>Claude</strong>：走 Anthropic 的 OpenAI 兼容接口，能跑</li>
+<li><strong>OpenAI</strong>：标准接口</li>
+</ul>
+<p>这套架构最大的好处是：<strong>用户用自己的 key，调自己的额度，开发者不用付任何中转成本</strong>。 widget 只是个前端，所有 AI 调用都是浏览器直接打到 provider 端点。</p>
+<h2 id="iv--关键技术决策">IV · 关键技术决策</h2>
+<h3 id="api-key-的安全边界">API key 的安全边界</h3>
+<p>这个决策踩过坑，值得单独说。</p>
+<p>claude.ai 的 artifact 环境有两个存储：</p>
+<ul>
+<li><strong><code>window.storage</code></strong>：artifact 范围的持久化存储，<strong>会跨会话同步到服务器</strong>。</li>
+<li><strong><code>localStorage</code></strong>：浏览器本地存储，<strong>永远不会离开浏览器</strong>（除了用户主动调用的 AI provider 请求）。</li>
+</ul>
+<p>最初的设计是：API key 存 localStorage，其他配置（provider、model 等）也存 localStorage。简单粗暴。</p>
+<p>后来有一次让 Claude（claude.ai 里的）改文件，它把所有配置合并成一个 <code>mindos:cfg</code> 对象，统一写到 <code>window.storage</code>——<strong>代码更优雅了，但 API key 被上传到了服务器</strong>。这是个安全回归：API key 是用户私密的东西，绝不应该离开浏览器。</p>
+<p>修复方案：<strong>严格区分敏感数据和非敏感数据的存储边界</strong>。</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="js"><code><span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> function</span><span style="color:#B392F0"> saveSetting</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">k</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">v</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#6A737D">  // 同步写 localStorage（apiKey 始终只在这里）</span></span>
+<span class="line"><span style="color:#F97583">  try</span><span style="color:#E1E4E8"> { </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">typeof</span><span style="color:#E1E4E8"> localStorage </span><span style="color:#F97583">!==</span><span style="color:#9ECBFF"> &#39;undefined&#39;</span><span style="color:#E1E4E8">) localStorage.</span><span style="color:#B392F0">setItem</span><span style="color:#E1E4E8">(k, v); } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> {}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">  // ⚠️ 写 window.storage 时排除 apiKey（防止上传到服务器）</span></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (</span><span style="color:#F97583">typeof</span><span style="color:#E1E4E8"> window.storage </span><span style="color:#F97583">!==</span><span style="color:#9ECBFF"> &#39;undefined&#39;</span><span style="color:#E1E4E8">) {</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">      const</span><span style="color:#79B8FF"> safeCfg</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> Object.</span><span style="color:#B392F0">assign</span><span style="color:#E1E4E8">({}, _cfgCache, { apiKey: </span><span style="color:#9ECBFF">&#39;&#39;</span><span style="color:#E1E4E8"> });</span></span>
+<span class="line"><span style="color:#F97583">      await</span><span style="color:#E1E4E8"> window.storage.</span><span style="color:#B392F0">set</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">&#39;mindos:cfg&#39;</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">JSON</span><span style="color:#E1E4E8">.</span><span style="color:#B392F0">stringify</span><span style="color:#E1E4E8">(safeCfg));</span></span>
+<span class="line"><span style="color:#E1E4E8">    } </span><span style="color:#F97583">catch</span><span style="color:#E1E4E8"> {}</span></span>
+<span class="line"><span style="color:#E1E4E8">  }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>写的时候主动剔除 <code>apiKey</code> 字段；读的时候不信 <code>window.storage</code> 里的 apiKey 值，强制用 localStorage 覆盖。</p>
+<p><strong>这个坑的教训</strong>：让 AI 改代码时，安全相关的边界条件一定要在 prompt 里明确写出来，否则它会为了”代码优雅”无意中破坏安全约束。AI 不会主动考虑”这个数据能不能上传服务器”这种语义层面的问题。</p>
+<h3 id="周期回顾的层级设计">周期回顾的层级设计</h3>
+<p>Review 这个 tab 看起来简单，其实有个隐藏的工程问题：<strong>做年回顾的时候，要喂给 AI 多少数据？</strong></p>
+<p>最 naive 的做法：把一整年的 captures 全部塞给 AI。问题：</p>
+<ol>
+<li><strong>token 爆炸</strong>：一年 500 条 captures，每条平均 100 字，光输入就是 5 万字。年回顾调用一次成本惊人。</li>
+<li><strong>信息损失</strong>：AI 处理超长上下文会丢细节，500 条原始记录里那些微妙的转折会被淹没。</li>
+<li><strong>重复劳动</strong>：月报已经总结过的内容，年报再总结一遍是浪费。</li>
+</ol>
+<p>我的解法是 <strong>混合层级</strong>：</p>
+<ul>
+<li><strong>日回顾</strong>：直接读当天的 captures（最少 1 条）</li>
+<li><strong>周回顾</strong>：直接读本周的 captures（最少 3 条）</li>
+<li><strong>月回顾</strong>：<strong>优先读本月所有周回顾的摘要</strong>，没有周回顾时降级到读原始 captures（最少 5 条）</li>
+<li><strong>年回顾</strong>：<strong>优先读本年所有月回顾的摘要</strong>，没有月回顾时降级到读原始 captures（最少 20 条）</li>
+</ul>
+<p>这样年回顾的输入是 12 个月报摘要（每个几百字），而不是 500 条原始记录。<strong>token 成本降一个数量级，叙事连贯性反而更好</strong>——因为月报已经做过一次提炼，年报是在提炼过的内容上做更高一层的抽象。</p>
+<h2 id="v--语音输入浏览器原生-vs-云端-api-的取舍">V · 语音输入：浏览器原生 vs 云端 API 的取舍</h2>
+<p>最后一个加的功能。最早没打算做，因为觉得”记下来”这个动作打字就够了。但实际用下来发现，<strong>有些场景下打字确实是摩擦</strong>：</p>
+<ul>
+<li>走路时有想法，掏手机打字危险</li>
+<li>情绪强烈时（焦虑、兴奋），打字跟不上思绪</li>
+<li>长想法（&gt;50 字）打字累</li>
+</ul>
+<p>加语音输入时面临选择：用浏览器原生的 <strong>Web Speech API</strong>，还是用 <strong>Whisper API</strong>（OpenAI）？</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>方案</th><th>优点</th><th>缺点</th></tr></thead><tbody><tr><td>Web Speech API</td><td>免费、本地、实时、无需 key</td><td>仅 Chrome/Edge 支持</td></tr><tr><td>Whisper API</td><td>多浏览器、质量高</td><td>要 OpenAI key、要上传音频、有成本</td></tr></tbody></table>
+<p>最后选了<strong>两者结合，自动降级</strong>：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="js"><code><span class="line"><span style="color:#F97583">const</span><span style="color:#79B8FF"> _SR</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> window.SpeechRecognition </span><span style="color:#F97583">||</span><span style="color:#E1E4E8"> window.webkitSpeechRecognition;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> function</span><span style="color:#B392F0"> _micStart</span><span style="color:#E1E4E8">() {</span></span>
+<span class="line"><span style="color:#F97583">  if</span><span style="color:#E1E4E8"> (_SR) </span><span style="color:#B392F0">_micStartWebSpeech</span><span style="color:#E1E4E8">();  </span><span style="color:#6A737D">// Chrome/Edge 走原生</span></span>
+<span class="line"><span style="color:#F97583">  else</span><span style="color:#F97583"> await</span><span style="color:#B392F0"> _micStartWhisper</span><span style="color:#E1E4E8">();   </span><span style="color:#6A737D">// Firefox 走 Whisper（需 OpenAI key）</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span></code></pre>
+<p>Web Speech API 这条路有意思的细节：</p>
+<ol>
+<li><strong><code>continuous: true</code> + <code>interimResults: true</code></strong>：让识别持续运行，并把中间结果实时填进 textarea。用户说话过程中就能看到文字浮现，反馈感很强。</li>
+<li><strong>自动重启</strong>：部分浏览器在静默几秒后会自动停止识别。我在 <code>onend</code> 里加了判断——如果用户没点停止按钮，就自动重启识别。</li>
+<li><strong>增量拼接</strong>：识别结果分 final 和 interim 两种。我用 <code>baseText + finalText + interim</code> 的方式拼接到 textarea，保证已确认的内容不会丢，未确认的内容实时更新。</li>
+</ol>
+<p>Whisper 降级路径的限制：<strong>只有当前 provider 是 <code>openai</code> 且配了 API key 时才能用</strong>。否则会提示用户切换到 OpenAI provider 或者换 Chrome/Edge。这是有意的设计——不为了”功能完整”而引入隐式的 API 调用成本。</p>
+<h2 id="vi--ui-精修被忽视的细节决定质感">VI · UI 精修：被忽视的细节决定质感</h2>
+<p>最后做了整整一轮 UI 精修，没加新功能，全是细节。但这些细节决定了 widget 看起来是”是个 demo”还是”是个产品”。</p>
+<h3 id="可访问性">可访问性</h3>
+<p>给所有 nav-item 加了 <code>role=&quot;button&quot; tabindex=&quot;0&quot;</code> 和键盘事件。加上 <code>:focus-visible</code> 样式。<strong>这不仅是无障碍，也让自动化测试能正常点击 nav-item</strong>——之前用 Playwright 测试时点击没反应，就是因为缺这俩属性。</p>
+<h3 id="响应式">响应式</h3>
+<p><code>@media (max-width: 520px)</code> 把侧边栏缩到 52px 图标-only，label 改成 hover 浮窗。桌面端用鼠标 hover 显示，移动端窄屏下侧边栏不占空间。</p>
+<h3 id="排版的层次感">排版的层次感</h3>
+<p>字体选了三种，故意拉开差距：</p>
+<ul>
+<li><strong>Crimson Pro</strong>（衬线，斜体）：所有 AI 生成的内容——insights、reviews、coach 消息、action 文案。营造”读一本关于自己的杂志”的感觉。</li>
+<li><strong>Instrument Sans</strong>（无衬线）：用户输入和 UI 标签。</li>
+<li><strong>DM Mono</strong>（等宽）：所有元数据、时间戳、label。</li>
+</ul>
+<p><strong>AI 的输出和用户的输入在视觉上是两种不同的物体</strong>——这是刻意的。让用户感觉到”这是 AI 写的关于我的话”，而不是”这是我写的笔记”。</p>
+<h3 id="暗色模式">暗色模式</h3>
+<p>暗色模式没另写一套样式，而是用 CSS 变量覆盖：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="css"><code><span class="line"><span style="color:#B392F0">.app</span><span style="color:#E1E4E8"> { </span><span style="color:#FFAB70">--ms-bg</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">#F8F8F6</span><span style="color:#E1E4E8">; </span><span style="color:#FFAB70">--ms-tx</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">#1A1A1A</span><span style="color:#E1E4E8">; </span><span style="color:#6A737D">/* ...浅色变量 */</span><span style="color:#E1E4E8"> }</span></span>
+<span class="line"><span style="color:#B392F0">.app.dark</span><span style="color:#E1E4E8"> { </span><span style="color:#FFAB70">--ms-bg</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">#141414</span><span style="color:#E1E4E8">; </span><span style="color:#FFAB70">--ms-tx</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">#F0F0EE</span><span style="color:#E1E4E8">; </span><span style="color:#6A737D">/* ...暗色变量 */</span><span style="color:#E1E4E8"> }</span></span>
+<span class="line"></span></code></pre>
+<p>切换时只是给 <code>.app</code> 加/移除 <code>.dark</code> 类，所有 CSS 自动重算。主题偏好存 <code>window.storage</code>，跨会话保留。</p>
+<h2 id="vii--技术栈选型理由">VII · 技术栈选型理由</h2>
+<p>做这种”形态特殊”的项目，每个技术决策背后都有具体的约束。把选型理由列出来，比讲实现细节更有价值。</p>
+<h3 id="为什么是单文件-html-widget不是-reactvue-spa">为什么是单文件 HTML widget，不是 React/Vue SPA</h3>
+<p>这是个<strong>部署形态决定架构</strong>的典型案例。MindOS 最初的目标是跑在 claude.ai 的 artifact 环境里——artifact 只接受一段自包含的 HTML，不能有外部文件、不能有构建步骤、不能 import npm 包。</p>
+<p>这个约束反过来塑造了所有后续决策：</p>
+<ul>
+<li><strong>不能用框架</strong>：React/Vue 都需要 build step 或者大型 CDN bundle，artifact 环境不友好</li>
+<li><strong>不能用模块化</strong>：没有 import，所有 JS 必须塞进一个 <code>&lt;script&gt;</code> 标签</li>
+<li><strong>不能用外部资源</strong>（除了 CDN 字体和图标）：所有 CSS/JS 必须内联</li>
+</ul>
+<p>最后就是 vanilla JS + 一个大 <code>&lt;script&gt;</code> + 一个大 <code>&lt;style&gt;</code>。听起来很 retro，但实际上<strong>对一个状态简单的 CRUD-like 应用，vanilla JS 完全够用</strong>。整个 widget 的状态就是几个数组（captures、tasks、reviews、coach history），加几个 UI 状态变量。这种规模的代码用 React 反而 overkill。</p>
+<h3 id="为什么用-openai-chat-completions-协议作为统一接口">为什么用 OpenAI Chat Completions 协议作为统一接口</h3>
+<p>不是因为它最好，是因为它是<strong>事实标准</strong>。</p>
+<p>国内主流 LLM provider（DeepSeek、智谱、月之暗面、MiniMax）几乎全部提供 OpenAI 兼容的 <code>/chat/completions</code> 端点。这意味着只要 MindOS 会说 OpenAI 协议，就能接所有这些 provider，<strong>不需要为每家写一套适配器</strong>。</p>
+<p>加新 provider 就是注册表加一行 + UI 加一个 <code>&lt;option&gt;</code>。<strong>架构复杂度不随 provider 数量增长</strong>。</p>
+<h3 id="为什么-8-个-tab-而不是单一长页面">为什么 8 个 tab 而不是单一长页面</h3>
+<p>认知分块。</p>
+<p>人面对一个长页面会进入”扫读模式”，看到第二屏就开始走神。8 个 tab 强制用户<strong>一次只看一个认知环节</strong>：</p>
+<ul>
+<li>想记东西时只看 CAPTURE</li>
+<li>想理解自己时只看 UNDERSTAND</li>
+<li>想回顾时只看 REVIEW</li>
+</ul>
+<p>每个 tab 的内容量都被限制在一屏左右，<strong>强制保持认知聚焦</strong>。</p>
+<p>侧边栏设计也呼应这点：52px 窄边栏 + hover 显示 label，<strong>让 tab 切换的成本足够低（一次点击）但足够明确（视觉反馈强烈）</strong>。</p>
+<h2 id="viii--踩过的坑">VIII · 踩过的坑</h2>
+<h3 id="edit-工具报告成功但改动没持久化">Edit 工具报告成功但改动没持久化</h3>
+<p>开发 Phase 2 时连续 6 次 Edit 调用都报告”Successfully modified”，但 <code>git diff</code> 一看文件根本没变。换 Node.js 的 <code>fs.writeFileSync</code> 直接写文件，从此全部可靠。</p>
+<p><strong>教训</strong>：在 Trae/Claude Code 这类环境里，对工具的”成功”回报要保持怀疑，<strong>关键改动一定要用文件系统层面的 API 验证</strong>。</p>
+<h3 id="让-ai-改代码可能引入安全回归">让 AI 改代码可能引入安全回归</h3>
+<p>前面讲过 API key 那次。AI 为了”代码优雅”把所有配置合并到 <code>window.storage</code>，破坏了”API key 不离开浏览器”的安全边界。</p>
+<p><strong>教训</strong>：让 AI 改代码时，<strong>安全相关的边界条件必须在 prompt 里显式写出来</strong>。不能假设 AI 会自己考虑到”这个数据能不能上传服务器”。</p>
+<h3 id="review-页-undefined-的隐性-bug">Review 页 “undefined” 的隐性 bug</h3>
+<p>初始化时调用 <code>renderReview()</code> 没传 period 参数，导致 <code>REV_NAME[undefined]</code> 渲染成 “undefined”。功能正常，但 UI 上有个 “生成本undefined回顾” 的难看文字。</p>
+<p>修了两处：</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto" tabindex="0" data-language="js"><code><span class="line"><span style="color:#6A737D">// 修复 1：init 调用时传参</span></span>
+<span class="line"><span style="color:#B392F0">renderReview</span><span style="color:#E1E4E8">(revPeriod);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">// 修复 2：函数签名加默认参数（防御性）</span></span>
+<span class="line"><span style="color:#F97583">function</span><span style="color:#B392F0"> renderReview</span><span style="color:#E1E4E8">(</span><span style="color:#FFAB70">period</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> revPeriod, </span><span style="color:#FFAB70">data</span><span style="color:#E1E4E8">) { </span><span style="color:#F97583">...</span><span style="color:#E1E4E8"> }</span></span>
+<span class="line"></span></code></pre>
+<p><strong>教训</strong>：默认参数是廉价的保险。即使调用方”应该”传参，也给个默认值兜底。</p>
+<h2 id="结语">结语</h2>
+<h3 id="项目数据">项目数据</h3>
+<p>最终交付：</p>
+<ul>
+<li><strong>代码量</strong>：单文件 widget.md，83638 chars（约 1700 行 HTML/CSS/JS）</li>
+<li><strong>8 个 tab</strong>：记录 / 理解 / 成长 / 回顾 / 日程 / 行动 / 教练 / 设置</li>
+<li><strong>4 个 AI provider</strong>：DeepSeek / 智谱 GLM-4-Flash / Claude / OpenAI</li>
+<li><strong>7 处 AI 调用点</strong>：理解 / 成长 / 行动 / 日回顾 / 周回顾 / 月回顾 / 年回顾 / 教练</li>
+<li><strong>16 个核心函数</strong>：从 <code>addCapture()</code> 到 <code>_micTranscribeWhisper()</code></li>
+<li><strong>零依赖</strong>：单 HTML 文件，无 npm、无构建、无框架</li>
+<li><strong>可访问性</strong>：键盘导航、focus 样式、aria-label</li>
+<li><strong>响应式</strong>：520px 断点，桌面/移动都可用</li>
+<li><strong>暗色模式</strong>：CSS 变量切换，跨会话保留</li>
+<li><strong>语音输入</strong>：Web Speech API + Whisper 降级</li>
+</ul>
+<h3 id="demo">demo</h3>
+<p>以下是 widget 在浏览器中实际运行的截图，展示 8 个 tab 的真实样貌。</p>
+<div class="demo-grid"><div class="demo-item"><p><p class="demo-label">01 · 记录（浅色模式）</p>
+<p class="demo-desc">初始状态。顶栏 LIGHT 主题按钮、侧边栏 8 个图标、textarea 输入框、能量心情点、麦克风按钮、记下来按钮。</p>
+<img src="/blog/images/devlog-assets/01-capture-light.png" alt="记录 tab 初始状态"/></p></div><div class="demo-item"><p><p class="demo-label">02 · 记录（添加 3 条 captures 后）</p>
+<p class="demo-desc">输入 3 条想法后，左侧”记录”图标 badge 显示 3，下方”最近记录”列表出现 3 条带颜色条和情绪标签的条目。</p>
+<img src="/blog/images/devlog-assets/02-capture-list.png" alt="添加 captures 后的列表"/></p></div><div class="demo-item"><p><p class="demo-label">03 · 暗色模式</p>
+<p class="demo-desc">点击顶栏 LIGHT 按钮切换到暗色。整个 widget 背景变为 <code>#141414</code>，文字变浅，按钮文字变为 DARK。</p>
+<img src="/blog/images/devlog-assets/03-dark-mode.png" alt="暗色模式"/></p></div><div class="demo-item"><p><p class="demo-label">04 · 日程 tab</p>
+<p class="demo-desc">添加 3 个任务后的日程页。每个任务有 checkbox、文字、删除按钮。顶上有”今日/本周/已完成/全部”4 个筛选 tab。</p>
+<img src="/blog/images/devlog-assets/04-schedule.png" alt="日程 tab"/></p></div><div class="demo-item"><p><p class="demo-label">05 · 回顾 tab</p>
+<p class="demo-desc">周期回顾页面。日/周/月/年 4 个 tab 切换，显示当前周期和空状态提示。</p>
+<img src="/blog/images/devlog-assets/05-review.png" alt="回顾 tab"/></p></div><div class="demo-item"><p><p class="demo-label">06 · 行动 tab</p>
+<p class="demo-desc">每日单一行动页面。AI 基于用户的 captures 和成长分析，推荐今天最值得做的一件事。</p>
+<img src="/blog/images/devlog-assets/06-action.png" alt="行动 tab"/></p></div><div class="demo-item"><p><p class="demo-label">07 · 教练 tab</p>
+<p class="demo-desc">AI 教练页面。读取任务完成率，按完成度给三档反馈。不是 habit tracker，是诚实的镜子。</p>
+<img src="/blog/images/devlog-assets/07-coach.png" alt="教练 tab"/></p></div><div class="demo-item"><p><p class="demo-label">08 · 设置 tab</p>
+<p class="demo-desc">配置页面。provider 下拉、API key 输入框（只存 localStorage，不写 window.storage）、model/base_url 覆盖、用户背景文本域。</p>
+<img src="/blog/images/devlog-assets/08-config.png" alt="设置 tab"/></p></div></div>
+<h3 id="写在最后">写在最后</h3>
+<p>做这个东西的过程让我重新理解了”工具”这个词。</p>
+<p>最早我想做的是”AI 帮我整理笔记”，做着做着发现，<strong>真正的难点不是整理，而是诚实</strong>。人都需要一面镜子——不是 P 图过的镜子，是如实映照的镜子。AI 的价值在于它能读你几百条原始想法后说：“你嘴上说在意事业，但你 70% 的记录都在想另一件事。”</p>
+<p>这种话朋友不会跟你说，家人不忍心说，自己不愿意承认。但 AI 没有这种顾虑——只要 prompt 写得对，它就是个<strong>永远说真话的镜子</strong>。</p>
+<p>这就是为什么 Coach tab 不是一个 habit tracker。habit tracker 让你欺骗自己（“我今天其实做了，只是忘了打卡”），Coach 读你的真实数据然后告诉你：“你这周完成率 25%，下次别承诺这么多。”</p>
+<p>这不是 productivity，这是 self-awareness engineering。</p>
+<hr/>
+<div class="reading-archive"><p class="reading-archive-title">READING ARCHIVE</p><ol><li>Tiago Forte, “Building a Second Brain” (PARA 方法论)</li><li>OpenAI, “Chat Completions API Documentation”</li><li>MDN, “Web Speech API”</li><li>OpenAI, “Whisper API Documentation”</li></ol></div> </div> </div> </article> <aside class="page-col-right"> <div class="card card-padded"> <div class="card-label">More from Modusensus Lab</div> <div class="news-item"> <a href="/blog/mneme-technical-blog"> <div class="news-title">Mneme：记忆不是储藏室，是会遗忘的缪斯</div> <div class="news-meta">AUGUST 23, 2026</div> </a> </div><div class="news-item"> <a href="/blog/astro-blog-tutorial"> <div class="news-title">如何用 Astro 搭建一个博客网站（入门版）</div> <div class="news-meta">AUGUST 14, 2026</div> </a> </div> </div> </aside> </div>  </main> <!-- ── Footer ── --> <footer class="footer" data-astro-cid-37fxchfa> <div class="footer-inner" data-astro-cid-37fxchfa> <span class="footer-copy" data-astro-cid-37fxchfa>&copy; 2026 MODUSENSUS &middot; Independent Digital Studio</span> </div> </footer>  </body></html> <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script> 

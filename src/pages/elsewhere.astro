@@ -1,0 +1,135 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { elsewhereLinks, type ElsewhereKind } from '../data/elsewhere';
+
+const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: string }> = [
+  {
+    kind: 'friends',
+    label: 'FRIENDS',
+    title: 'FRIENDS',
+    copy: '朋友们正在建造的地方。',
+  },
+  {
+    kind: 'reading',
+    label: 'READING',
+    title: 'READING',
+    copy: '我会反复回去看的工具、项目和资料。',
+  },
+];
+---
+
+<BaseLayout activeNav="elsewhere" title="Elsewhere — MODUSENSUS">
+  <header class="container page-header">
+    <div class="mono-label">ELSEWHERE</div>
+    <h1 class="page-header-title">OTHER<br />PLACES</h1>
+    <p class="page-header-subtitle">远方 — FRIENDS / READING / INSPIRATION</p>
+  </header>
+
+  <div class="container board">
+    <hr class="board-rule" />
+    <div class="elsewhere-list">
+      {groups.map(group => {
+        const links = elsewhereLinks.filter(link => link.kind === group.kind);
+        return (
+          <section class="external-group">
+            <div class="mono-label group-label">{group.label}</div>
+            <p class="external-group-copy">{group.copy}</p>
+            {links.length > 0 ? (
+              <div>
+                {links.map(link => (
+                  <a
+                    class="external-row"
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <span class="external-name">{link.name}</span>
+                    <span class="external-desc">{link.description}</span>
+                    <span class="external-arrow" aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <div class="empty-state">
+                <div class="empty-state-title">OPEN FOR EXCHANGE</div>
+                <p class="empty-state-copy">友链位虚以待。欢迎交换链接，一起把小圈子连起来。</p>
+                <div class="exchange-rules">
+                  <div class="mono-meta">HOW TO APPLY</div>
+                  <ul class="exchange-list">
+                    <li>你的站点需要正常访问，且由你长期维护</li>
+                    <li>先在我的站点留言板或 GitHub 上打个招呼，附上你的站点名称、链接和一句话介绍</li>
+                    <li>内容不限主题，原创优先；拒绝纯采集、挂广告弹窗或含恶意内容的站点</li>
+                    <li>交换后我会尽快把你的链接加进来，也会期待你把我加上 ↴</li>
+                  </ul>
+                  <div class="exchange-info">
+                    <span class="mono-meta">MY INFO</span>
+                    <code>MODUSENSUS · https://modusensus.space · 城市、数据与创造力的交汇处</code>
+                  </div>
+                  <div class="exchange-actions">
+                    <a class="col-more" href="/guestbook">LEAVE A NOTE →</a>
+                    <a class="col-more" href="https://github.com/modusensus" target="_blank" rel="noopener noreferrer">GITHUB →</a>
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+.external-group-copy {
+  margin: -2px 0 14px;
+  font-family: var(--font-cn);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--muted);
+}
+.exchange-rules {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule-soft);
+}
+.exchange-rules .mono-meta { display: block; margin-bottom: 10px; }
+.exchange-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  font-family: var(--font-cn);
+  font-size: 13.5px;
+  line-height: 1.8;
+  color: var(--ink-soft);
+}
+.exchange-list li {
+  padding-left: 20px;
+  position: relative;
+  margin-bottom: 6px;
+}
+.exchange-list li::before {
+  content: '■';
+  position: absolute;
+  left: 0;
+  font-size: 8px;
+  top: 0.55em;
+  color: var(--muted);
+}
+.exchange-info {
+  margin-bottom: 18px;
+}
+.exchange-info code {
+  display: block;
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--ink);
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  padding: 10px 14px;
+  overflow-x: auto;
+}
+.exchange-actions { display: flex; gap: 24px; flex-wrap: wrap; }
+</style>

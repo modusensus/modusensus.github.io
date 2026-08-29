@@ -1,6 +1,5 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import SectionGrid from '../components/SectionGrid.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -8,88 +7,45 @@ const posts = allPosts
   .filter(p => p.data.module === 'archive')
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-function formatDate(date: Date) {
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+function fmtYear(date: Date) {
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
-
-function formatDateShort(date: Date) {
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).replace(/\//g, '.');
-}
-
-const projects = [
-  {
-    name: 'python-self-learning-map',
-    desc: '持续更新的学习档案，记录通过项目驱动的 Python 学习过程。包含练习代码、笔记和阶段性总结，目前仍在不断扩展中。',
-    tags: ['Python', '学习档案', '持续更新'],
-    link: 'https://github.com/modusensus/python-self-learning-map',
-  },
-];
 ---
 
 <BaseLayout activeNav="archive" title="Archive — MODUSENSUS">
-  <header class="page-header">
+  <header class="container page-header">
+    <div class="mono-label">03 — ARCHIVE</div>
     <h1 class="page-header-title">ARCHIVE</h1>
-    <p class="page-header-subtitle">知识档案 — Reading / Research / Notes</p>
+    <p class="page-header-subtitle">知识档案 — READING / RESEARCH / NOTES</p>
   </header>
 
-  <div class="page-layout">
-    <aside class="page-col-left">
-      <div class="card card-padded">
-        <div class="card-label">Archive stats</div>
-        <div class="card-stat-row"><span>Total</span><span>{allPosts.length}</span></div>
-        <div class="card-stat-row"><span>Threshold</span><span>{allPosts.filter(p => p.data.module === 'threshold').length}</span></div>
-        <div class="card-stat-row"><span>Lab</span><span>{allPosts.filter(p => p.data.module === 'lab').length}</span></div>
-        <div class="card-stat-row"><span>Archive</span><span>{posts.length}</span></div>
-      </div>
-      <div class="card card-padded">
-        <div class="card-label">Ongoing Projects</div>
-        {projects.map(p => (
-          <div style="margin-bottom: 14px;">
-            <div style="font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 3px;">
-              {p.link ? <a href={p.link} target="_blank" style="color: inherit; text-decoration: none;">{p.name} ↗</a> : p.name}
-            </div>
-            <div style="font-size: 11px; color: var(--dust); margin-bottom: 6px;">{p.desc}</div>
-            <div>{p.tags.map(t => <span class="pill">{t}</span>)}</div>
-          </div>
-        ))}
-      </div>
-    </aside>
+  <div class="container board">
+    <hr class="board-rule" />
 
-    <section class="page-col-main">
+    <div class="mono-label group-label">ONGOING</div>
+    <div>
+      <a class="lab-row" href="https://github.com/modusensus/tech-stack-map" target="_blank" rel="noopener">
+        <span class="lab-year">2026</span>
+        <span>
+          <span class="lab-name">tech-stack-map</span><br />
+          <span class="lab-desc">自学，搭建技术栈的过程。</span>
+        </span>
+        <span class="badge">LEARNING</span>
+      </a>
+    </div>
+
+    <div class="mono-label group-label">NOTES</div>
+    <div>
       {posts.map((post, idx) => (
-        <a href={`/blog/${post.slug}`} class="list-card">
-          {post.data.cover ? (
-            <img src={post.data.cover} alt={post.data.title} class="list-card-cover" />
-          ) : (
-            <div class="list-card-cover archive-gradient"></div>
-          )}
-          <div style="flex: 1; min-width: 0; padding-right: 12px;">
-            <div class="list-card-title">{post.data.title}</div>
-            <div class="list-card-meta">{formatDateShort(post.data.date)} · ARCHIVE · {post.data.category || 'NOTE'}</div>
+        <a class="ar-item" href={`/blog/${post.slug}`}>
+          <div class="ar-meta">
+            <span>No. {String(posts.length - idx).padStart(2, '0')} · {post.data.category || 'NOTE'}</span>
+            <span>{fmtYear(post.data.date)}</span>
           </div>
-          <div class="list-card-num">{String(idx + 1).padStart(2, '0')}</div>
+          <div class="ar-title">{post.data.title}</div>
         </a>
       ))}
-    </section>
-
-    <aside class="page-col-right">
-      <div class="card card-padded">
-        <div class="card-label">Tags</div>
-        <span class="pill">算法</span>
-        <span class="pill">AI</span>
-        <span class="pill">Obsidian</span>
-        <span class="pill">城市</span>
-        <span class="pill">工具</span>
-      </div>
-      <SectionGrid active="archive" title="Explore other sections" />
-    </aside>
+      {posts.length === 0 && <p class="mono-meta">NO ENTRIES YET.</p>}
+    </div>
   </div>
 </BaseLayout>
