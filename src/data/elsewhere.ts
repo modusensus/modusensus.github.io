@@ -36,6 +36,13 @@ export const elsewhereLinks: ElsewhereLink[] = [
     kind: 'friends',
   },
   {
+    name: 'SuemorのBlog',
+    url: 'https://www.suemor.com/',
+    description: '在探索的过程中遇见更好的自己',
+    image: 'https://y.suemor.com/suemor-avatar.jpeg',
+    kind: 'friends',
+  },
+  {
     name: 'Astro',
     url: 'https://astro.build',
     description: 'The web framework behind this small publishing system.',
