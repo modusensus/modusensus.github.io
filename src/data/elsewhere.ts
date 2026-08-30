@@ -43,6 +43,13 @@ export const elsewhereLinks: ElsewhereLink[] = [
     kind: 'friends',
   },
   {
+    name: 'Homulilly',
+    url: 'https://homulilly.com',
+    description: '圆环之外，仍有未尽之愿。',
+    image: 'https://homulilly.com/images/avatar.jpg',
+    kind: 'friends',
+  },
+  {
     name: 'Astro',
     url: 'https://astro.build',
     description: 'The web framework behind this small publishing system.',
