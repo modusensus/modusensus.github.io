@@ -22,6 +22,13 @@ export const elsewhereLinks: ElsewhereLink[] = [
     kind: 'friends',
   },
   {
+    name: 'Innei',
+    url: 'https://innei.in/',
+    description: "Innei's personal blog on frontend and full-stack development — TypeScript, React, Next.js, AI engineering, indie hacking, travel and life.",
+    image: 'https://avatars.githubusercontent.com/u/41265413?v=5',
+    kind: 'friends',
+  },
+  {
     name: 'Astro',
     url: 'https://astro.build',
     description: 'The web framework behind this small publishing system.',
