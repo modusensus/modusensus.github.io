@@ -4,6 +4,8 @@ export interface ElsewhereLink {
   name: string;
   url: string;
   description: string;
+  /** 头像图地址（友链卡片展示用，可选） */
+  image?: string;
   kind: ElsewhereKind;
 }
 
@@ -16,6 +18,7 @@ export const elsewhereLinks: ElsewhereLink[] = [
     name: "Elainafan's blog",
     url: 'https://www.elainafan.one/',
     description: '痛饮所有踌躇之后？',
+    image: 'https://www.elainafan.one/avatars/elainafan.jpg',
     kind: 'friends',
   },
   {
