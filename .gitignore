@@ -4,5 +4,6 @@ dist/
 .DS_Store
 Thumbs.db
 .superpowers/
+.claude/
 头像.jpg
 头图.jpg

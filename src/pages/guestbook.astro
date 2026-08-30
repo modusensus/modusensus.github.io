@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import giscus from '../config/giscus.json';
+import waline from '../config/waline.json';
 
-const giscusReady = Boolean(giscus.repoId && giscus.categoryId);
+const walineReady = Boolean(waline.serverURL);
 ---
 
 <BaseLayout activeNav="guestbook" title="Guestbook — MODUSENSUS">
@@ -17,18 +17,17 @@ const giscusReady = Boolean(giscus.repoId && giscus.categoryId);
     <div class="community-page">
       <div class="guestbook-intro">
         <p>如果你有想说的话，欢迎留下来。</p>
-        <p class="mono-meta">需要使用 GitHub 登录。留言公开显示，内容通过 GitHub Discussions 管理。</p>
+        <p class="mono-meta">昵称和邮箱为必填项，网址选填；填写邮箱可订阅回复通知。留言公开显示。</p>
       </div>
 
-      <div class="giscus-shell">
-        {giscusReady ? (
-          <div class="giscus" aria-label="Guestbook comments"></div>
+      <div class="waline-shell">
+        {walineReady ? (
+          <div class="waline" aria-label="Guestbook comments"></div>
         ) : (
           <div class="community-setup">
             <div class="community-setup-title">CHANNEL NOT CONFIGURED</div>
-            <p class="community-setup-copy">留言板页面已经准备好，但 GitHub Discussions 还没有完成连接。</p>
-            <p class="community-setup-copy">开启仓库 Discussions、安装 Giscus App，并把 Repository ID 和 Category ID 填入 `src/config/giscus.json` 后，留言功能会自动启用。</p>
-            <a class="community-setup-link" href="https://github.com/modusensus/modusensus.github.io" target="_blank" rel="noopener noreferrer">OPEN REPOSITORY ↗</a>
+            <p class="community-setup-copy">留言板页面已经准备好，但评论服务还没有完成连接。</p>
+            <p class="community-setup-copy">把 Waline 服务端地址填入 `src/config/waline.json` 后，留言功能会自动启用。</p>
           </div>
         )}
       </div>
@@ -36,35 +35,82 @@ const giscusReady = Boolean(giscus.repoId && giscus.categoryId);
   </div>
 </BaseLayout>
 
-{giscusReady && (
-  <script is:inline define:vars={{ giscusRepo: giscus.repo, giscusRepoId: giscus.repoId, giscusCategory: giscus.category, giscusCategoryId: giscus.categoryId }}>
-    (function () {
-      var mount = document.querySelector('.giscus');
-      if (!mount) return;
-      // 按当前站点主题加载自定义 giscus 主题 CSS（public/giscus/），切换主题时由 BaseLayout postMessage 同步
-      // ?v= 用于主题 CSS 更新后立即失效缓存
-      var giscusThemeUrl = function (t) { return location.origin + '/giscus/modusensus-' + t + '.css?v=1'; };
-      var theme = giscusThemeUrl(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
-      var s = document.createElement('script');
-      s.src = 'https://giscus.app/client.js';
-      s.setAttribute('data-repo', giscusRepo);
-      s.setAttribute('data-repo-id', giscusRepoId);
-      s.setAttribute('data-category', giscusCategory);
-      s.setAttribute('data-category-id', giscusCategoryId);
-      s.setAttribute('data-mapping', 'pathname');
-      s.setAttribute('data-strict', '0');
-      s.setAttribute('data-reactions-enabled', '1');
-      s.setAttribute('data-emit-metadata', '0');
-      s.setAttribute('data-input-position', 'top');
-      s.setAttribute('data-theme', theme);
-      s.setAttribute('data-lang', 'zh-CN');
-      s.setAttribute('data-loading', 'lazy');
-      s.crossOrigin = 'anonymous';
-      s.async = true;
-      mount.appendChild(s);
-    })();
-  </script>
-)}
+<script>
+  // Waline 客户端走 npm 打包（同源加载，不依赖第三方 CDN）；服务地址配置在 src/config/waline.json
+  // 站点启用了 <ViewTransitions />：打包脚本在一次完整加载中只执行一次，客户端路由切页不会重跑，
+  // 因此初始化必须挂到 astro:page-load（首次加载与每次路由切换后都会触发），否则从其他页面进来评论框不出现
+  import { init } from '@waline/client';
+  import '@waline/client/style';
+  import { serverURL } from '../config/waline.json';
+
+  document.addEventListener('astro:page-load', () => {
+    const mount = document.querySelector('.waline');
+    if (mount && !mount.dataset.walineMounted) {
+      mount.dataset.walineMounted = 'true'; // 同一 DOM 只挂载一次，防止重复 init
+      init({
+        el: mount,
+        serverURL,
+        lang: 'zh-CN',
+        // 传 CSS 选择器而非 'auto'：跟随站点 data-theme 切换，主题按钮点击即时生效
+        dark: ":root[data-theme='dark']",
+        meta: ['nick', 'mail', 'link'],
+        // 昵称/邮箱必填；不在列表内的字段（网址）会被 Waline 自动标注「(选填)」
+        requiredMeta: ['nick', 'mail'],
+        search: false,
+        pageSize: 10,
+      });
+    }
+  });
+</script>
+
+<style is:global>
+  /* ── Waline 主题覆盖：纸/墨/强调色，贴合站点设计 token（强调色随侧边栏调色板切换） ──
+     用 :root:root / :root[data-theme='dark']:root 抬高特异性，
+     压过 Waline 自带的 :root 默认值和运行时注入的暗色变量块 */
+  :root:root {
+    --waline-font-size: 15.5px;
+    --waline-white: #ffffff;
+    --waline-light-grey: #6e6e6b;
+    --waline-dark-grey: #4a4a46;
+    --waline-theme-color: var(--c-pink);
+    --waline-active-color: var(--c-accent-deep);
+    --waline-color: #1a1a1a;
+    --waline-bg-color: #e9e9e7;
+    --waline-bg-color-light: #e2e2df;
+    --waline-bg-color-hover: #dcdcd8;
+    --waline-border-color: #c8c8c3;
+    --waline-disable-bg-color: #e2e2df;
+    --waline-disable-color: #8a8a84;
+    --waline-code-bg-color: #1b1b19;
+    --waline-bq-color: #dcdcd8;
+    --waline-badge-color: var(--c-pink);
+    --waline-info-bg-color: #e2e2df;
+    --waline-info-color: #6e6e6b;
+  }
+  :root[data-theme='dark']:root {
+    --waline-white: #ffffff;
+    --waline-light-grey: #98988f;
+    --waline-dark-grey: #c9c9c0;
+    --waline-theme-color: var(--c-pink);
+    --waline-active-color: var(--c-accent-bright);
+    --waline-color: #ecece8;
+    --waline-bg-color: #1b1b19;
+    --waline-bg-color-light: #232320;
+    --waline-bg-color-hover: #2a2a26;
+    --waline-border-color: #3a3a35;
+    --waline-disable-bg-color: #232320;
+    --waline-disable-color: #6e6e68;
+    --waline-code-bg-color: #111110;
+    --waline-bq-color: #2a2a26;
+    --waline-badge-color: var(--c-pink);
+    --waline-info-bg-color: #232320;
+    --waline-info-color: #98988f;
+  }
+  .waline {
+    width: 100%;
+    font-family: var(--font-cn);
+  }
+</style>
 
 <style>
 .guestbook-intro {

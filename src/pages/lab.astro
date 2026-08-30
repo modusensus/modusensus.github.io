@@ -31,32 +31,122 @@ function fmtShort(date: Date) {
   <div class="container board">
     <hr class="board-rule" />
 
-    <div class="mono-label group-label">BUILDS</div>
-    <div>
-      {projects.map(p => (
-        <a class="lab-row" href={p.link} target="_blank" rel="noopener">
-          <span class="lab-year">{p.year}</span>
-          <span>
-            <span class="lab-name">{p.name}</span><br />
-            <span class="lab-desc">{p.desc}</span>
-          </span>
-          <span class="badge">{p.badge}</span>
-        </a>
-      ))}
-    </div>
+    <div class="lab-layout">
+      <!-- 左主栏：LOGS 文章列表 -->
+      <section class="lab-col lab-col-logs">
+        <div class="mono-label group-label">LOGS</div>
+        <div>
+          {posts.map((post, idx) => (
+            <a class="ar-item" href={`/blog/${post.slug}`}>
+              <div class="ar-meta">
+                <span>LOG — {String(posts.length - idx).padStart(2, '0')}</span>
+                <span>{fmtShort(post.data.date)}</span>
+              </div>
+              <div class="ar-title">{post.data.title}</div>
+            </a>
+          ))}
+          {posts.length === 0 && <p class="mono-meta">NO LOGS YET.</p>}
+        </div>
+      </section>
 
-    <div class="mono-label group-label">LOGS</div>
-    <div>
-      {posts.map((post, idx) => (
-        <a class="ar-item" href={`/blog/${post.slug}`}>
-          <div class="ar-meta">
-            <span>LOG — {String(posts.length - idx).padStart(2, '0')}</span>
-            <span>{fmtShort(post.data.date)}</span>
-          </div>
-          <div class="ar-title">{post.data.title}</div>
-        </a>
-      ))}
-      {posts.length === 0 && <p class="mono-meta">NO LOGS YET.</p>}
+      <!-- 右侧栏：BUILDS 卡片组 -->
+      <aside class="lab-col lab-col-builds">
+        <div class="mono-label group-label">BUILDS</div>
+        <div class="build-grid">
+          {projects.map(p => (
+            <a class="build-card" href={p.link} target="_blank" rel="noopener">
+              <span class="build-card-head">
+                <span class="build-card-name">{p.name}</span>
+                <span class="badge">{p.badge}</span>
+              </span>
+              <span class="build-card-year">{p.year}</span>
+              <span class="build-card-desc">{p.desc}</span>
+            </a>
+          ))}
+        </div>
+      </aside>
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  /* ── 两栏布局：左 LOGS 主栏 / 右 BUILDS 侧栏 ── */
+  .lab-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
+    gap: 48px;
+    align-items: start;
+  }
+
+  /* 侧栏吸顶：日志滚动时 BUILDS 卡片持续可见 */
+  .lab-col-builds {
+    position: sticky;
+    top: 32px;
+  }
+
+  /* ── BUILDS 卡片组 ── */
+  .build-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .build-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--paper-raise);
+    border: 1px solid var(--rule-soft);
+    border-radius: 4px;
+    padding: 16px;
+    transition: transform 0.25s var(--ease-out), border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+  }
+  .build-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--ink);
+    box-shadow: 0 6px 18px rgba(26, 26, 26, 0.1);
+  }
+
+  .build-card-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .build-card-name {
+    font-family: var(--font-grot);
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.35;
+    color: var(--ink);
+    transition: color 0.25s var(--ease-out);
+  }
+  .build-card:hover .build-card-name { color: var(--c-pink); }
+
+  .build-card-year {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .build-card-desc {
+    font-family: var(--font-cn);
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: var(--muted);
+  }
+
+  /* ── 响应式：≤899px 收成单栏，LOGS 在前、BUILDS 在后，去掉吸顶 ── */
+  @media (max-width: 899px) {
+    .lab-layout {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    .lab-col-logs { order: 1; }
+    .lab-col-builds { order: 2; position: static; }
+
+    /* 移动端卡片组改两列，节省纵向空间 */
+    .build-grid {
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+  }
+</style>

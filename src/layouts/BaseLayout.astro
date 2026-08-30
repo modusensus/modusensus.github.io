@@ -42,7 +42,7 @@ const navGroups = [
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="alternate" type="application/rss+xml" title="MODUSENSUS" href="/rss.xml" />
   <ViewTransitions />
-  <!-- 主题防闪烁：在首帧绘制前确定 data-theme -->
+  <!-- 主题/强调色防闪烁：在首帧绘制前确定 data-theme 与 data-accent -->
   <script is:inline>
     (function () {
       var stored = null;
@@ -51,6 +51,12 @@ const navGroups = [
         ? stored
         : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
       document.documentElement.dataset.theme = theme;
+      // 强调色：默认粉 = 无 data-accent 属性，仅恢复非默认值
+      var accent = null;
+      try { accent = localStorage.getItem('modusensus_accent'); } catch (e) {}
+      if (accent === 'vermilion' || accent === 'amber' || accent === 'pine' || accent === 'indigo') {
+        document.documentElement.dataset.accent = accent;
+      }
     })();
   </script>
 </head>
@@ -80,6 +86,16 @@ const navGroups = [
       <div class="site-nav-foot">VOL.3<br />2026</div>
     </div>
   </nav>
+
+  <!-- ── 强调色调色板：nav 整体 mix-blend-difference 会让内部色块反色失真，
+       故作为 nav 的兄弟元素独立 fixed 定位（对齐到主题按钮上方），显示真实颜色 ── -->
+  <div class="accent-palette" role="group" aria-label="强调色选择">
+    <button class="accent-dot" type="button" data-accent="pink" aria-label="强调色：粉（默认）" title="粉 · 默认"></button>
+    <button class="accent-dot" type="button" data-accent="vermilion" aria-label="强调色：朱砂" title="朱砂"></button>
+    <button class="accent-dot" type="button" data-accent="amber" aria-label="强调色：赭石" title="赭石"></button>
+    <button class="accent-dot" type="button" data-accent="pine" aria-label="强调色：松绿" title="松绿"></button>
+    <button class="accent-dot" type="button" data-accent="indigo" aria-label="强调色：靛青" title="靛青"></button>
+  </div>
 
   <!-- ── 全宽 Hero 插槽（仅首页使用） ── -->
   <slot name="hero" />
@@ -116,6 +132,9 @@ const navGroups = [
           </a>
         </div>
         <span>VOL. 3 — 2026 EDITION</span>
+        <span class="site-footer-icp">
+          <a href="https://icp.gov.moe/?keyword=20260447" target="_blank" rel="noopener noreferrer">萌ICP备20260447号</a>
+        </span>
       </div>
     </footer>
   </div>
@@ -149,10 +168,48 @@ const navGroups = [
       });
     }
 
+    // ── 强调色调色板：html[data-accent] 切换全站强调色（CSS 变量定义在 global.css），
+    //    localStorage 持久化；默认粉 = 无 data-accent 属性 ──
+    const ACCENTS = ['pink', 'vermilion', 'amber', 'pine', 'indigo'];
+
+    function applyStoredAccent() {
+      try {
+        const stored = localStorage.getItem('modusensus_accent');
+        if (ACCENTS.indexOf(stored) > -1 && stored !== 'pink') {
+          document.documentElement.dataset.accent = stored;
+        }
+      } catch (e) { /* ignore */ }
+    }
+
+    function bindAccentPalette() {
+      const dots = document.querySelectorAll('.accent-dot');
+      if (!dots.length) return;
+      const syncActive = () => {
+        const current = document.documentElement.dataset.accent || 'pink';
+        dots.forEach(dot => dot.classList.toggle('active', dot.dataset.accent === current));
+      };
+      dots.forEach(dot => {
+        dot.addEventListener('click', () => {
+          const next = dot.dataset.accent || 'pink';
+          if (next === 'pink') {
+            delete document.documentElement.dataset.accent;
+          } else {
+            document.documentElement.dataset.accent = next;
+          }
+          try { localStorage.setItem('modusensus_accent', next); } catch (e) { /* ignore */ }
+          syncActive();
+        });
+      });
+      syncActive();
+    }
+
     bindThemeToggle();
+    bindAccentPalette();
     document.addEventListener('astro:after-swap', () => {
       applyStoredTheme();
+      applyStoredAccent();
       bindThemeToggle();
+      bindAccentPalette();
     });
   </script>
   <Analytics />

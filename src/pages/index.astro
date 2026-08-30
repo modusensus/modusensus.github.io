@@ -139,7 +139,7 @@ function fmtYear(date: Date) {
             <span class="mono-label">03 — GUESTBOOK</span>
             <span class="col-sub">留言板</span>
           </div>
-          <p class="announce-text">路过就留句话吧。使用 GitHub 登录后留言，公开可见。</p>
+          <p class="announce-text">路过就留句话吧。昵称和邮箱必填、网址选填，留言公开可见。</p>
           <a class="col-more" href="/guestbook">SIGN THE BOOK →</a>
         </div>
       </aside>
@@ -383,6 +383,9 @@ html.js .timeline.tl-draw::before { transform: scaleY(1); }
 <script>
 import gsap from 'gsap';
 
+// 站点启用了 <ViewTransitions />：打包脚本一次完整加载只执行一次，客户端路由回首页不会重跑，
+// 因此全部 DOM 初始化放进 astro:page-load（首次加载与每次路由切换后都会触发）
+document.addEventListener('astro:page-load', () => {
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── 滚动显现：分隔线画出、时间轴生长、区块上浮错峰 ──
@@ -447,4 +450,5 @@ if (!reduce) {
     });
   }
 }
+});
 </script>

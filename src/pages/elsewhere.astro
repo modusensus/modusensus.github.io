@@ -87,16 +87,29 @@ const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: s
                 <div class="mono-meta">HOW TO APPLY · 友链申请</div>
                 <ul class="exchange-list">
                   <li>你的站点需要正常访问，且由你长期维护</li>
-                  <li>先在我的站点留言板或 GitHub 上打个招呼，附上你的站点名称、链接、一句话介绍和头像图地址</li>
+                  <li>先用 COPY MY INFO 一键复制本站信息加到你的友链，再按 YOUR INFO 的格式填好你的信息，通过留言板或 GitHub 发给我</li>
                   <li>内容不限主题，原创优先；拒绝纯采集、挂广告弹窗或含恶意内容的站点</li>
                   <li>交换后我会尽快把你的链接加进来，也会期待你把我加上 ↴</li>
                 </ul>
-                <div class="exchange-info">
-                  <span class="mono-meta">MY INFO</span>
-                  <code>title: MODUSENSUS</code>
-                  <code>description: 城市、数据与创造力的交汇处，写博客也做小工具。</code>
-                  <code>website: https://modusensus.space/</code>
-                  <code>image: https://modusensus.space/images/profile-avatar.jpg</code>
+                <div class="exchange-block">
+                  <div class="exchange-block-head">
+                    <span class="mono-meta">COPY MY INFO · 本站信息</span>
+                    <button class="copy-btn" type="button" data-copy-target="#copy-my-info">COPY ⧉</button>
+                  </div>
+                  <pre id="copy-my-info" class="copy-block">{`title: MODUSENSUS
+description: 城市、数据与创造力的交汇处，写博客也做小工具。
+website: https://modusensus.space/
+image: https://modusensus.space/images/profile-avatar.jpg`}</pre>
+                </div>
+                <div class="exchange-block">
+                  <div class="exchange-block-head">
+                    <span class="mono-meta">YOUR INFO · 申请格式（填好发我）</span>
+                    <button class="copy-btn" type="button" data-copy-target="#copy-your-info">COPY ⧉</button>
+                  </div>
+                  <pre id="copy-your-info" class="copy-block">{`title: 你的站点名称
+description: 一句话介绍
+website: https://your-site.com/
+image: https://your-site.com/avatar.jpg`}</pre>
                 </div>
                 <div class="exchange-actions">
                   <a class="col-more" href="/guestbook">LEAVE A NOTE →</a>
@@ -110,6 +123,47 @@ const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: s
     </div>
   </div>
 </BaseLayout>
+
+<script>
+  // 友链信息复制按钮：事件委托绑在 document 上，一次绑定即可跨 ViewTransitions 客户端路由持续有效
+  document.addEventListener('click', (e) => {
+    const btn = e.target instanceof Element ? e.target.closest('[data-copy-target]') : null;
+    if (!btn) return;
+    const block = document.querySelector(btn.getAttribute('data-copy-target') || '');
+    if (!block) return;
+    const text = (block.textContent || '').trim();
+    const done = () => {
+      btn.textContent = 'COPIED ✓';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = 'COPY ⧉';
+        btn.classList.remove('copied');
+      }, 1600);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  });
+
+  // 剪贴板 API 不可用时的兜底（旧浏览器 / 非安全上下文）
+  function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      done();
+    } catch (err) {
+      /* 复制失败静默忽略 */
+    }
+    ta.remove();
+  }
+</script>
 
 <style>
 /* ── 友链卡片 ── */
@@ -201,21 +255,44 @@ const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: s
   top: 0.55em;
   color: var(--muted);
 }
-.exchange-info {
-  margin-bottom: 18px;
+.exchange-block { margin-bottom: 14px; }
+.exchange-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
 }
-.exchange-info code {
-  display: block;
-  margin-top: 8px;
+.exchange-block-head .mono-meta { margin-bottom: 0; }
+.copy-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, transform 0.2s var(--ease-out);
+}
+.copy-btn:hover, .copy-btn.copied {
+  color: var(--c-pink);
+  border-color: var(--c-pink);
+  transform: translateY(-1px);
+}
+.copy-block {
+  margin: 0;
   font-family: var(--font-mono);
   font-size: 12px;
-  line-height: 1.7;
+  line-height: 1.8;
   color: var(--ink);
   background: var(--paper-raise);
   border: 1px solid var(--rule-soft);
   border-radius: 4px;
-  padding: 10px 14px;
+  padding: 12px 14px;
   overflow-x: auto;
+  white-space: pre;
 }
 .exchange-actions { display: flex; gap: 24px; flex-wrap: wrap; }
 </style>
