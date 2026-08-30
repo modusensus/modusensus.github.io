@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import { ViewTransitions } from 'astro:transitions';
+import Analytics from '@vercel/analytics/astro';
 
 interface Props {
   title?: string;
@@ -154,5 +155,6 @@ const navGroups = [
       bindThemeToggle();
     });
   </script>
+  <Analytics />
 </body>
 </html>
