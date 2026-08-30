@@ -79,17 +79,23 @@ const navGroups = [
       ))}
     </div>
     <div class="site-nav-bottom">
-      <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换明暗主题" title="切换明暗主题">
-        <svg class="icon-moon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg>
-        <svg class="icon-sun" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
-      </button>
+      <div class="nav-actions">
+        <button class="accent-toggle" id="accent-toggle" type="button" aria-haspopup="true" aria-controls="accent-popover" aria-expanded="false" aria-label="更换强调色" title="更换强调色">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/><circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/></svg>
+        </button>
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="切换明暗主题" title="切换明暗主题">
+          <svg class="icon-moon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z"/></svg>
+          <svg class="icon-sun" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/></svg>
+        </button>
+      </div>
       <div class="site-nav-foot">VOL.3<br />2026</div>
     </div>
   </nav>
 
-  <!-- ── 强调色调色板：nav 整体 mix-blend-difference 会让内部色块反色失真，
-       故作为 nav 的兄弟元素独立 fixed 定位（对齐到主题按钮上方），显示真实颜色 ── -->
-  <div class="accent-palette" role="group" aria-label="强调色选择">
+  <!-- ── 调色盘弹框：nav 整体 mix-blend-difference 会让色块反色失真，
+       故作为 nav 的兄弟元素独立 fixed 定位显真实色；由导航底部的调色盘按钮开合 ── -->
+  <div class="accent-popover" id="accent-popover" role="group" aria-label="强调色选择">
+    <span class="accent-popover-label">ACCENT</span>
     <button class="accent-dot" type="button" data-accent="pink" aria-label="强调色：粉（默认）" title="粉 · 默认"></button>
     <button class="accent-dot" type="button" data-accent="vermilion" aria-label="强调色：朱砂" title="朱砂"></button>
     <button class="accent-dot" type="button" data-accent="amber" aria-label="强调色：赭石" title="赭石"></button>
@@ -168,7 +174,7 @@ const navGroups = [
       });
     }
 
-    // ── 强调色调色板：html[data-accent] 切换全站强调色（CSS 变量定义在 global.css），
+    // ── 强调色调色盘：按钮开合弹框，html[data-accent] 切换全站强调色（CSS 变量在 global.css），
     //    localStorage 持久化；默认粉 = 无 data-accent 属性 ──
     const ACCENTS = ['pink', 'vermilion', 'amber', 'pine', 'indigo'];
 
@@ -181,13 +187,27 @@ const navGroups = [
       } catch (e) { /* ignore */ }
     }
 
+    // 点击外部关闭 / Esc 关闭挂在 document 上；路由切换后 DOM 是新的，
+    // 需先移除旧监听器再挂新的（否则堆积且引用已替换的旧元素）
+    let accentDocHandlers = null;
+
     function bindAccentPalette() {
-      const dots = document.querySelectorAll('.accent-dot');
-      if (!dots.length) return;
+      const toggle = document.getElementById('accent-toggle');
+      const pop = document.getElementById('accent-popover');
+      if (!toggle || !pop) return;
+      const dots = pop.querySelectorAll('.accent-dot');
+
+      const isOpen = () => pop.classList.contains('open');
+      const setOpen = (open) => {
+        pop.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      };
       const syncActive = () => {
         const current = document.documentElement.dataset.accent || 'pink';
         dots.forEach(dot => dot.classList.toggle('active', dot.dataset.accent === current));
       };
+
+      toggle.addEventListener('click', () => setOpen(!isOpen()));
       dots.forEach(dot => {
         dot.addEventListener('click', () => {
           const next = dot.dataset.accent || 'pink';
@@ -197,9 +217,26 @@ const navGroups = [
             document.documentElement.dataset.accent = next;
           }
           try { localStorage.setItem('modusensus_accent', next); } catch (e) { /* ignore */ }
-          syncActive();
+          syncActive(); // 选中后弹框保持打开方便连续试色；点外部或 Esc 关闭
         });
       });
+
+      if (accentDocHandlers) {
+        document.removeEventListener('click', accentDocHandlers.click);
+        document.removeEventListener('keydown', accentDocHandlers.keydown);
+      }
+      accentDocHandlers = {
+        click: (e) => {
+          if (!isOpen()) return;
+          const t = e.target instanceof Element ? e.target : null;
+          if (t && (t.closest('#accent-popover') || t.closest('#accent-toggle'))) return;
+          setOpen(false);
+        },
+        keydown: (e) => { if (e.key === 'Escape' && isOpen()) setOpen(false); },
+      };
+      document.addEventListener('click', accentDocHandlers.click);
+      document.addEventListener('keydown', accentDocHandlers.keydown);
+
       syncActive();
     }
 

@@ -143,10 +143,11 @@ img { max-width: 100%; display: block; }
   opacity: 0.45; line-height: 1.8;
 }
 
-/* 导航底部：主题切换 + 版本号 */
+/* 导航底部：调色盘/主题切换按钮 + 版本号 */
 .site-nav-bottom {
   display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
 }
+.nav-actions { display: flex; gap: 10px; }
 .theme-toggle {
   display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 30px;
@@ -161,28 +162,50 @@ img { max-width: 100%; display: block; }
 :root[data-theme='dark'] .theme-toggle .icon-sun { display: block; }
 :root[data-theme='dark'] .theme-toggle .icon-moon { display: none; }
 
-/* 强调色调色板：nav 整体 mix-blend-difference 且 fixed 定位形成隔离组，
-   放进去的色块会被反色失真 → 作为 nav 的兄弟元素独立 fixed 定位，对齐到主题按钮上方显真实色。
-   （≤899px 移动端导航为横条，隐藏色板避免遮挡） */
-.accent-palette {
+/* 强调色按钮：位于导航底部与主题按钮并排（单色图标，随 mix-blend-difference 反色无碍） */
+.accent-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px;
+  background: none; border: 1px solid currentColor; border-radius: 999px;
+  color: inherit; opacity: 0.7; cursor: pointer;
+  transition: opacity 0.2s, transform 0.25s var(--ease-out);
+}
+.accent-toggle:hover { opacity: 1; }
+.accent-toggle svg { display: block; }
+
+/* 调色盘弹框：nav 整体 mix-blend-difference 会让色块反色失真，
+   故作为 nav 的兄弟元素独立 fixed 定位显真实色；桌面端贴在按钮上方 */
+.accent-popover {
   position: fixed; left: 26px; bottom: 122px; z-index: 201;
-  display: flex; align-items: center; gap: 9px;
+  display: none; align-items: center; gap: 12px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 28px rgba(26, 26, 26, 0.14);
+}
+.accent-popover.open { display: flex; }
+.accent-popover-label {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); white-space: nowrap;
 }
 .accent-dot {
-  width: 13px; height: 13px; border-radius: 50%;
+  width: 16px; height: 16px; border-radius: 50%;
   border: 1px solid var(--rule-soft);
   padding: 0; cursor: pointer;
   transition: transform 0.2s var(--ease-out), box-shadow 0.2s;
 }
-.accent-dot:hover { transform: scale(1.3); }
+.accent-dot:hover { transform: scale(1.25); }
 .accent-dot.active { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink); }
 .accent-dot[data-accent='pink']      { background: #E8618C; }
 .accent-dot[data-accent='vermilion'] { background: #D5483F; }
 .accent-dot[data-accent='amber']     { background: #C9862B; }
 .accent-dot[data-accent='pine']      { background: #3F8E6D; }
 .accent-dot[data-accent='indigo']    { background: #4E6FA8; }
+/* 移动端：按钮在顶栏右侧，弹框挂到栏下方右对齐（顶栏高 58px） */
 @media (max-width: 899px) {
-  .accent-palette { display: none; }
+  .accent-popover { left: auto; right: 16px; bottom: auto; top: 66px; }
 }
 
 /* ═══ Content offset（桌面为左导航让位） ═══ */
