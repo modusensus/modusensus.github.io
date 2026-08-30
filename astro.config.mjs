@@ -2,8 +2,8 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
-  // 改成你的 GitHub 用户名
-  site: 'https://modusensus.github.io',
+  // 自定义域名（CNAME 已配置，GitHub Pages 绑定 modusensus.space）
+  site: 'https://modusensus.space',
   // 如果仓库名不是 username.github.io，需要设置 base
   // base: '/blog/',
   integrations: [mdx()],

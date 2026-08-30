@@ -13,6 +13,12 @@ export interface ElsewhereLink {
  */
 export const elsewhereLinks: ElsewhereLink[] = [
   {
+    name: "Elainafan's blog",
+    url: 'https://www.elainafan.one/',
+    description: '痛饮所有踌躇之后？',
+    kind: 'friends',
+  },
+  {
     name: 'Astro',
     url: 'https://astro.build',
     description: 'The web framework behind this small publishing system.',
