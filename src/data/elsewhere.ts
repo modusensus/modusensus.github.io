@@ -29,6 +29,13 @@ export const elsewhereLinks: ElsewhereLink[] = [
     kind: 'friends',
   },
   {
+    name: 'Nova Eon',
+    url: 'https://eonova.me',
+    description: '记录着一个爱捣鼓的博主',
+    image: 'https://eonova.me/avatar.jpg',
+    kind: 'friends',
+  },
+  {
     name: 'Astro',
     url: 'https://astro.build',
     description: 'The web framework behind this small publishing system.',
