@@ -14,27 +14,27 @@
 </div>
 
 <style>
-  .reader-chip { position: fixed; top: 18px; right: 22px; z-index: 195; }
+  .reader-chip { position: fixed; top: 13px; right: 16px; z-index: 195; }
   .rc-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
-    letter-spacing: 0.12em; color: var(--ink);
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.1em; color: var(--ink);
     background: var(--paper);
     border: 1px solid var(--rule); border-radius: 999px;
-    padding: 8px 14px; cursor: pointer;
-    box-shadow: 0 4px 12px rgba(26, 26, 26, 0.1);
+    padding: 4px 10px; cursor: pointer;
+    box-shadow: 0 3px 10px rgba(26, 26, 26, 0.1);
     transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
   }
-  .rc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(26, 26, 26, 0.16); }
+  .rc-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(26, 26, 26, 0.16); }
   .rc-avatar {
-    width: 18px; height: 18px; border-radius: 50%;
+    width: 14px; height: 14px; border-radius: 50%;
     object-fit: cover; border: 1px solid var(--rule-soft);
   }
   .rc-initial {
     display: inline-flex; align-items: center; justify-content: center;
-    width: 18px; height: 18px; border-radius: 50%;
+    width: 14px; height: 14px; border-radius: 50%;
     background: var(--c-pink); color: #fff;
-    font-size: 10px; font-weight: 700;
+    font-size: 8.5px; font-weight: 700;
   }
   @media (max-width: 899px) { .reader-chip { display: none; } }
   @media print { .reader-chip { display: none; } }

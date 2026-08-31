@@ -161,6 +161,8 @@ function fmtYear(date: Date) {
 /* ═══ HERO ═══ */
 .hero {
   position: relative;
+  /* 封面页：整层盖过左侧导航/读者签/状态件（z 190-200），下滑离开封面后它们自然露出 */
+  z-index: 205;
   min-height: 100vh;
   background: var(--hero-bg);
   display: flex; flex-direction: column;
@@ -393,7 +395,9 @@ html.js .timeline.tl-draw::before { transform: scaleY(1); }
   .home-grid { grid-template-columns: 1fr; gap: 48px; }
 }
 @media (max-width: 899px) {
-  .hero { min-height: 88vh; }
+  /* 封面铺满整屏：移动端导航改 fixed 脱离文档流，同样被 z-index 更高的封面盖住 */
+  .hero { min-height: 100vh; min-height: 100svh; }
+  :global(body.is-home .site-nav) { position: fixed; left: 0; }
   .hero-avatar { width: 92px; height: 92px; }
   .hero-icons { margin-top: 24px; gap: 10px; }
   .hero-icons a { width: 34px; height: 34px; }
