@@ -19,8 +19,8 @@ const {
 
 const navGroups = [
   [
-    { href: '/lab',             label: 'LAB',        key: 'lab' },
     { href: '/threshold-notes', label: 'THRESHOLD',  key: 'threshold' },
+    { href: '/lab',             label: 'LAB',        key: 'lab' },
     { href: '/archive',         label: 'ARCHIVE',    key: 'archive' },
   ],
   [
@@ -336,13 +336,59 @@ const navGroups = [
     bindThemeToggle();
     bindAccentPalette();
     bindOnlineWidget();
+    bindPostPop();
     document.addEventListener('astro:after-swap', () => {
       applyStoredTheme();
       applyStoredAccent();
       bindThemeToggle();
       bindAccentPalette();
       bindOnlineWidget();
+      bindPostPop();
     });
+
+    // ── 文章行悬浮描述卡：悬停带 data-desc 的文章行时弹出（自下而上），
+    //    data-ai 存在时标注「AI 参与」；仅精确指针设备启用，触屏直接点进文章不受影响 ──
+    function bindPostPop() {
+      if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+      let pop = document.getElementById('post-pop');
+      if (!pop) {
+        pop = document.createElement('div');
+        pop.id = 'post-pop';
+        pop.className = 'post-pop';
+        pop.setAttribute('aria-hidden', 'true');
+        document.body.appendChild(pop);
+      }
+
+      const show = (row) => {
+        const desc = row.getAttribute('data-desc');
+        if (!desc) return;
+        pop.textContent = '';
+        if (row.hasAttribute('data-ai')) {
+          const tag = document.createElement('span');
+          tag.className = 'post-pop-ai';
+          tag.textContent = 'AI 参与';
+          pop.appendChild(tag);
+        }
+        pop.appendChild(document.createTextNode(desc));
+        const r = row.getBoundingClientRect();
+        pop.style.left = '0px';
+        pop.style.top = '0px';
+        pop.classList.add('show');
+        const pw = pop.offsetWidth, ph = pop.offsetHeight;
+        let left = Math.min(r.left, window.innerWidth - pw - 16);
+        left = Math.max(16, left);
+        let top = r.bottom + 8; // 默认弹在行下方
+        if (top + ph + 8 > window.innerHeight) top = r.top - ph - 8; // 视口底部放不下则弹上方
+        pop.style.left = left + 'px';
+        pop.style.top = Math.max(8, top) + 'px';
+      };
+      const hide = () => pop.classList.remove('show');
+
+      document.querySelectorAll('.ar-item[data-desc], .tn-item[data-desc]').forEach(row => {
+        row.addEventListener('mouseenter', () => show(row));
+        row.addEventListener('mouseleave', hide);
+      });
+    }
 
     // ── GSAP 字体编排入场动效（克制的杂志开版感）：
     //    大标题按 <br> 拆行逐行升起 → 头部 mono 标签/副标题/涂鸦接力淡入 → 横线左起划出，

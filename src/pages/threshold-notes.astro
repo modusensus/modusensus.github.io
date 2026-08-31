@@ -15,7 +15,11 @@ function fmtShort(date: Date) {
 
 <BaseLayout activeNav="threshold" title="Threshold Notes — MODUSENSUS">
   <header class="container page-header">
-    <div class="mono-label">02 — MAGAZINE</div>
+    <div class="column-art-wrap" aria-hidden="true">
+      <img class="column-art" data-art="light" src="/images/columns/threshold-light.png" alt="" width="480" height="480" loading="lazy" />
+      <img class="column-art" data-art="dark" src="/images/columns/threshold-dark.png" alt="" width="480" height="480" loading="lazy" />
+    </div>
+    <div class="mono-label">01 — MAGAZINE</div>
     <h1 class="page-header-title">THRESHOLD<br />NOTES</h1>
     <p class="page-header-subtitle">数字思想杂志 — ESSAY / HUMANITY / TECHNOLOGY</p>
   </header>
@@ -24,7 +28,12 @@ function fmtShort(date: Date) {
     <hr class="board-rule" />
     <div class="list-narrow">
       {posts.map((post, idx) => (
-        <a class="tn-item" href={`/blog/${post.slug}`}>
+        <a
+          class="tn-item"
+          href={`/blog/${post.slug}`}
+          data-desc={post.data.subtitle || post.data.excerpt || ''}
+          data-ai={post.data.ai ? 'ai' : undefined}
+        >
           <div class="tn-meta">
             <span>No. {post.data.issue || String(posts.length - idx).padStart(2, '0')}</span>
             <span>{fmtShort(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>

@@ -47,14 +47,17 @@ function formatDate(date: Date) {
           class="fragment-item"
           style={`--fragment-accent: ${accentColors[fragment.data.color]}`}
         >
-          <span class="fragment-tape" aria-hidden="true"></span>
-          <span class="fragment-num" aria-hidden="true">{String(renderedFragments.length - index).padStart(2, '0')}</span>
-          <div class="fragment-meta">
-            <span class="mono-meta">SIGNAL_{String(renderedFragments.length - index).padStart(2, '0')}</span>
-            <time class="mono-meta" datetime={fragment.data.date.toISOString()}>{formatDate(fragment.data.date)}</time>
-            {fragment.data.mood && <span class="mono-meta fragment-mood">{fragment.data.mood}</span>}
+          <div class="fragment-axis">
+            <time class="fragment-time-y" datetime={fragment.data.date.toISOString()}>{fragment.data.date.getFullYear()}</time>
+            <time class="fragment-time" datetime={fragment.data.date.toISOString()}>{String(fragment.data.date.getMonth() + 1).padStart(2, '0')}.{String(fragment.data.date.getDate()).padStart(2, '0')}</time>
           </div>
-          <div class="fragment-body"><Content /></div>
+          <div class="fragment-main">
+            <div class="fragment-meta">
+              <span class="mono-meta">SIGNAL_{String(renderedFragments.length - index).padStart(2, '0')}</span>
+              {fragment.data.mood && <span class="mono-meta fragment-mood">{fragment.data.mood}</span>}
+            </div>
+            <div class="fragment-body"><Content /></div>
+          </div>
         </article>
       )) : (
         <div class="empty-state">

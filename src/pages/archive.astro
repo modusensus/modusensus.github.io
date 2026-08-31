@@ -14,6 +14,10 @@ function fmtYear(date: Date) {
 
 <BaseLayout activeNav="archive" title="Archive — MODUSENSUS">
   <header class="container page-header">
+    <div class="column-art-wrap" aria-hidden="true">
+      <img class="column-art" data-art="light" src="/images/columns/archive-light.png" alt="" width="480" height="480" loading="lazy" />
+      <img class="column-art" data-art="dark" src="/images/columns/archive-dark.png" alt="" width="480" height="480" loading="lazy" />
+    </div>
     <div class="mono-label">03 — ARCHIVE</div>
     <h1 class="page-header-title">ARCHIVE</h1>
     <p class="page-header-subtitle">知识档案 — READING / RESEARCH / NOTES</p>
@@ -37,7 +41,12 @@ function fmtYear(date: Date) {
     <div class="mono-label group-label">NOTES</div>
     <div>
       {posts.map((post, idx) => (
-        <a class="ar-item" href={`/blog/${post.slug}`}>
+        <a
+          class="ar-item"
+          href={`/blog/${post.slug}`}
+          data-desc={post.data.subtitle || post.data.excerpt || ''}
+          data-ai={post.data.ai ? 'ai' : undefined}
+        >
           <div class="ar-meta">
             <span>No. {String(posts.length - idx).padStart(2, '0')} · {post.data.category || 'NOTE'}</span>
             <span>{fmtYear(post.data.date)}</span>

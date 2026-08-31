@@ -23,7 +23,11 @@ function fmtShort(date: Date) {
 
 <BaseLayout activeNav="lab" title="Modusensus Lab — MODUSENSUS">
   <header class="container page-header">
-    <div class="mono-label">01 — BUILDS</div>
+    <div class="column-art-wrap" aria-hidden="true">
+      <img class="column-art" data-art="light" src="/images/columns/lab-light.png" alt="" width="480" height="480" loading="lazy" />
+      <img class="column-art" data-art="dark" src="/images/columns/lab-dark.png" alt="" width="480" height="480" loading="lazy" />
+    </div>
+    <div class="mono-label">02 — BUILDS</div>
     <h1 class="page-header-title">MODUSENSUS<br />LAB</h1>
     <p class="page-header-subtitle">AI EXPERIMENTS · TOOLS · AUTOMATION · SYSTEMS</p>
   </header>
@@ -37,7 +41,12 @@ function fmtShort(date: Date) {
         <div class="mono-label group-label">LOGS</div>
         <div>
           {posts.map((post, idx) => (
-            <a class="ar-item" href={`/blog/${post.slug}`}>
+            <a
+              class="ar-item"
+              href={`/blog/${post.slug}`}
+              data-desc={post.data.subtitle || post.data.excerpt || ''}
+              data-ai={post.data.ai ? 'ai' : undefined}
+            >
               <div class="ar-meta">
                 <span>LOG — {String(posts.length - idx).padStart(2, '0')}</span>
                 <span>{fmtShort(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
@@ -70,11 +79,11 @@ function fmtShort(date: Date) {
 </BaseLayout>
 
 <style>
-  /* ── 两栏布局：左 LOGS 主栏 / 右 BUILDS 侧栏 ── */
+  /* ── 两栏布局：左 LOGS 主栏 / 右 BUILDS 窄侧栏 ── */
   .lab-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(280px, 1fr);
-    gap: 48px;
+    grid-template-columns: minmax(0, 1.5fr) 250px;
+    gap: 44px;
     align-items: start;
   }
 
@@ -84,20 +93,29 @@ function fmtShort(date: Date) {
     top: 32px;
   }
 
-  /* ── BUILDS 卡片组 ── */
+  /* ── BUILDS 卡片组：窄卡 + 纵向滚动 ── */
   .build-grid {
     display: grid;
-    gap: 12px;
+    gap: 10px;
+    max-height: calc(100vh - 130px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule) transparent;
   }
+  .build-grid::-webkit-scrollbar { width: 4px; }
+  .build-grid::-webkit-scrollbar-thumb { background: var(--rule); }
+  .build-grid::-webkit-scrollbar-track { background: transparent; }
 
   .build-card {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
     background: var(--paper-raise);
     border: 1px solid var(--rule-soft);
     border-radius: 4px;
-    padding: 16px;
+    padding: 13px 14px;
     transition: transform 0.25s var(--ease-out), border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
   }
   .build-card:hover {
@@ -110,12 +128,12 @@ function fmtShort(date: Date) {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
   }
   .build-card-name {
     font-family: var(--font-grot);
     font-weight: 700;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.35;
     color: var(--ink);
     transition: color 0.25s var(--ease-out);
@@ -124,18 +142,22 @@ function fmtShort(date: Date) {
 
   .build-card-year {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 10px;
     letter-spacing: 0.08em;
     color: var(--muted);
   }
   .build-card-desc {
     font-family: var(--font-cn);
-    font-size: 12.5px;
-    line-height: 1.7;
+    font-size: 12px;
+    line-height: 1.65;
     color: var(--muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  /* ── 响应式：≤899px 收成单栏，LOGS 在前、BUILDS 在后，去掉吸顶 ── */
+  /* ── 响应式：≤899px 收成单栏，LOGS 在前、BUILDS 在后，去掉吸顶与滚动 ── */
   @media (max-width: 899px) {
     .lab-layout {
       grid-template-columns: 1fr;
@@ -143,10 +165,11 @@ function fmtShort(date: Date) {
     }
     .lab-col-logs { order: 1; }
     .lab-col-builds { order: 2; position: static; }
-
-    /* 移动端卡片组改两列，节省纵向空间 */
     .build-grid {
-      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     }
   }
 </style>
