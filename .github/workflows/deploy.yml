@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 主页热力图按 git 提交历史渲染，需要完整历史
       - uses: actions/setup-node@v4
         with:
           node-version: 20

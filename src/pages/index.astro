@@ -1,4 +1,5 @@
 ---
+import { execSync } from 'node:child_process';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 import { announcements } from '../data/announcements';
@@ -29,12 +30,15 @@ const moduleNames: Record<string, string> = {
   archive: 'ARCHIVE',
 };
 
-// 分区（SECTIONS）：按 module 聚合，标出该分区用到的全部 tag（category 按 / 拆分去重）
+// 文章 tag：优先 frontmatter 的 tags 数组，缺失时按 category 的 / 拆分兜底
+function postTags(p: { data: { tags?: string[]; category?: string } }): string[] {
+  return p.data.tags || (p.data.category || '').split('/').map((c) => c.trim()).filter(Boolean);
+}
+
+// 分区（SECTIONS）：按 module 聚合，标出该分区用到的全部 tag
 const sections = ['threshold', 'lab', 'archive'].map((m) => {
   const posts = sorted.filter((p) => p.data.module === m);
-  const tags = [...new Set(posts.flatMap((p) =>
-    (p.data.category || '').split('/').map((c) => c.trim()).filter(Boolean),
-  ))];
+  const tags = [...new Set(posts.flatMap((p) => postTags(p)))];
   return {
     key: m,
     name: moduleNames[m],
@@ -43,6 +47,47 @@ const sections = ['threshold', 'lab', 'archive'].map((m) => {
     tags,
   };
 });
+
+// 热力图：近 63 天每日 git 提交数（构建时统计，完整历史由 Actions fetch-depth: 0 保证）
+const HEAT_DAYS = 63;
+function getHeatmap() {
+  try {
+    const out = execSync('git log --format=%ad --date=format:%Y-%m-%d', { encoding: 'utf8' });
+    const counts: Record<string, number> = {};
+    for (const d of out.trim().split('\n').filter(Boolean)) counts[d] = (counts[d] || 0) + 1;
+
+    const today = new Date();
+    const end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const start = new Date(end);
+    start.setDate(end.getDate() - HEAT_DAYS + 1);
+
+    // 日历列从周日起排：起点前的日子用空占位格
+    const pad = start.getDay();
+    const days: { date: string; count: number; inRange: boolean }[] = [];
+    for (let i = 0; i < pad; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() - (pad - i));
+      days.push({ date: '', count: 0, inRange: false });
+    }
+    let total = 0;
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      total += counts[key] || 0;
+      days.push({ date: key, count: counts[key] || 0, inRange: true });
+    }
+    return { days, total };
+  } catch {
+    return { days: [], total: 0 }; // 无 git 环境时整块保持为空
+  }
+}
+const heat = getHeatmap();
+// 提交数 → 色档 1-4（0 留底）
+function heatLevel(count: number) {
+  if (count >= 7) return 4;
+  if (count >= 4) return 3;
+  if (count >= 2) return 2;
+  return 1;
+}
 
 const letters = 'MODUSENSUS'.split('');
 const letterColors = ['orange', 'yellow', 'purple', 'green', 'pink', 'blue'];
@@ -153,6 +198,25 @@ function fmtYear(date: Date) {
             <div class="stat-label">DAYS · 运行天数</div>
           </div>
         </div>
+
+        {heat.days.length > 0 && (
+          <div class="heat">
+            <div class="heat-head">
+              <span class="mono-label">CONTRIBUTION</span>
+              <span class="heat-total">{heat.total} COMMITS · 近 {HEAT_DAYS} 天</span>
+            </div>
+            <div class="heat-grid" role="img" aria-label="近 63 天提交热力图">
+              {heat.days.map(day => (
+                <span
+                  class:list={['heat-cell', { 'heat-cell--off': !day.inRange }]}
+                  style={day.count ? { '--heat-lv': heatLevel(day.count) } : undefined}
+                  title={day.inRange ? `${day.date} · ${day.count} 次提交` : undefined}
+                  aria-hidden={!day.inRange ? 'true' : undefined}
+                ></span>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       <section class="sections-card">
@@ -194,9 +258,9 @@ function fmtYear(date: Date) {
               </div>
               <div class="tl-title">{post.data.title}</div>
               {post.data.subtitle && <div class="tl-desc">{post.data.subtitle}</div>}
-              {post.data.category && (
+              {postTags(post).length > 0 && (
                 <div class="tl-tags">
-                  {post.data.category.split('/').map(t => <span class="tl-tag">#{t.trim()}</span>)}
+                  {postTags(post).map(t => <span class="tl-tag">#{t}</span>)}
                 </div>
               )}
             </a>
@@ -477,6 +541,32 @@ function fmtYear(date: Date) {
   .stat { padding: 4px 14px 0; }
   .stat:first-child { padding-left: 0; }
 }
+
+/* 站点统计下方：提交热力图（日历式，周日起排，4 档深浅） */
+.heat {
+  margin-top: 44px;
+  border-top: 1px solid var(--rule-soft);
+  padding-top: 16px;
+}
+.heat-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  margin-bottom: 14px;
+}
+.heat-total {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--muted);
+}
+.heat-grid {
+  display: grid; grid-auto-flow: column;
+  grid-template-rows: repeat(7, 1fr);
+  gap: 3px;
+}
+.heat-cell {
+  aspect-ratio: 1;
+  background: color-mix(in srgb, var(--c-pink) calc(var(--heat-lv, 0) * 24%), var(--rule-soft));
+  border-radius: 2px;
+}
+.heat-cell--off { background: transparent; }
 
 /* 02 — 分区：三个模块的入口卡片，每卡标出该分区用到的 tag */
 .sections-card { border-top: 2px solid var(--rule); padding-top: 16px; }
