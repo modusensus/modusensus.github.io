@@ -310,6 +310,65 @@ const navGroups = [
       bindAccentPalette();
       bindOnlineWidget();
     });
+
+    // ── GSAP 字体编排入场动效（克制的杂志开版感）：
+    //    大标题按 <br> 拆行逐行升起 → 头部 mono 标签/副标题/涂鸦接力淡入 → 横线左起划出，
+    //    列表项（文章行/便签/友链卡/BUILDS 卡）由 ScrollTrigger 批量上浮浮现。
+    //    模块级只注册一次；astro:page-load 首次加载与每次路由切换都触发 ──
+    import { gsap } from 'gsap';
+    import { ScrollTrigger } from 'gsap/ScrollTrigger';
+    gsap.registerPlugin(ScrollTrigger);
+
+    // 把标题内容按 <br> 拆成「遮罩 span > 行 span」，供逐行升起
+    function splitTitleLines(title) {
+      const parts = title.innerHTML.split(/<br\s*\/?>/i).map(s => s.trim()).filter(Boolean);
+      title.innerHTML = parts.map(p => `<span class="ph-mask"><span class="ph-line">${p}</span></span>`).join('');
+      return title.querySelectorAll('.ph-line');
+    }
+
+    function runIntro() {
+      ScrollTrigger.getAll().forEach(t => t.kill()); // 路由切换后旧触发器引用的是已移除的 DOM
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      // 1) 页头：标题逐行 + 标签/副标题/涂鸦接力
+      const header = document.querySelector('.page-header');
+      if (header) {
+        const title = header.querySelector('.page-header-title');
+        const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+        if (title) {
+          const lines = splitTitleLines(title);
+          tl.from(lines, { yPercent: 118, duration: 0.7, stagger: 0.09 }, 0);
+        }
+        const mono = header.querySelector('.mono-label');
+        const sub = header.querySelector('.page-header-subtitle');
+        const scrawl = header.querySelector('.fragment-scrawl');
+        if (mono) tl.from(mono, { opacity: 0, y: 8, duration: 0.45 }, 0.15);
+        if (sub) tl.from(sub, { opacity: 0, y: 10, duration: 0.5 }, 0.28);
+        if (scrawl) tl.from(scrawl, { opacity: 0, rotation: -11, y: 6, duration: 0.5 }, 0.5);
+      }
+
+      // 2) 横线从左划出（钢笔打线）
+      const rule = document.querySelector('.board-rule');
+      if (rule) {
+        gsap.from(rule, { scaleX: 0, transformOrigin: 'left center', duration: 0.55, ease: 'power2.out', delay: 0.25 });
+      }
+
+      // 3) 列表项进入视口时批量上浮；clearProps 释放内联 transform，避免盖住 hover 位移
+      const items = document.querySelectorAll('.ar-item, .fragment-item, .friend-card, .build-card, .lab-row');
+      if (items.length) {
+        gsap.set(items, { opacity: 0, y: 24 });
+        ScrollTrigger.batch(items, {
+          start: 'top 92%',
+          once: true,
+          onEnter: batch => gsap.to(batch, {
+            opacity: 1, y: 0, duration: 0.55, ease: 'power2.out',
+            stagger: 0.07, overwrite: true, clearProps: 'transform,opacity',
+          }),
+        });
+      }
+    }
+
+    document.addEventListener('astro:page-load', runIntro);
   </script>
   <Analytics />
 </body>

@@ -112,6 +112,10 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase;
 }
 
+/* ── 入场动效：GSAP 把 .page-header-title 按 <br> 拆行后挂的遮罩结构 ── */
+.ph-mask { display: block; overflow: hidden; }
+.ph-line { display: block; }
+
 /* ═══ Left nav rail — mix-blend-difference，背景永远与页面一致 ═══ */
 .site-nav {
   position: fixed; top: 0; left: 0; bottom: 0; z-index: 200;
