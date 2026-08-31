@@ -10,13 +10,17 @@ export interface RecentComment {
   insertedAt?: string;
   time?: string | number;
   path?: string;
+  /** recent API 实际返回的路径字段是 url；fetch 时已统一归并到 path */
+  url?: string;
 }
 
 export async function fetchRecentComments(serverURL: string, count = 5): Promise<RecentComment[]> {
   const base = serverURL.replace(/\/$/, '');
   const r = await fetch(`${base}/api/comment?type=recent&count=${count}&lang=zh-CN`);
   const j = await r.json();
-  return Array.isArray(j && j.data) ? (j.data as RecentComment[]) : [];
+  const items: RecentComment[] = Array.isArray(j && j.data) ? j.data : [];
+  // recent API 的路径字段是 url（不是 path），统一归并到 path，尾斜杠一并归一
+  return items.map(c => ({ ...c, path: (c.path || c.url || '').replace(/\/$/, '') || undefined }));
 }
 
 export function commentExcerpt(html: string, max = 64): string {
