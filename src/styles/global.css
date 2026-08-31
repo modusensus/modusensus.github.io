@@ -461,13 +461,13 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
 .fragment-mood {
   margin-left: auto;
   display: inline-block;
-  font-size: 14px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   color: var(--fragment-accent, var(--c-pink));
   transform: rotate(-2deg);
 }
 
 .fragment-body {
-  font-family: var(--font-serif); font-size: 16.5px; line-height: 2;
+  font-family: var(--font-cn); font-size: 15px; line-height: 1.9;
   color: var(--ink);
 }
 .fragment-body p { margin-bottom: 0.9rem; }
