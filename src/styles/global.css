@@ -167,6 +167,18 @@ img { max-width: 100%; display: block; }
 :root[data-theme='dark'] .theme-toggle .icon-sun { display: block; }
 :root[data-theme='dark'] .theme-toggle .icon-moon { display: none; }
 
+/* ── 主题切换擦除层：新主题背景从底部上滑（→ dark）/ 顶部下滑（→ light）盖过整页，
+      盖满后 JS 切换真实主题并撤层（页面底色此时与擦除层同色，撤层无感） ── */
+.theme-wipe {
+  position: fixed; inset: 0; z-index: 9500;
+  pointer-events: none; visibility: hidden;
+  transform: translateY(100%);
+}
+.theme-wipe.up { visibility: visible; animation: theme-wipe-up 0.55s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+.theme-wipe.down { visibility: visible; animation: theme-wipe-down 0.55s cubic-bezier(0.65, 0, 0.35, 1) forwards; }
+@keyframes theme-wipe-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes theme-wipe-down { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+
 /* 强调色按钮：位于导航底部与主题按钮并排（单色图标，随 mix-blend-difference 反色无碍） */
 .accent-toggle {
   display: inline-flex; align-items: center; justify-content: center;

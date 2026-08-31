@@ -66,6 +66,9 @@ const navGroups = [
 
   <div class="reading-progress" id="reading-progress" aria-hidden="true"></div>
 
+  <!-- ── 主题切换擦除层：切换时新主题背景上滑（→ dark）/ 下滑（→ light）盖过整页 ── -->
+  <div class="theme-wipe" id="theme-wipe" aria-hidden="true"></div>
+
   <!-- ── 左侧导航：mix-blend-difference，深浅背景自动反色 ── -->
   <nav class="site-nav" aria-label="Main navigation">
     <a href="/" class="site-nav-brand">MODUSENSUS</a>
@@ -185,17 +188,43 @@ const navGroups = [
       const btn = document.getElementById('theme-toggle');
       if (!btn) return;
       btn.addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
-        try { localStorage.setItem('modusensus_theme', next); } catch (e) { /* ignore */ }
-        // 同步 giscus iframe 到对应的自定义主题 CSS（public/giscus/），?v= 用于更新后失效缓存
-        const giscusTheme = `${location.origin}/giscus/modusensus-${next}.css?v=1`;
-        document.querySelectorAll('iframe.giscus-frame').forEach((frame) => {
-          frame.contentWindow?.postMessage(
-            { giscus: { setConfig: { theme: giscusTheme } } },
-            'https://giscus.app',
-          );
-        });
+        const de = document.documentElement;
+        const current = de.dataset.theme === 'dark' ? 'dark' : 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+
+        const applyTheme = () => {
+          de.dataset.theme = next;
+          try { localStorage.setItem('modusensus_theme', next); } catch (e) { /* ignore */ }
+          // 同步 giscus iframe 到对应的自定义主题 CSS（public/giscus/），?v= 用于更新后失效缓存
+          const giscusTheme = `${location.origin}/giscus/modusensus-${next}.css?v=1`;
+          document.querySelectorAll('iframe.giscus-frame').forEach((frame) => {
+            frame.contentWindow?.postMessage(
+              { giscus: { setConfig: { theme: giscusTheme } } },
+              'https://giscus.app',
+            );
+          });
+        };
+
+        const wipe = document.getElementById('theme-wipe');
+        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!wipe || reduce) { applyTheme(); return; }
+
+        // 预读目标主题的背景色：同一任务内同步改回 data-theme，不触发中间绘制
+        de.dataset.theme = next;
+        const targetBg = getComputedStyle(document.body).backgroundColor;
+        de.dataset.theme = current;
+        if (!targetBg || targetBg === 'transparent') { applyTheme(); return; }
+
+        // 新主题背景上滑（→ dark）/ 下滑（→ light）盖过整页，盖满后切换真实主题并撤掉擦除层
+        wipe.classList.remove('up', 'down');
+        void wipe.offsetWidth; // 强制回流：连续点击时重启动画
+        wipe.style.background = targetBg;
+        wipe.classList.add(next === 'dark' ? 'up' : 'down');
+        setTimeout(() => {
+          applyTheme();
+          wipe.classList.remove('up', 'down');
+          wipe.style.background = '';
+        }, 570);
       });
     }
 
