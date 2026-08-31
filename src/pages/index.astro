@@ -86,11 +86,18 @@ function fmtYear(date: Date) {
         <span class="scroll">SCROLL ↓</span>
       </div>
     </section>
+
+    <!-- ── 开场与正文之间的「切入」横条：纸底跑马灯（两份相同内容实现无缝循环） ── -->
+    <div class="hero-ticker" aria-hidden="true">
+      <div class="hero-ticker-track">
+        <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
+        <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
+      </div>
+    </div>
   </Fragment>
 
   <!-- ═══ SITE PANEL — 时间轴 + 公告 + 留言 ═══ -->
   <div class="container board">
-    <hr class="board-rule" />
     <div class="home-grid">
 
       <!-- 01 近期更新：时间轴 -->
@@ -250,6 +257,8 @@ function fmtYear(date: Date) {
 }
 
 /* ═══ SITE PANEL ═══ */
+/* 分隔线由 hero-ticker 的下边框承担，正文区补足上留白 */
+.board { padding-top: 64px; }
 .home-grid {
   display: grid; grid-template-columns: 1.6fr 1fr;
   gap: 72px; align-items: start;
@@ -341,6 +350,28 @@ function fmtYear(date: Date) {
   color: var(--ink-soft); margin-bottom: 0;
 }
 
+/* ── 开场切入横条：纸底跑马灯，把深色开场与纸色正文明确切开 ── */
+.hero-ticker {
+  overflow: hidden;
+  background: var(--paper);
+  border-top: 2px solid var(--rule);
+  border-bottom: 2px solid var(--rule);
+  padding: 13px 0;
+}
+.hero-ticker-track {
+  display: flex; width: max-content;
+  animation: hero-ticker 28s linear infinite;
+}
+.hero-ticker-track span {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.18em; text-transform: uppercase; white-space: nowrap;
+  color: var(--ink);
+}
+@keyframes hero-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
 /* ═══ Scroll reveal（html.js 才隐藏，无 JS 时内容照常显示） ═══ */
 html.js .rv {
   opacity: 0; transform: translateY(26px);
@@ -348,14 +379,6 @@ html.js .rv {
   transition-delay: var(--rv-delay, 0ms);
 }
 html.js .rv.rv-visible { opacity: 1; transform: none; }
-
-/* 黑色分隔线：从左往右画出 */
-html.js hr.board-rule.rv {
-  opacity: 1;
-  transform: scaleX(0); transform-origin: left center;
-  transition: transform 0.9s var(--ease-out);
-}
-html.js hr.board-rule.rv.rv-visible { transform: scaleX(1); }
 
 /* 时间轴竖线：从上往下生长 */
 html.js .timeline::before {
@@ -375,7 +398,8 @@ html.js .timeline.tl-draw::before { transform: scaleY(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .d-float, .hero-foot .scroll { animation: none; }
-  html.js .rv, html.js hr.board-rule.rv { opacity: 1; transform: none; transition: none; }
+  .hero-ticker-track { animation: none; }
+  html.js .rv { opacity: 1; transform: none; transition: none; }
   html.js .timeline::before { transform: none; transition: none; }
 }
 </style>
@@ -391,7 +415,7 @@ const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ── 滚动显现：分隔线画出、时间轴生长、区块上浮错峰 ──
 // （无论是否减动效都绑定类，CSS 的 reduce 媒体查询会强制显示）
 document.documentElement.classList.add('js');
-const revealEls = [...document.querySelectorAll('.board-rule, .section-head, .tl-item, .rail-card')];
+const revealEls = [...document.querySelectorAll('.section-head, .tl-item, .rail-card')];
 revealEls.forEach(el => el.classList.add('rv'));
 document.querySelectorAll('.home-main .tl-item').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 90}ms`));
 document.querySelectorAll('.home-rail .rail-card').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 120}ms`));

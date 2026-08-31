@@ -1,0 +1,103 @@
+---
+// ── 右上角读者身份入口 ──
+// 读者身份由 Waline 管理（登录/注册动作发生在评论框内），这里做状态显示与入口：
+// 未登录显示「读者 · 登录」，已登录显示头像 + 昵称；点击平滑滚到本页评论区，
+// 本页没有评论区时跳留言板。桌面端固定右上角；移动端隐藏（顶栏已满，评论区自带身份表单）。
+---
+
+<div class="reader-chip" id="reader-chip" hidden>
+  <button class="rc-btn" id="rc-btn" type="button" aria-label="读者身份">
+    <img class="rc-avatar" id="rc-avatar" alt="" hidden />
+    <span class="rc-initial" id="rc-initial" aria-hidden="true" hidden></span>
+    <span class="rc-text" id="rc-text">读者 · 登录</span>
+  </button>
+</div>
+
+<style>
+  .reader-chip { position: fixed; top: 18px; right: 22px; z-index: 195; }
+  .rc-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.12em; color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule); border-radius: 999px;
+    padding: 8px 14px; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(26, 26, 26, 0.1);
+    transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+  }
+  .rc-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(26, 26, 26, 0.16); }
+  .rc-avatar {
+    width: 18px; height: 18px; border-radius: 50%;
+    object-fit: cover; border: 1px solid var(--rule-soft);
+  }
+  .rc-initial {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: var(--c-pink); color: #fff;
+    font-size: 10px; font-weight: 700;
+  }
+  @media (max-width: 899px) { .reader-chip { display: none; } }
+  @media print { .reader-chip { display: none; } }
+</style>
+
+<script>
+  // WALINE_USER 是 Waline 客户端写在本地的登录用户（登录动作发生在评论框内）；
+  // 轮询读取以同步状态（同页登录不会触发 storage 事件，2s 轮询成本可忽略）
+  function readUser() {
+    try { return JSON.parse(localStorage.getItem('WALINE_USER') || 'null'); } catch { return null; }
+  }
+
+  function syncChip() {
+    const chip = document.getElementById('reader-chip');
+    const avatar = document.getElementById('rc-avatar');
+    const initial = document.getElementById('rc-initial');
+    const text = document.getElementById('rc-text');
+    if (!chip || !avatar || !initial || !text) return;
+    const u = readUser();
+    if (u && u.nick) {
+      const url = typeof u.avatar === 'string' && u.avatar
+        ? u.avatar
+        : (typeof u.mailMd5 === 'string' && u.mailMd5 ? `https://cravatar.cn/avatar/${u.mailMd5}?s=64&d=mp` : '');
+      if (url) {
+        if (avatar.dataset.src !== url) { avatar.src = url; avatar.dataset.src = url; }
+        avatar.hidden = false;
+        initial.hidden = true;
+      } else {
+        avatar.hidden = true;
+        initial.hidden = false;
+        initial.textContent = u.nick.slice(0, 1).toUpperCase();
+      }
+      text.textContent = u.nick;
+    } else {
+      avatar.hidden = true;
+      initial.hidden = true;
+      text.textContent = '读者 · 登录';
+    }
+    chip.hidden = false;
+  }
+
+  function bindChip() {
+    const btn = document.getElementById('rc-btn');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const target = document.querySelector('.waline');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const box = (target.closest('.comments, .community-page') || target);
+        // 内联样式做一个强调色描边闪烁，提示评论区位置（scoped 样式覆盖不到跨组件 DOM）
+        box.style.transition = 'box-shadow 0.4s';
+        box.style.boxShadow = '0 0 0 3px var(--c-pink)';
+        setTimeout(() => { box.style.boxShadow = ''; }, 1500);
+      } else {
+        window.location.href = '/guestbook';
+      }
+    });
+    syncChip();
+  }
+
+  // astro:page-load 首次加载与每次路由切换都触发，不做额外直调（否则首载绑定两次）
+  document.addEventListener('astro:page-load', bindChip);
+
+  let rcTimer = 0; // 模块级单例：一次完整加载只起一个轮询
+  if (!rcTimer) rcTimer = setInterval(syncChip, 2000);
+</script>

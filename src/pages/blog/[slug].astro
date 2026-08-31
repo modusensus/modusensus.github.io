@@ -92,6 +92,11 @@ const tocItems = headings.filter(h => h.depth === 2);
           <span id="like-count">0</span>
         </button>
       </div>
+
+      <div class="comments">
+        <div class="mono-label comments-label">COMMENTS · 说点什么</div>
+        <div class="waline" data-waline-path={`/blog/${post.slug}`} aria-label="文章评论"></div>
+      </div>
     </div>
 
     {related.length > 0 && (
@@ -201,3 +206,39 @@ const tocItems = headings.filter(h => h.depth === 2);
 </script>
 
 <!-- Waline 浏览量统计脚本已上移到 BaseLayout（全局一份，避免双份导致重复计数） -->
+
+<style>
+.comments {
+  margin-top: 64px;
+  padding-top: 44px;
+  border-top: 1px solid var(--rule);
+}
+.comments-label { color: var(--ink); margin-bottom: 30px; }
+</style>
+
+<script>
+  // ── 文章页 Waline 评论区（主题覆盖在 global.css，与留言板同一套）；
+  //    data-waline-path 与页首浏览量的 data-path 保持一致（/blog/slug） ──
+  import { init } from '@waline/client';
+  import '@waline/client/style';
+  import { serverURL } from '../../config/waline.json';
+
+  document.addEventListener('astro:page-load', () => {
+    const mount = document.querySelector('.waline[data-waline-path]');
+    if (mount && !mount.dataset.walineMounted) {
+      mount.dataset.walineMounted = 'true'; // 同一 DOM 只挂载一次，防止重复 init
+      init({
+        el: mount,
+        serverURL,
+        lang: 'zh-CN',
+        // 传 CSS 选择器而非 'auto'：跟随站点 data-theme 切换，主题按钮点击即时生效
+        dark: ":root[data-theme='dark']",
+        meta: ['nick', 'mail', 'link'],
+        requiredMeta: ['nick', 'mail'],
+        search: false,
+        pageSize: 10,
+        path: mount.dataset.walinePath,
+      });
+    }
+  });
+</script>

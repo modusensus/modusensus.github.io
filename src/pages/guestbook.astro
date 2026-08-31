@@ -63,54 +63,7 @@ const walineReady = Boolean(waline.serverURL);
   });
 </script>
 
-<style is:global>
-  /* ── Waline 主题覆盖：纸/墨/强调色，贴合站点设计 token（强调色随侧边栏调色板切换） ──
-     用 :root:root / :root[data-theme='dark']:root 抬高特异性，
-     压过 Waline 自带的 :root 默认值和运行时注入的暗色变量块 */
-  :root:root {
-    --waline-font-size: 15.5px;
-    --waline-white: #ffffff;
-    --waline-light-grey: #6e6e6b;
-    --waline-dark-grey: #4a4a46;
-    --waline-theme-color: var(--c-pink);
-    --waline-active-color: var(--c-accent-deep);
-    --waline-color: #1a1a1a;
-    --waline-bg-color: #e9e9e7;
-    --waline-bg-color-light: #e2e2df;
-    --waline-bg-color-hover: #dcdcd8;
-    --waline-border-color: #c8c8c3;
-    --waline-disable-bg-color: #e2e2df;
-    --waline-disable-color: #8a8a84;
-    --waline-code-bg-color: #1b1b19;
-    --waline-bq-color: #dcdcd8;
-    --waline-badge-color: var(--c-pink);
-    --waline-info-bg-color: #e2e2df;
-    --waline-info-color: #6e6e6b;
-  }
-  :root[data-theme='dark']:root {
-    --waline-white: #ffffff;
-    --waline-light-grey: #98988f;
-    --waline-dark-grey: #c9c9c0;
-    --waline-theme-color: var(--c-pink);
-    --waline-active-color: var(--c-accent-bright);
-    --waline-color: #ecece8;
-    --waline-bg-color: #1b1b19;
-    --waline-bg-color-light: #232320;
-    --waline-bg-color-hover: #2a2a26;
-    --waline-border-color: #3a3a35;
-    --waline-disable-bg-color: #232320;
-    --waline-disable-color: #6e6e68;
-    --waline-code-bg-color: #111110;
-    --waline-bq-color: #2a2a26;
-    --waline-badge-color: var(--c-pink);
-    --waline-info-bg-color: #232320;
-    --waline-info-color: #98988f;
-  }
-  .waline {
-    width: 100%;
-    font-family: var(--font-cn);
-  }
-</style>
+<!-- Waline 主题覆盖已上移到 global.css（文章页评论区也用同一套） -->
 
 <style>
 .guestbook-intro {
