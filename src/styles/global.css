@@ -417,20 +417,77 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
 .elsewhere-list,
 .community-page { max-width: 780px; }
 
+/* ── Fragments：杂志剪贴 × 手写便签 ──
+   卡片微歪斜 + 顶部纸胶带 = 碎碎念的随手贴；衬线正文 + 幽灵序号 + SIGNAL 编号 = 杂志感 */
+.fragment-list { max-width: 680px; display: flex; flex-direction: column; gap: 44px; }
+
 .fragment-item {
-  border-top: 1px solid var(--rule);
-  border-left: 3px solid var(--fragment-accent, var(--c-pink));
-  padding: 20px 0 20px 20px;
+  position: relative;
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  padding: 28px 30px 26px;
+  transform: rotate(-0.4deg);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
 }
-.fragment-item + .fragment-item { border-top-color: var(--rule-soft); }
+.fragment-item:nth-child(even) { transform: rotate(0.45deg); }
+.fragment-item:hover {
+  transform: rotate(0) translateY(-3px);
+  box-shadow: 0 12px 28px rgba(26, 26, 26, 0.1);
+}
+
+/* 顶部半透明纸胶带，颜色随片段心情色 */
+.fragment-tape {
+  position: absolute; top: -11px; left: 50%;
+  width: 104px; height: 22px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: var(--fragment-accent, var(--c-pink));
+  opacity: 0.4;
+}
+.fragment-item:nth-child(even) .fragment-tape { transform: translateX(-50%) rotate(2deg); }
+
+/* 右上角幽灵序号 */
+.fragment-num {
+  position: absolute; right: 20px; top: 12px;
+  font-family: var(--font-grot); font-weight: 900; font-size: 46px; line-height: 1;
+  color: var(--fragment-accent, var(--c-pink)); opacity: 0.13;
+  pointer-events: none;
+}
+
 .fragment-meta {
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
-  margin-bottom: 12px;
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  margin-bottom: 14px;
 }
-.fragment-body { font-family: var(--font-cn); font-size: 16px; line-height: 1.9; color: var(--ink); }
+.fragment-mood {
+  margin-left: auto;
+  display: inline-block;
+  font-size: 14px; font-weight: 700;
+  color: var(--fragment-accent, var(--c-pink));
+  transform: rotate(-2deg);
+}
+
+.fragment-body {
+  font-family: var(--font-serif); font-size: 16.5px; line-height: 2;
+  color: var(--ink);
+}
 .fragment-body p { margin-bottom: 0.9rem; }
 .fragment-body p:last-child { margin-bottom: 0; }
-.fragment-mood { color: var(--fragment-accent, var(--c-pink)); }
+
+/* 页眉手写涂鸦（page-header 需要定位上下文） */
+.page-header { position: relative; }
+.fragment-scrawl {
+  position: absolute; right: 5%; bottom: 26px;
+  font-family: var(--font-script); font-size: 27px; font-weight: 700;
+  color: var(--c-pink); transform: rotate(-5deg);
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .fragment-item { padding: 24px 20px 22px; }
+  .fragment-num { font-size: 34px; right: 14px; top: 10px; }
+  .fragment-scrawl { position: static; display: block; margin-top: 10px; transform: rotate(-2deg); font-size: 23px; }
+  .fragment-list { gap: 34px; }
+}
 
 .external-group + .external-group { margin-top: 48px; }
 .external-row {

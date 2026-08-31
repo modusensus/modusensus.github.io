@@ -36,6 +36,7 @@ function formatDate(date: Date) {
     <div class="mono-label">FRAGMENTS</div>
     <h1 class="page-header-title">SMALL<br />SIGNALS</h1>
     <p class="page-header-subtitle">片段 — SHORT THOUGHTS / UNFINISHED OBSERVATIONS</p>
+    <span class="fragment-scrawl" aria-hidden="true">murmurs ↓</span>
   </header>
 
   <div class="container board">
@@ -46,6 +47,8 @@ function formatDate(date: Date) {
           class="fragment-item"
           style={`--fragment-accent: ${accentColors[fragment.data.color]}`}
         >
+          <span class="fragment-tape" aria-hidden="true"></span>
+          <span class="fragment-num" aria-hidden="true">{String(renderedFragments.length - index).padStart(2, '0')}</span>
           <div class="fragment-meta">
             <span class="mono-meta">SIGNAL_{String(renderedFragments.length - index).padStart(2, '0')}</span>
             <time class="mono-meta" datetime={fragment.data.date.toISOString()}>{formatDate(fragment.data.date)}</time>
