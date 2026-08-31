@@ -991,11 +991,11 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   color: var(--ink-soft);
   overflow-wrap: anywhere;
 }
-/* 主页卡片内的紧凑版 */
-.rc-list--compact .rc-row { padding: 10px 0; }
-.rc-list--compact .rc-avatar { width: 24px; height: 24px; }
-.rc-list--compact .rc-src { display: none; }
-.rc-list--compact .rc-text {
+/* 主页「读者来信」卡片内的紧凑版：显示文章 slug 链接 */
+.rc-list--letters .rc-row { padding: 10px 0; }
+.rc-list--letters .rc-avatar { width: 24px; height: 24px; }
+.rc-list--letters .rc-src { color: var(--c-pink); }
+.rc-list--letters .rc-text {
   font-size: 12.5px;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;

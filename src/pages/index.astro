@@ -143,13 +143,13 @@ function fmtYear(date: Date) {
 
         <div class="rail-card">
           <div class="section-head">
-            <span class="mono-label">03 — GUESTBOOK</span>
-            <span class="col-sub">留言板</span>
+            <span class="mono-label">03 — READERS' LETTERS</span>
+            <span class="col-sub">读者来信</span>
           </div>
-          <p class="announce-text">路过就留句话吧。昵称和邮箱必填、网址选填，留言公开可见。</p>
-          <!-- 全站最新留言：Waline recent API，取不到/为空时保持隐藏 -->
-          <div class="rc-list rc-list--compact" id="home-latest-comments" hidden></div>
-          <a class="col-more" href="/guestbook">SIGN THE BOOK →</a>
+          <p class="announce-text">来自文章评论区的读者来信，点 slug 回到原文一起聊。</p>
+          <!-- 读者来信：Waline recent API 过滤出文章评论区留言，取不到/为空时保持隐藏 -->
+          <div class="rc-list rc-list--letters" id="home-latest-comments" hidden></div>
+          <a class="col-more" href="/threshold-notes">LEAVE A REPLY →</a>
         </div>
       </aside>
 
@@ -424,13 +424,14 @@ revealEls.forEach(el => el.classList.add('rv'));
 document.querySelectorAll('.home-main .tl-item').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 90}ms`));
 document.querySelectorAll('.home-rail .rail-card').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 120}ms`));
 
-// ── 最新留言（全站）：Waline recent API，失败/为空时保持隐藏 ──
+// ── 读者来信：只取文章评论区（/blog/*）的最新评论，失败/为空时保持隐藏 ──
 const latestEl = document.getElementById('home-latest-comments');
 if (latestEl) {
-  fetchRecentComments(serverURL, 3)
+  fetchRecentComments(serverURL, 20)
     .then(items => {
-      if (!items.length) return;
-      renderRecentList(latestEl, items);
+      const letters = items.filter(c => typeof c.path === 'string' && c.path.startsWith('/blog'));
+      if (!letters.length) return;
+      renderRecentList(latestEl, letters.slice(0, 3), { src: 'slug' });
       latestEl.hidden = false;
     })
     .catch(() => { /* 接口不可用时保持隐藏 */ });

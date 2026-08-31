@@ -39,7 +39,13 @@ export function relTime(iso?: string | number): string {
   return new Date(t).toLocaleDateString('zh-CN');
 }
 
-export function renderRecentList(el: HTMLElement, items: RecentComment[]): void {
+export interface RenderListOptions {
+  /** 来源链接形式：auto = 非留言板显示「来自文章 ↗」（默认）；slug = 显示文章 slug；none = 不显示 */
+  src?: 'auto' | 'slug' | 'none';
+}
+
+export function renderRecentList(el: HTMLElement, items: RecentComment[], opts: RenderListOptions = {}): void {
+  const srcMode = opts.src ?? 'auto';
   el.innerHTML = '';
   for (const c of items) {
     const row = document.createElement('div');
@@ -67,13 +73,19 @@ export function renderRecentList(el: HTMLElement, items: RecentComment[]): void 
     time.textContent = relTime(c.insertedAt ?? c.time);
     head.append(nick, time);
 
-    // 来源：留言板自身的留言不加链接，文章评论链回原文
-    if (c.path && c.path !== '/guestbook') {
-      const src = document.createElement('a');
-      src.className = 'rc-src';
-      src.href = c.path;
-      src.textContent = '来自文章 ↗';
-      head.appendChild(src);
+    // 来源链接
+    if (c.path && srcMode !== 'none') {
+      const isGuestbook = c.path.replace(/\/$/, '') === '/guestbook';
+      const show = srcMode === 'slug' || (srcMode === 'auto' && !isGuestbook);
+      if (show) {
+        const src = document.createElement('a');
+        src.className = 'rc-src';
+        src.href = c.path;
+        src.textContent = srcMode === 'slug'
+          ? `${(c.path.replace(/\/$/, '').split('/').pop() || 'post')} ↗`
+          : '来自文章 ↗';
+        head.appendChild(src);
+      }
     }
 
     const text = document.createElement('div');

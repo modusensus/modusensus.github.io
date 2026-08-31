@@ -85,15 +85,20 @@ const walineReady = Boolean(waline.serverURL);
   document.addEventListener('modusensus:waline-user', mountWaline);
   document.addEventListener('astro:page-load', mountWaline);
 
-  // ── 全站留言便签墙：Waline recent API（失败/为空时整块隐藏） ──
+  // ── 留言便签墙：只显示留言板自己的留言（文章评论区独立，不出现在这里），
+  //    Waline recent API 拉取后按 path 过滤（失败/为空时整块隐藏） ──
   function loadWall() {
     const wrap = document.getElementById('gb-wall');
     const wall = document.getElementById('gb-note-wall');
     if (!wrap || !wall) return;
-    fetchRecentComments(serverURL, 12)
+    fetchRecentComments(serverURL, 20)
       .then(items => {
-        if (!items.length) { wrap.hidden = true; return; }
-        renderNoteWall(wall, items);
+        const notes = items.filter(c => {
+          const p = typeof c.path === 'string' ? c.path.replace(/\/$/, '') : '';
+          return p === '/guestbook';
+        });
+        if (!notes.length) { wrap.hidden = true; return; }
+        renderNoteWall(wall, notes);
         wrap.hidden = false;
       })
       .catch(() => { wrap.hidden = true; });
