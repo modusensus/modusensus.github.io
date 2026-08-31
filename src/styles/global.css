@@ -227,16 +227,17 @@ img { max-width: 100%; display: block; }
 }
 .footer-icon:hover { color: var(--c-pink); transform: translateY(-2px); }
 .footer-icon svg { display: block; }
-/* 萌ICP 备案号：flex-basis 100% 在图标行下方独占一行居中；
-   内部 flex 容器容纳在线人数徽标与 ICP 链接 */
+/* 页脚右侧：版本号 + 萌ICP 备案号并排 */
+.site-footer-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .site-footer-icp {
-  flex-basis: 100%; text-align: center; padding-top: 2px;
-  display: flex; align-items: center; justify-content: center;
-  gap: 18px; flex-wrap: wrap;
-}
-.site-footer-icp a {
   color: var(--muted); font-weight: 400; letter-spacing: 0.1em;
   transition: color 0.2s;
+}
+.site-footer-icp:hover { color: var(--c-pink); }
+/* 在线人数徽标：图标行下方独占一行居中（接口不可用时整体 hidden） */
+.site-footer-extra {
+  flex-basis: 100%; display: flex; align-items: center; justify-content: center;
+  padding-top: 2px;
 }
 .site-footer-icp a:hover { color: var(--c-pink); }
 
