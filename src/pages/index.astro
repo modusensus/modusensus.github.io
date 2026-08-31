@@ -8,6 +8,21 @@ const sorted = allPosts.sort((a, b) => b.data.date.valueOf() - a.data.date.value
 
 const recent = sorted.slice(0, 3);
 
+// 站点统计（构建时统计）：文章数 + 正文字数（剥去代码块/行内代码/标记符号后计字符）
+const siteStats = allPosts.reduce(
+  (acc, p) => {
+    acc.posts += 1;
+    acc.words += (p.body || '')
+      .replace(/```[\s\S]*?```/g, ' ')
+      .replace(/`[^`]*`/g, ' ')
+      .replace(/[[\]()*_>#~|-]/g, ' ')
+      .replace(/\s+/g, '').length;
+    return acc;
+  },
+  { posts: 0, words: 0 },
+);
+const SITE_EST = '2026-07-14'; // 仓库首个提交日 = 站点运行起点
+
 const moduleNames: Record<string, string> = {
   threshold: 'THRESHOLD',
   lab: 'LAB',
@@ -25,8 +40,9 @@ function fmtYear(date: Date) {
 
 <BaseLayout activeNav="home">
   <Fragment slot="hero">
-    <!-- ═══ HERO — 深色噪点 + 彩色拆字 + 头像贴纸 + 涂鸦 ═══ -->
-    <section class="hero">
+    <!-- ═══ 封面（COVER）— 深色噪点 + 彩色拆字 + 头像贴纸 + 涂鸦；
+         JS 可用时是全屏固定层，与下方主页互相独立，下滑渐变切入主页 ═══ -->
+    <section class="hero" id="cover">
       <div class="hero-inner">
         <img src="/images/profile-avatar.gif" alt="MODUSENSUS avatar" class="hero-avatar" width="112" height="112" />
 
@@ -86,17 +102,18 @@ function fmtYear(date: Date) {
         <span class="scroll">SCROLL ↓</span>
       </div>
     </section>
-
-    <!-- ── 开场与正文之间的「切入」横条：纸底跑马灯（两份相同内容实现无缝循环） ── -->
-    <div class="hero-ticker" aria-hidden="true">
-      <div class="hero-ticker-track">
-        <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
-        <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
-      </div>
-    </div>
   </Fragment>
 
-  <!-- ═══ SITE PANEL — 时间轴 + 公告 + 留言 ═══ -->
+  <!-- ═══ 主页正文（封面之后的世界）：顶部切入跑马灯 + 分区面板 ═══ -->
+  <!-- ── 切入横条：纸底跑马灯（两份相同内容实现无缝循环） ── -->
+  <div class="hero-ticker" aria-hidden="true">
+    <div class="hero-ticker-track">
+      <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
+      <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
+    </div>
+  </div>
+
+  <!-- ═══ SITE PANEL — 时间轴 + 公告 + 留言 + 站点统计 ═══ -->
   <div class="container board">
     <div class="home-grid">
 
@@ -151,6 +168,27 @@ function fmtYear(date: Date) {
           <div class="rc-list rc-list--letters" id="home-latest-comments" hidden></div>
           <a class="col-more" href="/guestbook">SIGN THE BOOK →</a>
         </div>
+
+        <div class="rail-card">
+          <div class="section-head">
+            <span class="mono-label">04 — SITE STATS</span>
+            <span class="col-sub">站点统计</span>
+          </div>
+          <div class="stats-grid">
+            <div class="stat">
+              <div class="stat-num">{siteStats.posts}</div>
+              <div class="stat-label">POSTS · 文章</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num">{siteStats.words.toLocaleString('en-US')}</div>
+              <div class="stat-label">WORDS · 总字数</div>
+            </div>
+            <div class="stat">
+              <div class="stat-num" id="stat-days">&ndash;</div>
+              <div class="stat-label">DAYS · 运行天数</div>
+            </div>
+          </div>
+        </div>
       </aside>
 
     </div>
@@ -158,17 +196,21 @@ function fmtYear(date: Date) {
 </BaseLayout>
 
 <style>
-/* ═══ HERO ═══ */
+/* ═══ 封面（COVER）═══
+   无 JS：普通文档流首屏，照常向下滚动（渐进增强兜底）。
+   JS 可用：升级为全屏固定层（z 205 盖过导航 z200 / 读者签 z195 / 状态件 z190），
+   与下方主页互相独立；html.cover-mode 锁滚动，下滑渐变切入主页。 */
 .hero {
   position: relative;
-  /* 封面页：整层盖过左侧导航/读者签/状态件（z 190-200），下滑离开封面后它们自然露出 */
-  z-index: 205;
   min-height: 100vh;
   background: var(--hero-bg);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   overflow: hidden;
+  z-index: 205;
 }
+:global(html.js) .hero { position: fixed; inset: 0; min-height: 0; }
+:global(html.cover-mode) { overflow: hidden; }
 .hero::before {
   content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 1;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -241,7 +283,7 @@ function fmtYear(date: Date) {
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.22em;
   color: rgba(244, 244, 242, 0.65); text-transform: uppercase;
 }
-.hero-foot .scroll { animation: nudge 2.2s ease-in-out infinite; }
+.hero-foot .scroll { animation: nudge 2.2s ease-in-out infinite; cursor: pointer; }
 @keyframes nudge { 0%, 100% { translate: 0 0; } 50% { translate: 0 5px; } }
 
 /* 社交图标行 */
@@ -354,6 +396,21 @@ function fmtYear(date: Date) {
   color: var(--ink-soft); margin-bottom: 0;
 }
 
+/* 04 — 站点统计：三格账目式排布 */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stat { border-top: 1px solid var(--rule-soft); padding-top: 12px; }
+.stat-num {
+  font-family: var(--font-grot); font-weight: 900;
+  font-size: clamp(22px, 2.2vw, 30px); line-height: 1.1;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.stat-label {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); margin-top: 7px;
+}
+
 /* ── 开场切入横条：纸底跑马灯，把深色开场与纸色正文明确切开 ── */
 .hero-ticker {
   overflow: hidden;
@@ -395,9 +452,6 @@ html.js .timeline.tl-draw::before { transform: scaleY(1); }
   .home-grid { grid-template-columns: 1fr; gap: 48px; }
 }
 @media (max-width: 899px) {
-  /* 封面铺满整屏：移动端导航改 fixed 脱离文档流，同样被 z-index 更高的封面盖住 */
-  .hero { min-height: 100vh; min-height: 100svh; }
-  :global(body.is-home .site-nav) { position: fixed; left: 0; }
   .hero-avatar { width: 92px; height: 92px; }
   .hero-icons { margin-top: 24px; gap: 10px; }
   .hero-icons a { width: 34px; height: 34px; }
@@ -415,10 +469,94 @@ import gsap from 'gsap';
 import { serverURL } from '../config/waline.json';
 import { fetchRecentComments, renderRecentList } from '../lib/recent-comments';
 
+// ── 封面 ↔ 主页双态（模块级，跨路由切换存活）──
+let splashCleanup = null; // 当前封面态的事件清理器
+let splashGoCover = null; // 「渐变回封面」入口，供品牌链接点击调用
+let splashMode = 'cover'; // cover = 封面层显示；board = 主页正文
+
 // 站点启用了 <ViewTransitions />：打包脚本一次完整加载只执行一次，客户端路由回首页不会重跑，
 // 因此全部 DOM 初始化放进 astro:page-load（首次加载与每次路由切换后都会触发）
 document.addEventListener('astro:page-load', () => {
 const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── 封面态初始化：每次到达 / 都从封面开始；下滑（滚轮/触摸/按键）渐变切入主页，
+//    正文态向上滚不会回到封面；只有点击左上角 MODUSENSUS 品牌链接才回封面 ──
+if (splashCleanup) { splashCleanup(); splashCleanup = null; }
+const cover = document.getElementById('cover');
+const pageOffset = document.querySelector('.page-offset') as HTMLElement | null;
+if (cover && pageOffset) {
+  splashMode = 'cover';
+  document.documentElement.classList.add('cover-mode');
+  pageOffset.inert = true; // 封面态下正文不参与焦点与读屏
+  window.scrollTo(0, 0);
+
+  const enterBoard = () => {
+    if (splashMode !== 'cover') return;
+    splashMode = 'board';
+    document.documentElement.classList.remove('cover-mode');
+    pageOffset.inert = false;
+    if (reduce) { cover.style.display = 'none'; return; }
+    // 封面上移淡出 + 正文自下方渐显（交叉渐变）
+    gsap.timeline()
+      .to(cover, { autoAlpha: 0, y: -40, duration: 0.55, ease: 'power2.in' })
+      .fromTo(pageOffset,
+        { autoAlpha: 0, y: 26 },
+        { autoAlpha: 1, y: 0, duration: 0.6, ease: 'power2.out', clearProps: 'all' },
+        0.12)
+      .set(cover, { display: 'none' });
+  };
+
+  const enterCover = () => {
+    if (splashMode !== 'board') return;
+    splashMode = 'cover';
+    cover.style.display = '';
+    gsap.set(cover, { clearProps: 'all' });
+    window.scrollTo(0, 0);
+    document.documentElement.classList.add('cover-mode');
+    pageOffset.inert = true;
+    if (reduce) return;
+    gsap.fromTo(cover, { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'transform' });
+  };
+  splashGoCover = enterCover;
+
+  const onWheel = e => { if (splashMode === 'cover' && e.deltaY > 8) enterBoard(); };
+  const onKey = e => {
+    if (splashMode !== 'cover') return;
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); enterBoard(); }
+  };
+  let touchY = null;
+  const onTouchStart = e => { touchY = e.touches[0].clientY; };
+  const onTouchMove = e => {
+    if (splashMode !== 'cover' || touchY === null) return;
+    if (touchY - e.touches[0].clientY > 40) { touchY = null; enterBoard(); }
+  };
+  const onScrollHint = e => {
+    if (e.target instanceof Element && e.target.closest('.hero-foot .scroll')) enterBoard();
+  };
+
+  document.addEventListener('wheel', onWheel, { passive: true });
+  document.addEventListener('keydown', onKey);
+  document.addEventListener('touchstart', onTouchStart, { passive: true });
+  document.addEventListener('touchmove', onTouchMove, { passive: true });
+  document.addEventListener('click', onScrollHint);
+
+  splashCleanup = () => {
+    document.removeEventListener('wheel', onWheel);
+    document.removeEventListener('keydown', onKey);
+    document.removeEventListener('touchstart', onTouchStart);
+    document.removeEventListener('touchmove', onTouchMove);
+    document.removeEventListener('click', onScrollHint);
+    document.documentElement.classList.remove('cover-mode');
+    pageOffset.inert = false;
+    splashGoCover = null;
+  };
+}
+
+// ── 站点统计：运行天数用实时时钟计算，构建值仅作兜底 ──
+const daysEl = document.getElementById('stat-days');
+if (daysEl) {
+  daysEl.textContent = String(Math.max(1, Math.floor((Date.now() - new Date('2026-07-14').getTime()) / 86400000)));
+}
 
 // ── 滚动显现：分隔线画出、时间轴生长、区块上浮错峰 ──
 // （无论是否减动效都绑定类，CSS 的 reduce 媒体查询会强制显示）
@@ -494,5 +632,16 @@ if (!reduce) {
     });
   }
 }
+});
+
+// ── 左上角 MODUSENSUS 品牌链接：主页正文态点击 = 渐变回封面（阻止同页跳转）；
+//    其他页面点击保持默认跳转（到达首页即封面态） ──
+document.addEventListener('click', e => {
+  if (!(e.target instanceof Element)) return;
+  if (!e.target.closest('a.site-nav-brand')) return;
+  const coverEl = document.getElementById('cover');
+  if (!coverEl || splashMode !== 'board' || !splashGoCover) return;
+  e.preventDefault();
+  splashGoCover();
 });
 </script>
