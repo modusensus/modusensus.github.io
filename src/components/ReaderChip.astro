@@ -41,8 +41,10 @@
 </style>
 
 <script>
-  // WALINE_USER 是 Waline 客户端写在本地的登录用户（登录动作发生在评论框内）；
-  // 轮询读取以同步状态（同页登录不会触发 storage 事件，2s 轮询成本可忽略）
+  // WALINE_USER 是 Waline 客户端写在本地的登录用户（v3 字段：display_name / email / url /
+  // avatar / token…；头像 URL 由服务端生成）。轮询读取以同步状态（同页登录不触发 storage 事件）
+  import { serverURL } from '../config/waline.json';
+
   function readUser() {
     try { return JSON.parse(localStorage.getItem('WALINE_USER') || 'null'); } catch { return null; }
   }
@@ -54,10 +56,9 @@
     const text = document.getElementById('rc-text');
     if (!chip || !avatar || !initial || !text) return;
     const u = readUser();
-    if (u && u.nick) {
-      const url = typeof u.avatar === 'string' && u.avatar
-        ? u.avatar
-        : (typeof u.mailMd5 === 'string' && u.mailMd5 ? `https://cravatar.cn/avatar/${u.mailMd5}?s=64&d=mp` : '');
+    const name = u && typeof u.display_name === 'string' ? u.display_name : '';
+    if (u && name) {
+      const url = typeof u.avatar === 'string' && u.avatar ? u.avatar : '';
       if (url) {
         if (avatar.dataset.src !== url) { avatar.src = url; avatar.dataset.src = url; }
         avatar.hidden = false;
@@ -65,9 +66,9 @@
       } else {
         avatar.hidden = true;
         initial.hidden = false;
-        initial.textContent = u.nick.slice(0, 1).toUpperCase();
+        initial.textContent = name.slice(0, 1).toUpperCase();
       }
-      text.textContent = u.nick;
+      text.textContent = name;
     } else {
       avatar.hidden = true;
       initial.hidden = true;
@@ -76,10 +77,42 @@
     chip.hidden = false;
   }
 
+  // ── 官方弹窗登录：打开 Waline 服务端 /ui/login（含注册），登录后它会向本页
+  //    postMessage { type: 'userInfo', data: { token, display_name, email, … } }；
+  //    已挂载的 Waline 评论框自身也在监听该消息并自动同步，这里另外写入本地存储、
+  //    同步小圆签，并广播 modusensus:waline-user 让评论区脚本重建读取新登录态 ──
+  function openLogin() {
+    const base = serverURL.replace(/\/$/, '');
+    const w = 1024, h = 600;
+    const win = window.open(
+      `${base}/ui/login?lng=zh-CN`,
+      '_blank',
+      `width=${w},height=${h},left=${Math.max(0, (window.innerWidth - w) / 2)},top=${Math.max(0, (window.innerHeight - h) / 2)},scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no`,
+    );
+    if (!win) { // 弹窗被拦截时退化为当前页打开
+      window.location.href = `${base}/ui/login?lng=zh-CN&redirect=${encodeURIComponent(location.href)}`;
+      return;
+    }
+    win.postMessage({ type: 'TOKEN', data: null }, '*');
+    const onMsg = ({ data }) => {
+      if (!data || typeof data !== 'object' || data.type !== 'userInfo') return;
+      if (!data.data || !data.data.token) return;
+      window.removeEventListener('message', onMsg);
+      try { win.close(); } catch { /* noop */ }
+      try { localStorage.setItem('WALINE_USER', JSON.stringify(data.data)); } catch { /* noop */ }
+      syncChip();
+      document.dispatchEvent(new CustomEvent('modusensus:waline-user'));
+    };
+    window.addEventListener('message', onMsg);
+  }
+
   function bindChip() {
     const btn = document.getElementById('rc-btn');
     if (!btn) return;
     btn.addEventListener('click', () => {
+      const u = readUser();
+      if (!u || !u.display_name) { openLogin(); return; }
+      // 已登录：滚到本页评论区（本页没有则去留言板）
       const target = document.querySelector('.waline');
       if (target) {
         target.scrollIntoView({ behavior: 'smooth', block: 'center' });

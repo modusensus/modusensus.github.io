@@ -218,27 +218,37 @@ const tocItems = headings.filter(h => h.depth === 2);
 
 <script>
   // ── 文章页 Waline 评论区（主题覆盖在 global.css，与留言板同一套）；
-  //    data-waline-path 与页首浏览量的 data-path 保持一致（/blog/slug） ──
+  //    data-waline-path 与页首浏览量的 data-path 保持一致（/blog/slug）。
+  //    右上角读者入口弹窗登录成功后会广播 modusensus:waline-user，
+  //    这里销毁重建评论框以读取最新登录态 ──
   import { init } from '@waline/client';
   import '@waline/client/style';
   import { serverURL } from '../../config/waline.json';
 
-  document.addEventListener('astro:page-load', () => {
-    const mount = document.querySelector('.waline[data-waline-path]');
-    if (mount && !mount.dataset.walineMounted) {
-      mount.dataset.walineMounted = 'true'; // 同一 DOM 只挂载一次，防止重复 init
-      init({
-        el: mount,
-        serverURL,
-        lang: 'zh-CN',
-        // 传 CSS 选择器而非 'auto'：跟随站点 data-theme 切换，主题按钮点击即时生效
-        dark: ":root[data-theme='dark']",
-        meta: ['nick', 'mail', 'link'],
-        requiredMeta: ['nick', 'mail'],
-        search: false,
-        pageSize: 10,
-        path: mount.dataset.walinePath,
-      });
+  let walineInstance = null;
+
+  function mountComments() {
+    if (walineInstance) {
+      try { walineInstance.destroy(); } catch { /* 已销毁 */ }
+      walineInstance = null;
     }
-  });
+    const mount = document.querySelector('.waline[data-waline-path]');
+    if (!mount || mount.dataset.walineMounted) return;
+    mount.dataset.walineMounted = 'true'; // 同一 DOM 只挂载一次，防止重复 init
+    walineInstance = init({
+      el: mount,
+      serverURL,
+      lang: 'zh-CN',
+      // 传 CSS 选择器而非 'auto'：跟随站点 data-theme 切换，主题按钮点击即时生效
+      dark: ":root[data-theme='dark']",
+      meta: ['nick', 'mail', 'link'],
+      requiredMeta: ['nick', 'mail'],
+      search: false,
+      pageSize: 10,
+      path: mount.dataset.walinePath,
+    });
+  }
+
+  document.addEventListener('modusensus:waline-user', mountComments);
+  document.addEventListener('astro:page-load', mountComments);
 </script>

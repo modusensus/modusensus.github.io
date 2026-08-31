@@ -43,11 +43,17 @@ const walineReady = Boolean(waline.serverURL);
   import '@waline/client/style';
   import { serverURL } from '../config/waline.json';
 
-  document.addEventListener('astro:page-load', () => {
+  let walineInstance = null;
+
+  function mountWaline() {
+    if (walineInstance) {
+      try { walineInstance.destroy(); } catch { /* 已销毁 */ }
+      walineInstance = null;
+    }
     const mount = document.querySelector('.waline');
     if (mount && !mount.dataset.walineMounted) {
       mount.dataset.walineMounted = 'true'; // 同一 DOM 只挂载一次，防止重复 init
-      init({
+      walineInstance = init({
         el: mount,
         serverURL,
         lang: 'zh-CN',
@@ -60,7 +66,11 @@ const walineReady = Boolean(waline.serverURL);
         pageSize: 10,
       });
     }
-  });
+  }
+
+  // 右上角读者入口弹窗登录成功后广播该事件，重建评论框以读取最新登录态
+  document.addEventListener('modusensus:waline-user', mountWaline);
+  document.addEventListener('astro:page-load', mountWaline);
 </script>
 
 <!-- Waline 主题覆盖已上移到 global.css（文章页评论区也用同一套） -->
