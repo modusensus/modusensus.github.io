@@ -213,13 +213,40 @@ img { max-width: 100%; display: block; }
 
 /* ═══ Footer ═══ */
 .site-footer { border-top: 3px solid var(--rule); }
+/* ── 页脚主区：品牌块 + 链接列（版式参考 Shiro 主题） ── */
 .site-footer-inner {
-  display: flex; justify-content: space-between; align-items: center;
-  gap: 20px; flex-wrap: wrap;
-  padding-top: 22px; padding-bottom: 26px;
-  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
-  letter-spacing: 0.12em;
+  display: grid; grid-template-columns: minmax(240px, 1.2fr) 2fr;
+  gap: 48px; align-items: start;
+  padding-top: 36px; padding-bottom: 30px;
 }
+.footer-brand-name {
+  font-family: var(--font-grot); font-weight: 900; font-size: 18px;
+  letter-spacing: 0.02em; color: var(--ink);
+}
+.footer-brand-tagline {
+  margin-top: 8px;
+  font-family: var(--font-serif); font-size: 13px; line-height: 1.8;
+  color: var(--muted);
+}
+.footer-brand-copy {
+  margin-top: 10px;
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 400;
+  letter-spacing: 0.08em; line-height: 1.9; color: var(--muted);
+}
+.footer-brand-copy a { transition: color 0.2s; }
+.footer-brand-copy a:hover { color: var(--c-pink); }
+.footer-cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.footer-col { display: flex; flex-direction: column; gap: 9px; }
+.footer-col-head {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink); margin-bottom: 4px;
+}
+.footer-col a {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em;
+  color: var(--muted); width: fit-content; transition: color 0.2s;
+}
+.footer-col a:hover { color: var(--c-pink); }
 .footer-icons { display: flex; gap: 20px; }
 .footer-icon {
   display: inline-flex; align-items: center; gap: 7px;
@@ -227,18 +254,21 @@ img { max-width: 100%; display: block; }
 }
 .footer-icon:hover { color: var(--c-pink); transform: translateY(-2px); }
 .footer-icon svg { display: block; }
-/* 页脚右侧：版本号 + 萌ICP 备案号并排 */
+/* ── 页脚底部工具行：在线人数居左，版本号 + 备案号居右 ── */
+.site-footer-bottom {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; flex-wrap: wrap;
+  border-top: 1px solid var(--rule-soft);
+  padding-top: 16px; padding-bottom: 24px;
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.12em;
+}
 .site-footer-right { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .site-footer-icp {
   color: var(--muted); font-weight: 400; letter-spacing: 0.1em;
   transition: color 0.2s;
 }
 .site-footer-icp:hover { color: var(--c-pink); }
-/* 在线人数徽标：图标行下方独占一行居中（接口不可用时整体 hidden） */
-.site-footer-extra {
-  flex-basis: 100%; display: flex; align-items: center; justify-content: center;
-  padding-top: 2px;
-}
 .site-footer-icp a:hover { color: var(--c-pink); }
 
 /* 在线人数：强调色呼吸点 + 数字，接口不可用时整体 hidden */
@@ -777,10 +807,13 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   .lab-row { grid-template-columns: 40px 1fr auto; gap: 10px; }
   .external-row { grid-template-columns: 1fr auto; gap: 8px 12px; }
   .external-desc { grid-column: 1 / -1; }
-  /* 页脚图标：小屏只留图标，避免一行放不下 */
+  /* 页脚图标：小屏只留图标，避免一行放不下（colophon 联系行仍在用） */
   .footer-icons { flex-wrap: wrap; gap: 16px; }
   .footer-icon span { display: none; }
-  .site-footer-inner { justify-content: center; text-align: center; }
+  /* 页脚：品牌块与链接列纵向堆叠，链接列收成两列 */
+  .site-footer-inner { grid-template-columns: 1fr; gap: 32px; }
+  .footer-cols { grid-template-columns: repeat(2, 1fr); }
+  .site-footer-bottom { justify-content: center; }
 }
 
 /* ═══ Reduced motion ═══ */
