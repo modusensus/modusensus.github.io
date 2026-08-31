@@ -1,0 +1,124 @@
+---
+// ── 站长状态管理页（私密）：凭 STATUS_KEY 更新右下角小部件的"此刻"状态 ──
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Status Admin — MODUSENSUS">
+  <div class="container sa-wrap">
+    <div class="mono-label">STATUS ADMIN</div>
+    <h1 class="sa-title">此刻在干嘛</h1>
+    <p class="sa-current" id="sa-current">加载中…</p>
+
+    <form class="sa-form" id="sa-form">
+      <label class="sa-field">
+        <span class="sa-field-label mono-meta">口令</span>
+        <input class="sa-input" type="password" id="sa-key" autocomplete="off" required />
+      </label>
+      <label class="sa-field">
+        <span class="sa-field-label mono-meta">状态内容（≤120 字）</span>
+        <input class="sa-input" type="text" id="sa-text" maxlength="120" placeholder="例：☕ 在写论文，勿扰" required />
+      </label>
+      <div class="sa-actions">
+        <button class="sa-submit" type="submit">更新状态</button>
+        <span class="sa-result" id="sa-result" role="status"></span>
+      </div>
+    </form>
+  </div>
+</BaseLayout>
+
+<style>
+  .sa-wrap { max-width: 560px; padding-top: 40px; padding-bottom: 80px; }
+  .sa-title {
+    font-family: var(--font-grot); font-size: 34px; font-weight: 900;
+    letter-spacing: -0.01em; margin: 14px 0 10px;
+  }
+  .sa-current {
+    font-family: var(--font-cn); font-size: 14px; line-height: 1.8;
+    color: var(--muted); margin: 0 0 30px;
+  }
+  .sa-form { display: flex; flex-direction: column; gap: 18px; }
+  .sa-field { display: flex; flex-direction: column; gap: 8px; }
+  .sa-input {
+    font-family: var(--font-cn); font-size: 15px; color: var(--ink);
+    background: var(--paper-raise);
+    border: 1px solid var(--rule-soft); border-radius: 3px;
+    padding: 11px 14px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .sa-input:focus { border-color: var(--ink); }
+  .sa-actions { display: flex; align-items: center; gap: 14px; margin-top: 6px; }
+  .sa-submit {
+    font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: var(--ink); color: var(--paper);
+    border: 1px solid var(--ink); border-radius: 3px;
+    padding: 11px 22px; cursor: pointer;
+    transition: background 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
+  }
+  .sa-submit:hover { background: var(--c-pink); border-color: var(--c-pink); color: #fff; }
+  .sa-result { font-family: var(--font-cn); font-size: 13px; color: var(--muted); }
+</style>
+
+<script>
+  function relTime(iso) {
+    const t = new Date(iso).getTime();
+    if (!Number.isFinite(t)) return '';
+    const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (m < 1) return '刚刚';
+    if (m < 60) return `${m} 分钟前`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h} 小时前`;
+    const d = Math.floor(h / 24);
+    if (d < 30) return `${d} 天前`;
+    return new Date(t).toLocaleDateString('zh-CN');
+  }
+
+  async function showCurrent() {
+    const el = document.getElementById('sa-current');
+    if (!el) return;
+    try {
+      const r = await fetch('/api/status');
+      const j = await r.json();
+      el.textContent = j && j.text
+        ? `当前状态：${j.text}（更新于 ${relTime(j.at)}）`
+        : '当前没有状态。';
+    } catch {
+      el.textContent = '状态服务不可用。';
+    }
+  }
+
+  // astro:page-load 首次加载与每次路由切换都触发；表单是 SSR 输出的新 DOM，直接绑定即可
+  document.addEventListener('astro:page-load', () => {
+    const form = document.getElementById('sa-form');
+    if (!form) return;
+    const result = document.getElementById('sa-result');
+    const keyInput = document.getElementById('sa-key');
+    const textInput = document.getElementById('sa-text');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!result || !keyInput || !textInput) return;
+      result.textContent = '提交中…';
+      try {
+        const r = await fetch('/api/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: keyInput.value, text: textInput.value }),
+        });
+        if (r.ok) {
+          result.textContent = '✓ 已更新，右下角小部件已生效';
+          textInput.value = '';
+          showCurrent();
+        } else if (r.status === 401) {
+          result.textContent = '口令不对。';
+        } else {
+          result.textContent = '更新失败，稍后再试。';
+        }
+      } catch {
+        result.textContent = '网络错误，稍后再试。';
+      }
+    });
+
+    showCurrent();
+  });
+</script>

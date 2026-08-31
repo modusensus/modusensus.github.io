@@ -1,0 +1,192 @@
+---
+// ── 右下角站长状态小部件 ──
+// 数据来自自建接口 /api/status（管理页 /status 更新）；有状态才显示。
+// 头像取 public/avatar.jpg，缺图时自动退化为 "M" 字标。
+---
+
+<div class="status-widget" id="status-widget" hidden>
+  <div class="sw-card" aria-live="polite">
+    <span class="sw-tape" aria-hidden="true"></span>
+    <div class="mono-label sw-label">NOW · 此刻</div>
+    <p class="sw-text" id="sw-text"></p>
+    <p class="sw-meta mono-meta" id="sw-meta"></p>
+  </div>
+  <button class="sw-avatar-btn" id="sw-avatar-btn" type="button" aria-expanded="false" aria-label="查看站长当前状态">
+    <span class="sw-monogram" aria-hidden="true">M</span>
+    <img class="sw-avatar" id="sw-avatar" src="/avatar.jpg" alt="" />
+    <span class="sw-dot" aria-hidden="true"></span>
+  </button>
+</div>
+
+<style>
+  .status-widget { position: fixed; right: 22px; bottom: 22px; z-index: 190; }
+
+  .sw-avatar-btn {
+    position: relative; display: block;
+    width: 52px; height: 52px; padding: 0;
+    border-radius: 50%; border: 2px solid var(--ink);
+    background: var(--paper-raise);
+    box-shadow: 0 6px 16px rgba(26, 26, 26, 0.14);
+    cursor: pointer;
+    transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+  }
+  .status-widget:hover .sw-avatar-btn {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 26px rgba(26, 26, 26, 0.2);
+  }
+  .sw-monogram {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-grot); font-weight: 900; font-size: 22px;
+    color: var(--ink);
+  }
+  .sw-avatar {
+    position: relative; width: 100%; height: 100%;
+    border-radius: 50%; object-fit: cover; display: block;
+  }
+  /* 状态点：强调色，外圈缓慢扩散示意"实时" */
+  .sw-dot {
+    position: absolute; right: -3px; bottom: -3px;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--c-pink); border: 2px solid var(--paper);
+  }
+  .sw-dot::after {
+    content: ''; position: absolute; inset: -2px; border-radius: 50%;
+    border: 2px solid var(--c-pink); opacity: 0;
+    animation: sw-ring 2.4s infinite;
+  }
+  @keyframes sw-ring {
+    0% { transform: scale(1); opacity: 0.55; }
+    70%, 100% { transform: scale(2.1); opacity: 0; }
+  }
+
+  /* 状态便签卡：与 FRAGMENTS 同一套视觉语言（纸片 + 纸胶带 + 微歪斜） */
+  .sw-card {
+    position: absolute; right: 0; bottom: calc(100% + 14px);
+    width: 268px;
+    background: var(--paper-raise);
+    border: 1px solid var(--rule-soft); border-radius: 3px;
+    padding: 18px 20px 14px;
+    box-shadow: 0 14px 30px rgba(26, 26, 26, 0.15);
+    opacity: 0; visibility: hidden; pointer-events: none;
+    transform: translateY(8px) rotate(-0.8deg);
+    transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out), visibility 0s 0.25s;
+  }
+  .status-widget.open .sw-card {
+    opacity: 1; visibility: visible; pointer-events: auto;
+    transform: translateY(0) rotate(-0.8deg);
+    transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out), visibility 0s;
+  }
+  .sw-tape {
+    position: absolute; top: -9px; left: 50%;
+    width: 64px; height: 18px;
+    transform: translateX(-50%) rotate(-2deg);
+    background: var(--c-pink); opacity: 0.4;
+  }
+  .sw-label { color: var(--muted); margin-bottom: 10px; }
+  .sw-text {
+    font-family: var(--font-cn); font-size: 15px; line-height: 1.75;
+    color: var(--ink); margin: 0 0 8px; overflow-wrap: anywhere;
+  }
+  .sw-meta { margin: 0; }
+
+  @media (max-width: 640px) {
+    .status-widget { right: 14px; bottom: 14px; }
+    .sw-avatar-btn { width: 44px; height: 44px; }
+    .sw-card { width: min(268px, calc(100vw - 32px)); }
+  }
+  @media print { .status-widget { display: none; } }
+</style>
+
+<script>
+  // ── 状态小部件逻辑：GET /api/status 读取最新状态（60 秒模块级缓存，跨路由不重取），
+  //    有状态才显示；桌面悬停展开便签卡，触屏点击开合。
+  //    挂 astro:page-load 适配 ViewTransitions（首次加载与每次路由切换都触发） ──
+  let cache = null;
+  let cacheAt = 0;
+  let docHandlers = null;
+
+  function relTime(iso) {
+    const t = new Date(iso).getTime();
+    if (!Number.isFinite(t)) return '';
+    const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+    if (m < 1) return '刚刚';
+    if (m < 60) return `${m} 分钟前`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h} 小时前`;
+    const d = Math.floor(h / 24);
+    if (d < 30) return `${d} 天前`;
+    return new Date(t).toLocaleDateString('zh-CN');
+  }
+
+  async function loadStatus() {
+    if (cache && Date.now() - cacheAt < 60000) return cache;
+    try {
+      const r = await fetch('/api/status');
+      const j = await r.json();
+      cache = j && typeof j.text === 'string' && j.text ? j : null;
+      cacheAt = Date.now();
+    } catch { /* 接口不可用时维持旧缓存 */ }
+    return cache;
+  }
+
+  function bindStatusWidget() {
+    const wrap = document.getElementById('status-widget');
+    if (!wrap) return;
+    const btn = document.getElementById('sw-avatar-btn');
+    const textEl = document.getElementById('sw-text');
+    const metaEl = document.getElementById('sw-meta');
+    const avatar = document.getElementById('sw-avatar');
+    if (!btn || !textEl || !metaEl) return;
+
+    loadStatus().then((data) => {
+      if (!data) return;
+      textEl.textContent = data.text;
+      metaEl.textContent = `更新于 ${relTime(data.at)}`;
+      wrap.hidden = false;
+    });
+
+    // 头像缺失（public/avatar.jpg 不存在）时移除 img，露出 "M" 字标
+    if (avatar) avatar.addEventListener('error', () => avatar.remove(), { once: true });
+
+    const isOpen = () => wrap.classList.contains('open');
+    const setOpen = (v) => {
+      wrap.classList.toggle('open', v);
+      btn.setAttribute('aria-expanded', v ? 'true' : 'false');
+    };
+    // 鼠标悬停展开；触屏没有悬停语义（tap 也会先触发 pointerenter），只靠点击开合
+    wrap.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') setOpen(true); });
+    wrap.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') setOpen(false); });
+    btn.addEventListener('click', () => setOpen(!isOpen()));
+
+    // 点击外部 / Esc 关闭挂在 document 上；路由切换后 DOM 是新的，
+    // 处理器内实时重查元素，先移除旧监听器再挂新的（否则堆积）
+    if (docHandlers) {
+      document.removeEventListener('click', docHandlers.click);
+      document.removeEventListener('keydown', docHandlers.keydown);
+    }
+    docHandlers = {
+      click: (e) => {
+        const w = document.getElementById('status-widget');
+        if (!w || !w.classList.contains('open')) return;
+        const t = e.target instanceof Element ? e.target : null;
+        if (t && t.closest('#status-widget')) return;
+        w.classList.remove('open');
+        const b = document.getElementById('sw-avatar-btn');
+        if (b) b.setAttribute('aria-expanded', 'false');
+      },
+      keydown: (e) => {
+        const w = document.getElementById('status-widget');
+        if (w && e.key === 'Escape' && w.classList.contains('open')) {
+          w.classList.remove('open');
+          const b = document.getElementById('sw-avatar-btn');
+          if (b) b.setAttribute('aria-expanded', 'false');
+        }
+      },
+    };
+    document.addEventListener('click', docHandlers.click);
+    document.addEventListener('keydown', docHandlers.keydown);
+  }
+
+  document.addEventListener('astro:page-load', bindStatusWidget);
+</script>
