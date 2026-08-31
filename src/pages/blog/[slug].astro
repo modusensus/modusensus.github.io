@@ -58,6 +58,7 @@ const tocItems = headings.filter(h => h.depth === 2);
         <div class="art-meta-line">
           <span class="mono-meta">{fmtLong(post.data.date)}</span>
           {post.data.readingTime && <span class="mono-meta">{post.data.readingTime} MIN READ</span>}
+          <span class="mono-meta"><span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
         </div>
       </header>
 
@@ -197,4 +198,15 @@ const tocItems = headings.filter(h => h.depth === 2);
     window.addEventListener('resize', syncSidebar);
     syncSidebar();
   }
+</script>
+
+<script>
+  // Waline 浏览量统计：与 guestbook 页相同的 ViewTransitions 适配 —— 打包脚本一次完整加载只执行一次，
+  // 挂 astro:page-load 后首次加载与每次路由切换都会触发；监听器驻留后，后续路由切换为所在路径累计一次浏览
+  import { pageviewCount } from '@waline/client/pageview';
+  import { serverURL } from '../../config/waline.json';
+
+  document.addEventListener('astro:page-load', () => {
+    pageviewCount({ serverURL, path: window.location.pathname });
+  });
 </script>
