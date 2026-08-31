@@ -147,6 +147,8 @@ function fmtYear(date: Date) {
             <span class="col-sub">留言板</span>
           </div>
           <p class="announce-text">路过就留句话吧。昵称和邮箱必填、网址选填，留言公开可见。</p>
+          <!-- 全站最新留言：Waline recent API，取不到/为空时保持隐藏 -->
+          <div class="rc-list rc-list--compact" id="home-latest-comments" hidden></div>
           <a class="col-more" href="/guestbook">SIGN THE BOOK →</a>
         </div>
       </aside>
@@ -406,6 +408,8 @@ html.js .timeline.tl-draw::before { transform: scaleY(1); }
 
 <script>
 import gsap from 'gsap';
+import { serverURL } from '../config/waline.json';
+import { fetchRecentComments, renderRecentList } from '../lib/recent-comments';
 
 // 站点启用了 <ViewTransitions />：打包脚本一次完整加载只执行一次，客户端路由回首页不会重跑，
 // 因此全部 DOM 初始化放进 astro:page-load（首次加载与每次路由切换后都会触发）
@@ -419,6 +423,18 @@ const revealEls = [...document.querySelectorAll('.section-head, .tl-item, .rail-
 revealEls.forEach(el => el.classList.add('rv'));
 document.querySelectorAll('.home-main .tl-item').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 90}ms`));
 document.querySelectorAll('.home-rail .rail-card').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 120}ms`));
+
+// ── 最新留言（全站）：Waline recent API，失败/为空时保持隐藏 ──
+const latestEl = document.getElementById('home-latest-comments');
+if (latestEl) {
+  fetchRecentComments(serverURL, 3)
+    .then(items => {
+      if (!items.length) return;
+      renderRecentList(latestEl, items);
+      latestEl.hidden = false;
+    })
+    .catch(() => { /* 接口不可用时保持隐藏 */ });
+}
 
 const io = new IntersectionObserver((entries) => {
   for (const entry of entries) {

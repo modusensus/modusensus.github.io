@@ -31,6 +31,13 @@ const walineReady = Boolean(waline.serverURL);
           </div>
         )}
       </div>
+
+      <!-- 全站留言流：聚合所有页面（文章评论区 + 留言板）的最新公开留言 -->
+      <div class="gb-latest" id="gb-latest" hidden>
+        <div class="mono-label gb-latest-label">LATEST · 全站最新留言</div>
+        <p class="gb-latest-note mono-meta">来自全站所有页面的公开留言与文章讨论，实时同步。</p>
+        <div class="rc-list" id="gb-latest-list" hidden></div>
+      </div>
     </div>
   </div>
 </BaseLayout>
@@ -42,6 +49,7 @@ const walineReady = Boolean(waline.serverURL);
   import { init } from '@waline/client';
   import '@waline/client/style';
   import { serverURL } from '../config/waline.json';
+  import { fetchRecentComments, renderRecentList } from '../lib/recent-comments';
 
   let walineInstance = null;
 
@@ -57,6 +65,8 @@ const walineReady = Boolean(waline.serverURL);
         el: mount,
         serverURL,
         lang: 'zh-CN',
+        // 固定 path，避免尾斜杠变化导致留言被拆到两个路径下
+        path: '/guestbook',
         // 传 CSS 选择器而非 'auto'：跟随站点 data-theme 切换，主题按钮点击即时生效
         dark: ":root[data-theme='dark']",
         meta: ['nick', 'mail', 'link'],
@@ -71,6 +81,22 @@ const walineReady = Boolean(waline.serverURL);
   // 右上角读者入口弹窗登录成功后广播该事件，重建评论框以读取最新登录态
   document.addEventListener('modusensus:waline-user', mountWaline);
   document.addEventListener('astro:page-load', mountWaline);
+
+  // ── 全站最新留言：Waline recent API（失败/为空时整块隐藏） ──
+  function loadLatest() {
+    const wrap = document.getElementById('gb-latest');
+    const listEl = document.getElementById('gb-latest-list');
+    if (!wrap || !listEl) return;
+    fetchRecentComments(serverURL, 8)
+      .then(items => {
+        if (!items.length) { wrap.hidden = true; return; }
+        renderRecentList(listEl, items);
+        listEl.hidden = false;
+        wrap.hidden = false;
+      })
+      .catch(() => { wrap.hidden = true; });
+  }
+  document.addEventListener('astro:page-load', loadLatest);
 </script>
 
 <!-- Waline 主题覆盖已上移到 global.css（文章页评论区也用同一套） -->
@@ -89,6 +115,17 @@ const walineReady = Boolean(waline.serverURL);
 }
 .guestbook-intro .mono-meta {
   line-height: 1.8;
+  text-transform: none;
+  letter-spacing: 0.04em;
+}
+.gb-latest {
+  margin-top: 56px;
+  padding-top: 40px;
+  border-top: 1px solid var(--rule);
+}
+.gb-latest-label { color: var(--ink); margin-bottom: 8px; }
+.gb-latest-note {
+  margin: 0 0 10px;
   text-transform: none;
   letter-spacing: 0.04em;
 }
