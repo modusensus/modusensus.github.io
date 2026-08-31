@@ -60,6 +60,10 @@ const walineReady = Boolean(waline.serverURL);
     if (walineInstance) {
       try { walineInstance.destroy(); } catch { /* 已销毁 */ }
       walineInstance = null;
+      // destroy 会清空 .waline 内部 DOM；若不清除挂载标志，下次 mount 会被
+      // dataset.walineMounted 挡住而跳过重新 init，评论区就永久空白（登录后必现）
+      const prev = document.querySelector('.waline');
+      if (prev) delete prev.dataset.walineMounted;
     }
     const mount = document.querySelector('.waline');
     if (mount && !mount.dataset.walineMounted) {
@@ -101,7 +105,11 @@ const walineReady = Boolean(waline.serverURL);
         renderNoteWall(wall, notes);
         wrap.hidden = false;
       })
-      .catch(() => { wrap.hidden = true; });
+      .catch(() => {
+        // 拉取失败（如 Waline 服务不可达）时不再整块静默隐藏，给出可见提示
+        wrap.hidden = false;
+        wall.innerHTML = '<p class="gb-note-offline">便签墙暂时加载失败，稍后再来看看。</p>';
+      });
   }
   document.addEventListener('astro:page-load', loadWall);
 </script>
@@ -128,6 +136,12 @@ const walineReady = Boolean(waline.serverURL);
 /* 便签墙（上）与评论框（下）的分区标签 */
 .gb-wall { margin-bottom: 56px; }
 .gb-wall-label { color: var(--ink); margin-bottom: 22px; }
+.gb-note-offline {
+  font-family: var(--font-cn);
+  font-size: 14px;
+  color: var(--muted);
+  padding: 18px 0;
+}
 .gb-comment-block { padding-top: 40px; border-top: 1px solid var(--rule); }
 .gb-comment-label { color: var(--ink); margin-bottom: 26px; }
 </style>
