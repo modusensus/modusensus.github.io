@@ -29,6 +29,21 @@ const moduleNames: Record<string, string> = {
   archive: 'ARCHIVE',
 };
 
+// 分区（SECTIONS）：按 module 聚合，标出该分区用到的全部 tag（category 按 / 拆分去重）
+const sections = ['threshold', 'lab', 'archive'].map((m) => {
+  const posts = sorted.filter((p) => p.data.module === m);
+  const tags = [...new Set(posts.flatMap((p) =>
+    (p.data.category || '').split('/').map((c) => c.trim()).filter(Boolean),
+  ))];
+  return {
+    key: m,
+    name: moduleNames[m],
+    href: m === 'threshold' ? '/threshold-notes' : `/${m}`,
+    count: posts.length,
+    tags,
+  };
+});
+
 const letters = 'MODUSENSUS'.split('');
 const letterColors = ['orange', 'yellow', 'purple', 'green', 'pink', 'blue'];
 const cardColors = ['var(--c-pink)', 'var(--c-blue)', 'var(--c-yellow)'];
@@ -113,37 +128,61 @@ function fmtYear(date: Date) {
     </div>
   </div>
 
-  <!-- ═══ SITE PANEL — 站点统计 + 时间轴 + 公告 + 留言 ═══ -->
+  <!-- ═══ SITE PANEL — 站点统计 + 分区 + 时间轴 + 公告 + 留言 ═══ -->
   <div class="container board">
 
-    <!-- 01 站点统计：整幅账目横条 -->
-    <section class="stats-band">
-      <div class="section-head">
-        <span class="mono-label">01 — SITE STATS</span>
-        <span class="col-sub">站点统计</span>
-      </div>
-      <div class="stats-grid">
-        <div class="stat">
-          <div class="stat-num">{siteStats.posts}</div>
-          <div class="stat-label">POSTS · 文章</div>
+    <!-- 01 站点统计（左）+ 02 分区（右） -->
+    <div class="stats-row">
+
+      <section class="stats-band">
+        <div class="section-head">
+          <span class="mono-label">01 — SITE STATS</span>
+          <span class="col-sub">站点统计</span>
         </div>
-        <div class="stat">
-          <div class="stat-num">{siteStats.words.toLocaleString('en-US')}</div>
-          <div class="stat-label">WORDS · 总字数</div>
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-num">{siteStats.posts}</div>
+            <div class="stat-label">POSTS · 文章</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num">{siteStats.words.toLocaleString('en-US')}</div>
+            <div class="stat-label">WORDS · 总字数</div>
+          </div>
+          <div class="stat">
+            <div class="stat-num" id="stat-days">&ndash;</div>
+            <div class="stat-label">DAYS · 运行天数</div>
+          </div>
         </div>
-        <div class="stat">
-          <div class="stat-num" id="stat-days">&ndash;</div>
-          <div class="stat-label">DAYS · 运行天数</div>
+      </section>
+
+      <section class="sections-card">
+        <div class="section-head">
+          <span class="mono-label">02 — SECTIONS</span>
+          <span class="col-sub">分区</span>
         </div>
-      </div>
-    </section>
+        <div class="sections-list">
+          {sections.map(s => (
+            <a class="sections-item" href={s.href}>
+              <div class="sections-item-head">
+                <span class="sections-name">{s.name}</span>
+                <span class="sections-count">{s.count} POSTS</span>
+              </div>
+              <div class="sections-tags">
+                {s.tags.map(t => <span class="sections-tag">{t}</span>)}
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+
+    </div>
 
     <div class="home-grid">
 
-      <!-- 02 近期更新：时间轴 -->
+      <!-- 03 近期更新：时间轴 -->
       <section class="home-main">
         <div class="section-head">
-          <span class="mono-label">02 — RECENT UPDATES</span>
+          <span class="mono-label">03 — RECENT UPDATES</span>
           <span class="col-sub">近期更新</span>
         </div>
         <div class="timeline">
@@ -155,6 +194,11 @@ function fmtYear(date: Date) {
               </div>
               <div class="tl-title">{post.data.title}</div>
               {post.data.subtitle && <div class="tl-desc">{post.data.subtitle}</div>}
+              {post.data.category && (
+                <div class="tl-tags">
+                  {post.data.category.split('/').map(t => <span class="tl-tag">#{t.trim()}</span>)}
+                </div>
+              )}
             </a>
           ))}
         </div>
@@ -165,7 +209,7 @@ function fmtYear(date: Date) {
       <aside class="home-rail">
         <div class="rail-card">
           <div class="section-head">
-            <span class="mono-label">03 — ANNOUNCEMENTS</span>
+            <span class="mono-label">04 — ANNOUNCEMENTS</span>
             <span class="col-sub">公告</span>
           </div>
           <div class="announce-cards">
@@ -183,7 +227,7 @@ function fmtYear(date: Date) {
 
         <div class="rail-card">
           <div class="section-head">
-            <span class="mono-label">04 — READERS' LETTERS</span>
+            <span class="mono-label">05 — READERS' LETTERS</span>
             <span class="col-sub">读者来信</span>
           </div>
           <p class="announce-text">来自文章评论与留言板的读者来信，点链接回到原文一起聊。</p>
@@ -364,6 +408,16 @@ function fmtYear(date: Date) {
   font-family: var(--font-cn); font-size: 13.5px; line-height: 1.75;
   color: var(--muted); margin-top: 8px;
 }
+.tl-tags {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 10px;
+}
+.tl-tag {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--muted);
+  transition: color 0.2s var(--ease-out);
+}
+.tl-item:hover .tl-tag { color: var(--c-pink); }
 
 .rail-card { border-top: 2px solid var(--rule); padding-top: 16px; }
 .rail-card + .rail-card { margin-top: 52px; }
@@ -374,7 +428,7 @@ function fmtYear(date: Date) {
   position: relative;
   background: var(--paper-raise);
   border: 1px solid var(--rule-soft);
-  border-left: 3px solid var(--card-accent, var(--ink));
+  border-top: 3px solid var(--card-accent, var(--ink));
   padding: 14px 16px 12px;
   transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out), border-color 0.25s;
 }
@@ -398,8 +452,12 @@ function fmtYear(date: Date) {
   color: var(--ink-soft); margin-bottom: 0;
 }
 
-/* 01 — 站点统计：整幅账目横条，三格以竖线分隔 */
-.stats-band { margin-bottom: 64px; }
+/* 01 — 站点统计（左）+ 02 — 分区（右）：两列并排 */
+.stats-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 72px; align-items: start;
+  margin-bottom: 64px;
+}
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
 .stat { padding: 4px 28px 0; }
 .stat:first-child { padding-left: 0; }
@@ -419,6 +477,41 @@ function fmtYear(date: Date) {
   .stat { padding: 4px 14px 0; }
   .stat:first-child { padding-left: 0; }
 }
+
+/* 02 — 分区：三个模块的入口卡片，每卡标出该分区用到的 tag */
+.sections-card { border-top: 2px solid var(--rule); padding-top: 16px; }
+.sections-item {
+  display: block;
+  padding: 15px 0 14px;
+  border-bottom: 1px solid var(--rule-soft);
+  transition: transform 0.25s var(--ease-out);
+}
+.sections-item:hover { transform: translateX(4px); }
+.sections-item-head {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+}
+.sections-name {
+  font-family: var(--font-grot); font-weight: 700; font-size: 17px;
+  letter-spacing: -0.01em; color: var(--ink);
+  transition: color 0.2s var(--ease-out);
+}
+.sections-item:hover .sections-name { color: var(--c-pink); }
+.sections-count {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.14em; color: var(--muted); white-space: nowrap;
+}
+.sections-tags {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  margin-top: 10px;
+}
+.sections-tag {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--muted);
+  border: 1px solid var(--rule);
+  padding: 2px 7px;
+  transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+}
+.sections-item:hover .sections-tag { border-color: var(--c-pink); color: var(--c-pink); }
 
 /* ── 开场切入横条：纸底跑马灯，把深色开场与纸色正文明确切开 ── */
 .hero-ticker {
@@ -459,6 +552,7 @@ html.js .timeline.tl-draw::before { transform: scaleY(1); }
 
 @media (max-width: 1024px) {
   .home-grid { grid-template-columns: 1fr; gap: 48px; }
+  .stats-row { grid-template-columns: 1fr; gap: 48px; }
 }
 @media (max-width: 899px) {
   .hero-avatar { width: 92px; height: 92px; }
@@ -570,7 +664,7 @@ if (daysEl) {
 // ── 滚动显现：分隔线画出、时间轴生长、区块上浮错峰 ──
 // （无论是否减动效都绑定类，CSS 的 reduce 媒体查询会强制显示）
 document.documentElement.classList.add('js');
-const revealEls = [...document.querySelectorAll('.section-head, .tl-item, .rail-card')];
+const revealEls = [...document.querySelectorAll('.section-head, .tl-item, .rail-card, .sections-item')];
 revealEls.forEach(el => el.classList.add('rv'));
 document.querySelectorAll('.home-main .tl-item').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 90}ms`));
 document.querySelectorAll('.home-rail .rail-card').forEach((el, i) => el.style.setProperty('--rv-delay', `${i * 120}ms`));
