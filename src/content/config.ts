@@ -23,7 +23,7 @@ const fragments = defineCollection({
   schema: z.object({
     date:  z.date(),
     mood:  z.string().optional(),
-    color: z.enum(['pink', 'blue', 'yellow', 'green', 'purple']).default('pink'),
+    color: z.enum(['pink', 'blue', 'yellow', 'green', 'purple', 'red']).default('pink'),
     draft: z.boolean().default(false),
   }),
 });
