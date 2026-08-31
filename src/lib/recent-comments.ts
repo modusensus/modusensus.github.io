@@ -82,7 +82,7 @@ export function renderRecentList(el: HTMLElement, items: RecentComment[], opts: 
         src.className = 'rc-src';
         src.href = c.path;
         src.textContent = srcMode === 'slug'
-          ? `${(c.path.replace(/\/$/, '').split('/').pop() || 'post')} ↗`
+          ? (isGuestbook ? '留言板 ↗' : `${(c.path.replace(/\/$/, '').split('/').pop() || 'post')} ↗`)
           : '来自文章 ↗';
         head.appendChild(src);
       }
