@@ -1000,3 +1000,73 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* ═══ 留言板便签墙（与 FRAGMENTS 便签同一套视觉语言：纸片 + 纸胶带 + 折角 + 微歪斜） ═══ */
+.gb-note-wall { columns: 2; column-gap: 24px; }
+.gb-note {
+  position: relative;
+  break-inside: avoid;
+  margin: 0 0 24px;
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  border-radius: 3px;
+  padding: 30px 22px 20px;
+  box-shadow: 0 6px 14px rgba(26, 26, 26, 0.07);
+  transform: rotate(-1deg);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+.gb-note:nth-child(even) { transform: rotate(0.8deg); }
+.gb-note:hover {
+  transform: rotate(0) translateY(-3px);
+  box-shadow: 0 12px 26px rgba(26, 26, 26, 0.12);
+}
+/* 右下角折角 */
+.gb-note::after {
+  content: '';
+  position: absolute; right: 0; bottom: 0;
+  width: 18px; height: 18px;
+  background: linear-gradient(135deg, rgba(26, 26, 26, 0.14) 0 50%, var(--paper) 50% 100%);
+}
+.gb-note-tape {
+  position: absolute; top: -10px; left: 50%;
+  width: 84px; height: 20px;
+  transform: translateX(-50%) rotate(-2.5deg);
+  background: var(--note-accent, var(--c-pink));
+  opacity: 0.4;
+}
+.gb-note:nth-child(even) .gb-note-tape { transform: translateX(-50%) rotate(2deg); }
+.gb-note-meta {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.gb-note-avatar {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1px solid var(--rule-soft); object-fit: cover; flex: none;
+  background: var(--paper);
+}
+.gb-note-nick {
+  font-family: var(--font-grot); font-weight: 700; font-size: 12.5px;
+  color: var(--ink);
+}
+.gb-note-time {
+  margin-left: auto;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--muted); text-transform: uppercase;
+}
+.gb-note-text {
+  font-family: var(--font-cn); font-size: 14px; line-height: 1.8;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+.gb-note-src {
+  display: inline-block; margin-top: 10px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--muted); text-decoration: none;
+  transition: color 0.2s;
+}
+.gb-note-src:hover { color: var(--c-pink); }
+@media (max-width: 640px) {
+  .gb-note-wall { columns: 1; }
+  .gb-note { padding: 26px 18px 18px; transform: rotate(-0.6deg); }
+  .gb-note:nth-child(even) { transform: rotate(0.6deg); }
+}

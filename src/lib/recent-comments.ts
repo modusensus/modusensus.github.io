@@ -85,3 +85,54 @@ export function renderRecentList(el: HTMLElement, items: RecentComment[]): void 
     el.appendChild(row);
   }
 }
+
+// ── 便签墙变体：留言板用（与 FRAGMENTS 便签同一套视觉语言） ──
+const NOTE_ACCENTS = ['var(--c-pink)', 'var(--c-blue)', 'var(--c-yellow)', 'var(--c-green)', 'var(--c-purple)'];
+
+export function renderNoteWall(el: HTMLElement, items: RecentComment[]): void {
+  el.innerHTML = '';
+  items.forEach((c, i) => {
+    const note = document.createElement('article');
+    note.className = 'gb-note';
+    note.style.setProperty('--note-accent', NOTE_ACCENTS[i % NOTE_ACCENTS.length]);
+
+    const tape = document.createElement('span');
+    tape.className = 'gb-note-tape';
+    tape.setAttribute('aria-hidden', 'true');
+    note.appendChild(tape);
+
+    const meta = document.createElement('div');
+    meta.className = 'gb-note-meta';
+    if (c.avatar) {
+      const avatar = document.createElement('img');
+      avatar.className = 'gb-note-avatar';
+      avatar.loading = 'lazy';
+      avatar.alt = '';
+      avatar.src = c.avatar;
+      meta.appendChild(avatar);
+    }
+    const nick = document.createElement('span');
+    nick.className = 'gb-note-nick';
+    nick.textContent = c.nick || '匿名';
+    const time = document.createElement('span');
+    time.className = 'gb-note-time';
+    time.textContent = relTime(c.insertedAt ?? c.time);
+    meta.append(nick, time);
+    note.appendChild(meta);
+
+    const text = document.createElement('div');
+    text.className = 'gb-note-text';
+    text.textContent = commentExcerpt(c.comment || '', 140);
+    note.appendChild(text);
+
+    if (c.path && c.path !== '/guestbook') {
+      const src = document.createElement('a');
+      src.className = 'gb-note-src';
+      src.href = c.path;
+      src.textContent = '来自文章 ↗';
+      note.appendChild(src);
+    }
+
+    el.appendChild(note);
+  });
+}
