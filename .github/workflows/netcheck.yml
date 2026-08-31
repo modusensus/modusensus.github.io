@@ -1,0 +1,14 @@
+name: netcheck
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: probe waline api
+        run: |
+          curl -sS -m 30 -w "\nHTTP %{http_code}\n" \
+            "https://waline-lilac-iota.vercel.app/api/comment?type=recent&count=5&lang=zh-CN" \
+            | head -c 2500
