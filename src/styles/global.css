@@ -4,22 +4,22 @@
    MODUSENSUS V3 — Dark Doodle Hero × Light Editorial
    ═══════════════════════════════════════════════════════════ */
 :root {
-  /* light editorial surface */
-  --paper:      #E9E9E7;
-  --paper-raise:#F1F1EF;
-  --ink:        #1A1A1A;
-  --ink-soft:   #4A4A47;
-  --muted:      #6E6E6B;
-  --rule:       #1A1A1A;
-  --rule-soft:  rgba(26, 26, 26, 0.16);
+  /* light editorial surface — 微暖的杂志纸色（米白） */
+  --paper:      #F2EDE2;
+  --paper-raise:#F7F3EA;
+  --ink:        #221E18;
+  --ink-soft:   #55504A;
+  --muted:      #7A746B;
+  --rule:       #221E18;
+  --rule-soft:  rgba(34, 30, 24, 0.16);
 
   /* dark hero */
   --hero-bg: #2B2B28;
-  --hero-fg: #F4F4F2;
+  --hero-fg: #F5F1E8;
 
   /* code blocks stay dark in both themes */
-  --code-bg: #1A1A1A;
-  --code-fg: #E9E9E7;
+  --code-bg: #211E19;
+  --code-fg: #EFEAE0;
 
   color-scheme: light;
 
@@ -43,16 +43,16 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ── Dark theme ── */
+/* ── Dark theme ── 暖炭黑（暗房里的相纸），同样带纸感 */
 :root[data-theme='dark'] {
-  --paper:      #1B1B19;
-  --paper-raise:#242422;
-  --ink:        #ECECE8;
-  --ink-soft:   #C4C4BE;
-  --muted:      #98988F;
-  --rule:       #ECECE8;
-  --rule-soft:  rgba(236, 236, 232, 0.16);
-  --hero-bg:    #141412;
+  --paper:      #24211C;
+  --paper-raise:#2C2922;
+  --ink:        #EDE8DC;
+  --ink-soft:   #C9C3B6;
+  --muted:      #9A948A;
+  --rule:       #EDE8DC;
+  --rule-soft:  rgba(237, 232, 220, 0.16);
+  --hero-bg:    #17140F;
   color-scheme: dark;
 }
 
@@ -77,6 +77,19 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
+
+/* ── 全站纸张颗粒：固定噪点层铺满视口（含封面与弹层），杂志纸质感；
+      不用混合模式、纯低透明度叠加，性能无损 ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 9600;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  background-size: 240px 240px;
+  opacity: 0.045;
+}
+:root[data-theme='dark'] body::after { opacity: 0.06; }
+@media print { body::after { display: none; } }
 a { color: inherit; text-decoration: none; }
 button { font-family: inherit; cursor: pointer; }
 img { max-width: 100%; display: block; }
@@ -929,17 +942,17 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   --waline-dark-grey: #4a4a46;
   --waline-theme-color: var(--c-pink);
   --waline-active-color: var(--c-accent-deep);
-  --waline-color: #1a1a1a;
-  --waline-bg-color: #e9e9e7;
-  --waline-bg-color-light: #e2e2df;
-  --waline-bg-color-hover: #dcdcd8;
-  --waline-border-color: #c8c8c3;
-  --waline-disable-bg-color: #e2e2df;
-  --waline-disable-color: #8a8a84;
-  --waline-code-bg-color: #1b1b19;
-  --waline-bq-color: #dcdcd8;
+  --waline-color: #221e18;
+  --waline-bg-color: #f2ede2;
+  --waline-bg-color-light: #e9e4d7;
+  --waline-bg-color-hover: #e0dbcd;
+  --waline-border-color: #c9c2b1;
+  --waline-disable-bg-color: #e9e4d7;
+  --waline-disable-color: #8f887b;
+  --waline-code-bg-color: #211e19;
+  --waline-bq-color: #e0dbcd;
   --waline-badge-color: var(--c-pink);
-  --waline-info-bg-color: #e2e2df;
+  --waline-info-bg-color: #e9e4d7;
   --waline-info-color: #6e6e6b;
 }
 :root[data-theme='dark']:root {
@@ -948,17 +961,17 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   --waline-dark-grey: #c9c9c0;
   --waline-theme-color: var(--c-pink);
   --waline-active-color: var(--c-accent-bright);
-  --waline-color: #ecece8;
-  --waline-bg-color: #1b1b19;
-  --waline-bg-color-light: #232320;
-  --waline-bg-color-hover: #2a2a26;
-  --waline-border-color: #3a3a35;
-  --waline-disable-bg-color: #232320;
-  --waline-disable-color: #6e6e68;
-  --waline-code-bg-color: #111110;
-  --waline-bq-color: #2a2a26;
+  --waline-color: #ede8dc;
+  --waline-bg-color: #24211c;
+  --waline-bg-color-light: #2c2922;
+  --waline-bg-color-hover: #332f27;
+  --waline-border-color: #3e3a30;
+  --waline-disable-bg-color: #2c2922;
+  --waline-disable-color: #7a756a;
+  --waline-code-bg-color: #15130f;
+  --waline-bq-color: #332f27;
   --waline-badge-color: var(--c-pink);
-  --waline-info-bg-color: #232320;
+  --waline-info-bg-color: #2c2922;
   --waline-info-color: #98988f;
 }
 .waline {
