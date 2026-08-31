@@ -141,7 +141,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <span class="mono-meta">PRIVACY · 隐私声明</span>
           <ul class="legal-list">
             <li>本站为纯静态站点，托管于 Vercel。访问统计使用 Vercel Analytics，仅记录匿名流量，不使用 Cookie、不识别个人身份。</li>
-            <li>浏览器本地存储（localStorage）仅用于保存主题偏好与文章点赞记录，数据不出本机。</li>
+            <li>浏览器本地存储（localStorage）仅用于保存主题偏好与文章点赞记录，数据不出本机；页脚在线人数使用会话级随机会话标识（sessionStorage，关闭标签页即失效），不涉及任何个人身份信息。</li>
             <li>留言板由 Waline 提供支持，留言内容存储于评论服务端数据库；昵称与邮箱为必填项，网址选填，邮箱仅用于接收回复通知。</li>
           </ul>
         </div>
@@ -150,6 +150,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <ul class="legal-list">
             <li>全站通过 HTTPS 加密传输，由 Vercel 托管。</li>
             <li>评论服务端仅保存留言内容与填写的昵称/邮箱/网址，无账号密码凭证。</li>
+            <li>在线人数统计仅在服务端保留 10 分钟内的匿名心跳记录（随机会话标识），不含 IP 或设备指纹，到期自动删除。</li>
             <li>评论客户端随站点同源打包，不加载第三方 CDN 脚本。</li>
             <li>如发现安全问题，欢迎通过上方 Email 联系。</li>
           </ul>

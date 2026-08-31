@@ -5,5 +5,8 @@ dist/
 Thumbs.db
 .superpowers/
 .claude/
+.env*
+.vercel/
 头像.jpg
 头图.jpg
+.vercel
