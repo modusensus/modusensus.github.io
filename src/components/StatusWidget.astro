@@ -1,7 +1,7 @@
 ---
 // ── 右下角站长状态小部件 ──
 // 数据来自自建接口 /api/status（管理页 /status 更新）；有状态才显示。
-// 头像取 public/avatar.jpg，缺图时自动退化为 "M" 字标。
+// 头像取主页同款 public/images/profile-avatar.gif，缺图时自动退化为 "M" 字标。
 ---
 
 <div class="status-widget" id="status-widget" hidden>
@@ -13,7 +13,7 @@
   </div>
   <button class="sw-avatar-btn" id="sw-avatar-btn" type="button" aria-expanded="false" aria-label="查看站长当前状态">
     <span class="sw-monogram" aria-hidden="true">M</span>
-    <img class="sw-avatar" id="sw-avatar" src="/avatar.jpg" alt="" />
+    <img class="sw-avatar" id="sw-avatar" src="/images/profile-avatar.gif" alt="" />
     <span class="sw-dot" aria-hidden="true"></span>
   </button>
 </div>
