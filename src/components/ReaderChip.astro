@@ -41,10 +41,8 @@
 </style>
 
 <script>
-  // WALINE_USER 是 Waline 客户端写在本地的登录用户（v3 字段：display_name / email / url /
+  // WALINE_USER 是登录成功后写在本地的用户信息（display_name / email / url /
   // avatar / token…；头像 URL 由服务端生成）。轮询读取以同步状态（同页登录不触发 storage 事件）
-  import { serverURL } from '../config/waline.json';
-
   function readUser() {
     try { return JSON.parse(localStorage.getItem('WALINE_USER') || 'null'); } catch { return null; }
   }
@@ -77,33 +75,10 @@
     chip.hidden = false;
   }
 
-  // ── 官方弹窗登录：打开 Waline 服务端 /ui/login（含注册），登录后它会向本页
-  //    postMessage { type: 'userInfo', data: { token, display_name, email, … } }；
-  //    已挂载的 Waline 评论框自身也在监听该消息并自动同步，这里另外写入本地存储、
-  //    同步小圆签，并广播 modusensus:waline-user 让评论区脚本重建读取新登录态 ──
+  // ── 登录：打开站内登录弹窗（LoginModal 组件，直调 Waline REST API，
+  //    风格与站点一致；第三方账号走弹窗内的官方登录窗口按钮） ──
   function openLogin() {
-    const base = serverURL.replace(/\/$/, '');
-    const w = 1024, h = 600;
-    const win = window.open(
-      `${base}/ui/login?lng=zh-CN`,
-      '_blank',
-      `width=${w},height=${h},left=${Math.max(0, (window.innerWidth - w) / 2)},top=${Math.max(0, (window.innerHeight - h) / 2)},scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no`,
-    );
-    if (!win) { // 弹窗被拦截时退化为当前页打开
-      window.location.href = `${base}/ui/login?lng=zh-CN&redirect=${encodeURIComponent(location.href)}`;
-      return;
-    }
-    win.postMessage({ type: 'TOKEN', data: null }, '*');
-    const onMsg = ({ data }) => {
-      if (!data || typeof data !== 'object' || data.type !== 'userInfo') return;
-      if (!data.data || !data.data.token) return;
-      window.removeEventListener('message', onMsg);
-      try { win.close(); } catch { /* noop */ }
-      try { localStorage.setItem('WALINE_USER', JSON.stringify(data.data)); } catch { /* noop */ }
-      syncChip();
-      document.dispatchEvent(new CustomEvent('modusensus:waline-user'));
-    };
-    window.addEventListener('message', onMsg);
+    document.dispatchEvent(new CustomEvent('modusensus:open-login'));
   }
 
   function bindChip() {

@@ -1,0 +1,301 @@
+---
+// ── 站内登录弹窗（替代 Waline 官方 /ui/login 窗口） ──
+// 官方登录页是 Waline 服务端渲染的跨域页面，站点的 CSS 覆盖不到；
+// 这里自建弹窗直调服务端 REST API，界面风格完全跟站点走：
+//   POST /api/user/login  { email, token }        → 发送邮箱验证码（token 由前端生成，关联本次会话）
+//   POST /api/user/verify { token, email, code }  → 校验验证码，返回 JWT + 用户信息
+// 登录成功写入 WALINE_USER（字段与官方登录一致），广播 modusensus:waline-user
+// 让已挂载的评论区重建以读取新登录态。
+// 「使用官方登录窗口」保留第三方账号（GitHub 等 OAuth）入口。
+import { serverURL } from '../config/waline.json';
+---
+
+<div class="lm-mask" id="lm-mask" hidden>
+  <div class="lm-card" role="dialog" aria-modal="true" aria-labelledby="lm-title">
+    <button class="lm-close" id="lm-close" type="button" aria-label="关闭登录窗口">✕</button>
+    <div class="lm-label">SIGN IN</div>
+    <h2 class="lm-title" id="lm-title">验证码登录</h2>
+    <p class="lm-sub">输入邮箱，验证码即登录；没有账号会自动创建。</p>
+
+    <form class="lm-form" id="lm-mail-form" novalidate>
+      <label class="lm-field">
+        <span class="lm-field-label">邮箱</span>
+        <input class="lm-input" id="lm-mail" type="email" placeholder="you@example.com" autocomplete="email" required />
+      </label>
+      <button class="lm-btn" type="submit">发送验证码</button>
+    </form>
+
+    <form class="lm-form" id="lm-code-form" novalidate hidden>
+      <label class="lm-field">
+        <span class="lm-field-label">验证码</span>
+        <input class="lm-input" id="lm-code" inputmode="numeric" maxlength="6" placeholder="6 位数字" autocomplete="one-time-code" required />
+      </label>
+      <div class="lm-row">
+        <button class="lm-btn lm-btn-primary" type="submit">登录</button>
+        <button class="lm-link" id="lm-back" type="button">换个邮箱</button>
+      </div>
+    </form>
+
+    <p class="lm-msg" id="lm-msg" role="status"></p>
+
+    <div class="lm-divider"><span>或</span></div>
+    <button class="lm-official" id="lm-official" type="button">使用官方登录窗口（第三方账号）</button>
+  </div>
+</div>
+
+<style>
+  .lm-mask {
+    position: fixed; inset: 0; z-index: 220;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    background: rgba(20, 16, 10, 0.55);
+    backdrop-filter: blur(2px);
+  }
+  .lm-card {
+    position: relative;
+    width: min(420px, 100%);
+    padding: 32px 30px 26px;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    box-shadow: 0 24px 60px rgba(20, 16, 10, 0.35);
+  }
+  .lm-close {
+    position: absolute; top: 10px; right: 12px;
+    width: 30px; height: 30px;
+    border: none; background: none; cursor: pointer;
+    color: var(--muted); font-size: 15px; line-height: 1;
+    transition: color 0.2s var(--ease-out);
+  }
+  .lm-close:hover { color: var(--c-pink); }
+  .lm-label {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.16em; color: var(--c-pink); margin-bottom: 10px;
+  }
+  .lm-title {
+    font-family: var(--font-serif); font-size: 26px; line-height: 1.2;
+    color: var(--ink); margin: 0 0 8px;
+  }
+  .lm-sub {
+    font-family: var(--font-cn); font-size: 13px; line-height: 1.7;
+    color: var(--muted); margin: 0 0 22px;
+  }
+  .lm-form { display: flex; flex-direction: column; gap: 14px; }
+  .lm-field { display: flex; flex-direction: column; gap: 6px; }
+  .lm-field-label {
+    font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: 0.12em; color: var(--ink-soft);
+  }
+  .lm-input {
+    padding: 10px 12px;
+    font-family: var(--font-cn); font-size: 14px;
+    color: var(--ink);
+    background: var(--paper-raise);
+    border: 1px solid var(--rule);
+    border-radius: 0;
+    outline: none;
+    transition: border-color 0.2s var(--ease-out);
+  }
+  .lm-input:focus { border-color: var(--c-pink); }
+  .lm-btn {
+    padding: 10px 14px;
+    font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink);
+    background: none;
+    border: 1px solid var(--ink);
+    cursor: pointer;
+    transition: all 0.2s var(--ease-out);
+  }
+  .lm-btn:hover { background: var(--ink); color: var(--paper); }
+  .lm-btn-primary {
+    border-color: var(--c-pink); color: var(--c-pink);
+  }
+  .lm-btn-primary:hover { background: var(--c-pink); border-color: var(--c-pink); color: #fff; }
+  .lm-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .lm-row { display: flex; align-items: center; gap: 16px; }
+  .lm-link {
+    padding: 0; border: none; background: none; cursor: pointer;
+    font-family: var(--font-cn); font-size: 12.5px; color: var(--muted);
+    text-decoration: underline; text-underline-offset: 3px;
+    transition: color 0.2s var(--ease-out);
+  }
+  .lm-link:hover { color: var(--c-pink); }
+  .lm-msg { min-height: 18px; margin: 12px 0 0; font-family: var(--font-cn); font-size: 12.5px; line-height: 1.6; }
+  .lm-msg.ok { color: var(--c-green); }
+  .lm-msg.err { color: var(--c-red); }
+  .lm-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 20px 0 14px;
+    font-family: var(--font-cn); font-size: 11.5px; color: var(--muted);
+  }
+  .lm-divider::before, .lm-divider::after {
+    content: ""; flex: 1; height: 1px; background: var(--rule);
+  }
+  .lm-official {
+    width: 100%; padding: 9px 12px;
+    font-family: var(--font-cn); font-size: 12.5px;
+    color: var(--ink-soft);
+    background: none; border: 1px solid var(--rule-soft);
+    cursor: pointer;
+    transition: border-color 0.2s var(--ease-out), color 0.2s var(--ease-out);
+  }
+  .lm-official:hover { border-color: var(--c-pink); color: var(--c-pink); }
+</style>
+
+<script>
+  // 站点启用了 <ViewTransitions />：模块脚本在一次完整加载中只执行一次，
+  // 路由切换会替换 DOM，因此元素引用与事件绑定必须放到 astro:page-load 里重建。
+  import { serverURL } from '../config/waline.json';
+
+  const base = serverURL.replace(/\/$/, '');
+  const $ = (id) => document.getElementById(id);
+
+  // 会话状态（跨路由切换保留：验证码流程中途切页不重置）
+  let sessionToken = '';
+  let sessionEmail = '';
+  // document 级监听只需绑一次，处理器指向「最近一次 bind 的闭包」（路由切换后 DOM 已换新）
+  let current = null;
+  let globalBound = false;
+
+  function uuid() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = (Math.random() * 16) | 0;
+      return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+    });
+  }
+
+  async function api(path, body) {
+    const r = await fetch(`${base}/api/${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json().catch(() => null);
+    if (!j || j.errno !== 0) throw new Error((j && j.errmsg) || '请求失败，请稍后再试');
+    return j;
+  }
+
+  function say(msg, text, type) {
+    msg.textContent = text;
+    msg.className = 'lm-msg' + (type ? ` ${type}` : '');
+  }
+
+  function bind() {
+    const mask = $('lm-mask');
+    const mailForm = $('lm-mail-form');
+    const codeForm = $('lm-code-form');
+    const mailInput = $('lm-mail');
+    const codeInput = $('lm-code');
+    const msg = $('lm-msg');
+    if (!mask || !mailForm || !codeForm || !mailInput || !codeInput || !msg) return;
+
+    function openModal() {
+      mask.hidden = false;
+      msg.textContent = '';
+      msg.className = 'lm-msg';
+      if (codeForm.hidden) { mailInput.value = ''; mailInput.focus(); }
+      else codeInput.focus();
+    }
+
+    function closeModal() {
+      mask.hidden = true;
+      codeForm.hidden = true;
+      mailForm.hidden = false;
+      msg.textContent = '';
+      msg.className = 'lm-msg';
+    }
+
+    // 步骤 1：发送验证码
+    mailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = mailInput.value.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say(msg, '请输入有效的邮箱地址', 'err'); return; }
+      sessionEmail = email;
+      sessionToken = uuid();
+      const btn = mailForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      say(msg, '正在发送…');
+      try {
+        await api('user/login', { email, token: sessionToken });
+        mailForm.hidden = true;
+        codeForm.hidden = false;
+        codeInput.value = '';
+        say(msg, `验证码已发送到 ${email}，请查收邮箱。`, 'ok');
+        codeInput.focus();
+      } catch (err) {
+        say(msg, err.message, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // 步骤 2：验证码登录
+    codeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const code = codeInput.value.trim();
+      if (!code) { say(msg, '请输入验证码', 'err'); return; }
+      const btn = codeForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      say(msg, '正在登录…');
+      try {
+        const j = await api('user/verify', { token: sessionToken, email: sessionEmail, code });
+        const data = j.data || {};
+        if (!data.token) throw new Error('登录失败，请重试');
+        localStorage.setItem('WALINE_USER', JSON.stringify(data));
+        closeModal();
+        document.dispatchEvent(new CustomEvent('modusensus:waline-user'));
+      } catch (err) {
+        say(msg, err.message, 'err');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // 换个邮箱
+    $('lm-back')?.addEventListener('click', () => {
+      codeForm.hidden = true;
+      mailForm.hidden = false;
+      say(msg, '');
+      mailInput.focus();
+    });
+
+    // 官方登录窗口（第三方账号 OAuth）
+    $('lm-official')?.addEventListener('click', () => {
+      const w = 1024, h = 600;
+      const win = window.open(
+        `${base}/ui/login?lng=zh-CN`,
+        '_blank',
+        `width=${w},height=${h},left=${Math.max(0, (window.innerWidth - w) / 2)},top=${Math.max(0, (window.innerHeight - h) / 2)},scrollbars=no,resizable=no,status=no,location=no,toolbar=no,menubar=no`,
+      );
+      if (!win) {
+        window.location.href = `${base}/ui/login?lng=zh-CN&redirect=${encodeURIComponent(location.href)}`;
+        return;
+      }
+      win.postMessage({ type: 'TOKEN', data: null }, '*');
+      const onMsg = ({ data }) => {
+        if (!data || typeof data !== 'object' || data.type !== 'userInfo') return;
+        if (!data.data || !data.data.token) return;
+        window.removeEventListener('message', onMsg);
+        try { win.close(); } catch { /* noop */ }
+        try { localStorage.setItem('WALINE_USER', JSON.stringify(data.data)); } catch { /* noop */ }
+        closeModal();
+        document.dispatchEvent(new CustomEvent('modusensus:waline-user'));
+      };
+      window.addEventListener('message', onMsg);
+    });
+
+    // 关闭
+    $('lm-close')?.addEventListener('click', closeModal);
+    mask.addEventListener('click', (e) => { if (e.target === mask) closeModal(); });
+    current = { openModal, closeModal };
+    if (!globalBound) {
+      globalBound = true;
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('lm-mask')?.hidden) current?.closeModal(); });
+      document.addEventListener('modusensus:open-login', () => current?.openModal());
+    }
+  }
+
+  // astro:page-load 首次加载与每次路由切换后都触发
+  document.addEventListener('astro:page-load', bind);
+</script>

@@ -4,6 +4,7 @@ import { ViewTransitions } from 'astro:transitions';
 import Analytics from '@vercel/analytics/astro';
 import StatusWidget from '../components/StatusWidget.astro';
 import ReaderChip from '../components/ReaderChip.astro';
+import LoginModal from '../components/LoginModal.astro';
 
 interface Props {
   title?: string;
@@ -163,6 +164,7 @@ const navGroups = [
 
   <!-- ── 右上角读者身份入口（Waline 登录状态） ── -->
   <ReaderChip />
+  <LoginModal />
 
   <script>
     // ── Waline 浏览量统计（全局）：任何页面出现 .waline-pageview-count 元素都会被填充，
