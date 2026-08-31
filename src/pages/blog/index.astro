@@ -35,7 +35,7 @@ const years = [...new Set(posts.map(p => p.data.date.getFullYear()))].sort((a, b
             <a class="ar-item" href={`/blog/${post.slug}`}>
               <div class="ar-meta">
                 <span>{sectionNames[post.data.module]}{post.data.issue ? ` · NO.${post.data.issue}` : ''}</span>
-                <span>{fmtYear(post.data.date)}</span>
+                <span>{fmtYear(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
               </div>
               <div class="ar-title">{post.data.title}</div>
             </a>

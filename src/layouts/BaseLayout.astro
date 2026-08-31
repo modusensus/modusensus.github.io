@@ -154,6 +154,15 @@ const navGroups = [
   </div>
 
   <script>
+    // ── Waline 浏览量统计（全局）：任何页面出现 .waline-pageview-count 元素都会被填充，
+    //    元素上的 data-path 指定计数路径；挂 astro:page-load 适配 ViewTransitions（首次加载与每次路由切换都触发） ──
+    import { pageviewCount } from '@waline/client/pageview';
+    import { serverURL } from '../config/waline.json';
+
+    document.addEventListener('astro:page-load', () => {
+      pageviewCount({ serverURL, path: window.location.pathname });
+    });
+
     // ── 主题切换：写 localStorage + 同步 giscus iframe 主题 ──
     function applyStoredTheme() {
       try {

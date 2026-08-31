@@ -40,7 +40,7 @@ function fmtShort(date: Date) {
             <a class="ar-item" href={`/blog/${post.slug}`}>
               <div class="ar-meta">
                 <span>LOG — {String(posts.length - idx).padStart(2, '0')}</span>
-                <span>{fmtShort(post.data.date)}</span>
+                <span>{fmtShort(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
               </div>
               <div class="ar-title">{post.data.title}</div>
             </a>

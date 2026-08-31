@@ -27,7 +27,7 @@ function fmtShort(date: Date) {
         <a class="tn-item" href={`/blog/${post.slug}`}>
           <div class="tn-meta">
             <span>No. {post.data.issue || String(posts.length - idx).padStart(2, '0')}</span>
-            <span>{fmtShort(post.data.date)}</span>
+            <span>{fmtShort(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
           </div>
           <div class="tn-title">{post.data.title}</div>
           {post.data.subtitle && <div class="tn-desc">{post.data.subtitle}</div>}

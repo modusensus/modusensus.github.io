@@ -200,13 +200,4 @@ const tocItems = headings.filter(h => h.depth === 2);
   }
 </script>
 
-<script>
-  // Waline 浏览量统计：与 guestbook 页相同的 ViewTransitions 适配 —— 打包脚本一次完整加载只执行一次，
-  // 挂 astro:page-load 后首次加载与每次路由切换都会触发；监听器驻留后，后续路由切换为所在路径累计一次浏览
-  import { pageviewCount } from '@waline/client/pageview';
-  import { serverURL } from '../../config/waline.json';
-
-  document.addEventListener('astro:page-load', () => {
-    pageviewCount({ serverURL, path: window.location.pathname });
-  });
-</script>
+<!-- Waline 浏览量统计脚本已上移到 BaseLayout（全局一份，避免双份导致重复计数） -->
