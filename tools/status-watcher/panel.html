@@ -143,8 +143,9 @@ document.getElementById('toggleOffline').onclick = async () => {
   }
   poll();
 };
-// 进度条：用服务端缓存的 pos 起算，前端每秒推进，过渡动画让点和线平滑移动
-let npPos = 0, npAt = 0, npDur = 0;
+// 进度条：用服务端缓存的 pos 起算，前端每秒推进，过渡动画让点和线平滑移动。
+// 网易云模拟模式（simulated）：DB 没有实时 pos，曲目没变就不重置，从 0 持续推进
+let npPos = 0, npAt = 0, npDur = 0, npTitle = '';
 function tickProgress() {
   if (!npDur) return;
   const p = Math.min(npPos + (Date.now() - npAt) / 1000, npDur);
@@ -177,10 +178,15 @@ async function poll() {
     ? '已下线 · 博客灯约 6 分钟后变灰'
     : (s.mode === 'manual' ? '在线 · 手动状态' : '在线 · 自动同步');
   document.getElementById('meta').textContent = s.lastPushAt ? `上次推送 ${s.lastPushAt}` : '尚未推送';
-  // 进度条：有播放且知道时长才显示
+  // 进度条：有播放且知道时长才显示；模拟模式下曲目没变不重置进度
   const np = s.nowPlaying;
   if (np && np.dur > 0) {
-    npPos = np.pos; npAt = Date.now(); npDur = np.dur;
+    if (np.simulated && np.title === npTitle) {
+      // 同一首歌继续走本地推进
+    } else {
+      npPos = np.pos; npAt = Date.now(); npTitle = np.title;
+    }
+    npDur = np.dur;
     document.getElementById('npBar').hidden = false;
     document.getElementById('npDur').textContent = fmt(np.dur);
     tickProgress();

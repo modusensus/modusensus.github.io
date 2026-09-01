@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { createServer } from 'node:http';
+import { DatabaseSync } from 'node:sqlite';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -130,6 +131,27 @@ function parseCloudTitle(title) {
 }
 const songText = (t, a) => (a ? `听音乐中 · ${t} — ${a}` : `听音乐中 · ${t}`);
 
+// ── 网易云本地库读取（SMTC 失效时的补充）：webdb.dat 只读 ──
+// handoff 记录当前曲目 ID；historyTracks 按 ID 查名称/时长。
+// 注意：progress 字段不实时更新，pos 只能从 0 模拟推进（前端处理）。
+function queryCloudDB() {
+  try {
+    const p = path.join(process.env.LOCALAPPDATA || '', 'NetEase', 'CloudMusic', 'Library', 'webdb.dat');
+    const db = new DatabaseSync(p, { readOnly: true });
+    try {
+      const hand = db.prepare("SELECT jsonStr FROM persistentModel WHERE uniKey='async:playingListHandoff'").get();
+      if (!hand) return null;
+      const id = JSON.parse(hand.jsonStr)?.data?.playingState?.currentPlayingItem?.id;
+      if (!id) return null;
+      const row = db.prepare('SELECT jsonStr FROM historyTracks WHERE id=?').get(id);
+      if (!row) return null;
+      const j = JSON.parse(row.jsonStr);
+      const artist = (j.artists || []).map((a) => a.name).filter(Boolean).join('/');
+      return { title: j.name, artist, dur: Math.round(Number(j.duration) / 1000) || 0 };
+    } finally { db.close(); }
+  } catch { return null; } // 文件被占/损坏时静默走标题兜底
+}
+
 // ── 音乐合成：SMTC（所有播放器）→ 网易云窗口标题；与窗口检测无关，自动/手动模式共用 ──
 let nowPlaying = null; // 最近一次播放信息（面板进度条用）：{title, artist, pos, dur, at}
 async function composeMusic() {
@@ -138,8 +160,13 @@ async function composeMusic() {
     nowPlaying = { title: np.title, artist: np.artist, pos: np.pos, dur: np.dur, at: Date.now() };
     return songText(np.title, np.artist);
   }
-  // SMTC 没读到（如网易云未注册媒体会话）→ 从网易云窗口标题解析。
-  // 局限：网易云暂停时标题仍留旧歌，可能短暂误报，实测后再说。
+  // SMTC 没读到（网易云 3.x 不注册 SMTC）→ 网易云本地库（曲目名/时长，pos 模拟）
+  // → 网易云窗口标题兜底。局限：暂停时旧歌信息仍保留，可能短暂误报。
+  const dbInfo = queryCloudDB();
+  if (dbInfo && dbInfo.title) {
+    nowPlaying = { title: dbInfo.title, artist: dbInfo.artist, pos: 0, dur: dbInfo.dur, at: Date.now(), simulated: true };
+    return songText(dbInfo.title, dbInfo.artist);
+  }
   const ct = await queryCloudTitle();
   const cloud = parseCloudTitle(ct);
   if (cloud) {
