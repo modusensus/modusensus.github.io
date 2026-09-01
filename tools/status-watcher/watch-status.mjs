@@ -3,7 +3,7 @@
 // 右下角小部件自动显示"此刻在干嘛"。口令从 .env 读取，不硬编码。
 // 用法：node watch-status.mjs    （Ctrl+C 停止）
 // 开机自启：见 README.md（任务计划程序）
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -165,13 +165,29 @@ async function push(text) {
   } catch { /* 断网/接口不可用时静默跳过，下轮重试 */ }
 }
 
+// ── 关机监听：WMI 检测 ShutdownInProgress，关机流程一开始就推"睡觉中" ──
+// 比 AtShutdown 任务可靠：触发更早，网络栈还没断。AtShutdown 任务保留作兜底。
+const SHUTDOWN_WATCH = `
+$q = "SELECT * FROM __InstanceModificationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_OperatingSystem' AND TargetInstance.ShutdownInProgress = TRUE"
+Register-WmiEvent -Query $q -SourceIdentifier sw-shutdown
+Wait-Event -SourceIdentifier sw-shutdown | Out-Null
+Write-Output 'SHUTDOWN'
+`;
+const watchShutdown = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', SHUTDOWN_WATCH],
+  { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
+watchShutdown.stdout.on('data', () => {
+  console.log(new Date().toLocaleTimeString('zh-CN', { hour12: false }), '→', '检测到关机，推送睡觉中');
+  push('睡觉中');
+});
+
 console.log('状态同步已启动，Ctrl+C 停止。检测间隔', POLL_MS / 1000, 's');
 let forceTick = 0;
 (async function loop() {
   const w = await queryWindow();
   const text = await composeStatus(w);
-  // 每 20 轮（10 分钟）强制推一次，覆盖外部写入的状态（如关机通知"睡觉中"）
+  // 每 8 轮（4 分钟）强制推一次：既覆盖外部写入的状态（如关机通知"睡觉中"），
+  // 也作为"在线心跳"刷新 updated_at，供前端状态灯判定在线/离线
   forceTick++;
-  if (text && (forceTick % 20 === 0 || text !== lastSent)) await push(text);
+  if (text && (forceTick % 8 === 0 || text !== lastSent)) await push(text);
   setTimeout(loop, POLL_MS);
 })();

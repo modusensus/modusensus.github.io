@@ -17,6 +17,19 @@ node watch-status.mjs
 
 `STATUS_KEY` 在 `.env`(已 gitignore,不会提交)。
 
+## 关机 → 自动显示"睡觉中"
+
+两条通道，互相兜底：
+
+1. **watch-status.mjs 内建 WMI 关机监听**（主通道）：PowerShell 每 2 秒轮询
+   `ShutdownInProgress`，关机流程一开始就推送"睡觉中"。此时网络栈还没断，比任务计划可靠。
+2. **任务计划程序 `ModusensusStatusShutdown`**（AtShutdown 兜底）：跑
+   `shutdown-notify.mjs`。关机时网络窗口极短，Node 冷启动 + HTTPS 握手容易来不及
+   （上次结果 0xC000026B = 系统关机终止），所以只作备份。
+
+状态卡片显示灯基于 `updated_at` 时效判定：watch-status 每 4 分钟强制推一次
+（"在线心跳"），超过 6 分钟无新推送 → 灯变灰（关机/睡眠/脚本停止都算下线）。
+
 ## 开机自启
 
 已配置:启动文件夹有 `modusensus-status-watcher.vbs`(隐藏窗口,登录即运行)。

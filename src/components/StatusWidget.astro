@@ -14,7 +14,10 @@
   <div class="sw-card" aria-live="polite">
     <span class="sw-tape" aria-hidden="true"></span>
     <div class="mono-label sw-label">NOW · 此刻</div>
-    <p class="sw-text" id="sw-text"></p>
+    <p class="sw-line">
+      <span class="sw-lamp" id="sw-lamp" aria-hidden="true"></span>
+      <span class="sw-text" id="sw-text"></span>
+    </p>
     <p class="sw-meta mono-meta" id="sw-meta"></p>
   </div>
 </div>
@@ -85,11 +88,27 @@
     background: var(--c-pink); opacity: 0.4;
   }
   .sw-label { color: var(--muted); margin-bottom: 10px; }
+  .sw-line { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
   .sw-text {
     font-family: var(--font-cn); font-size: 15px; line-height: 1.75;
-    color: var(--ink); margin: 0 0 8px; overflow-wrap: anywhere;
+    color: var(--ink); overflow-wrap: anywhere;
   }
   .sw-meta { margin: 0; }
+  /* 状态灯：绿色闪烁 = 本机在线（updated_at 新鲜）；灰色熄灭 = 下线 */
+  .sw-lamp {
+    flex: none; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--c-green);
+    box-shadow: 0 0 6px var(--c-green);
+    animation: sw-blink 1.4s ease-in-out infinite;
+  }
+  .sw-lamp.off {
+    background: #9a958c; box-shadow: none;
+    animation: none;
+  }
+  @keyframes sw-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.25; }
+  }
 
   /* 移动端导航变顶部横条，小部件隐藏 */
   @media (max-width: 899px) {
@@ -147,13 +166,23 @@
     const btn = document.getElementById('sw-avatar-btn');
     const textEl = document.getElementById('sw-text');
     const metaEl = document.getElementById('sw-meta');
+    const lampEl = document.getElementById('sw-lamp');
     const avatar = document.getElementById('sw-avatar');
-    if (!btn || !textEl || !metaEl) return;
+    if (!btn || !textEl || !metaEl || !lampEl) return;
+
+    // 在线判定：updated_at 距今超过 6 分钟视为下线（watch-status 每 4 分钟强制推一次心跳）。
+    // 关机/睡眠/进程停止后无新推送，灯变灰。
+    const ONLINE_WINDOW = 6 * 60 * 1000;
+    const setLamp = (d) => {
+      const at = d && d.at ? new Date(d.at).getTime() : NaN;
+      lampEl.classList.toggle('off', !Number.isFinite(at) || Date.now() - at > ONLINE_WINDOW);
+    };
 
     loadStatus().then((data) => {
       if (!data) return;
       textEl.textContent = data.text;
       metaEl.textContent = `更新于 ${relTime(data.at)}`;
+      setLamp(data);
       wrap.hidden = false;
       alignToSlot(wrap);
     });
@@ -168,6 +197,7 @@
         metaEl.textContent = `更新于 ${relTime(d.at)}`;
         wrap.hidden = false;
       }
+      setLamp(d); // 灯独立于文本判断：状态没变但时间流逝越过阈值也要变灰
       alignToSlot(wrap); // 路由切换后槽位可能移动，顺带校准
     }, 30_000);
 
