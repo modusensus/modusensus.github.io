@@ -707,9 +707,10 @@ if (cover && pageOffset) {
 }
 
 // ── 站点统计：运行天数按本地时区从上线日 00:00 起算，每分钟重算一次（跨天自动 +1，不用刷新）──
+// 注意：frontmatter 常量（SITE_EST）在模块化 <script> 里不可访问，这里写死并与 frontmatter 保持一致
 const daysEl = document.getElementById('stat-days');
 if (daysEl) {
-  const siteStart = new Date(`${SITE_EST}T00:00:00`).getTime();
+  const siteStart = new Date('2026-07-14T00:00:00').getTime();
   const updateDays = () => {
     daysEl.textContent = String(Math.max(1, Math.floor((Date.now() - siteStart) / 86400000)));
   };
