@@ -187,7 +187,7 @@
       alignToSlot(wrap);
     });
 
-    // 每 30 秒强制刷新（绕过 60s 缓存），状态变化即时可见，无需手动刷新页面
+    // 每 10 秒强制刷新（绕过 60s 缓存），状态变化即时可见，无需手动刷新页面
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(async () => {
       const d = await loadStatus(true);
@@ -199,7 +199,26 @@
       }
       setLamp(d); // 灯独立于文本判断：状态没变但时间流逝越过阈值也要变灰
       alignToSlot(wrap); // 路由切换后槽位可能移动，顺带校准
-    }, 30_000);
+    }, 10_000);
+
+    // 后台标签页的定时器会被浏览器节流（切回前台才恢复）——
+    // 标签页回到可见时立即刷新一次，等效"刷新页面"但不用刷新
+    if (window.__swVisHandler) document.removeEventListener('visibilitychange', window.__swVisHandler);
+    window.__swVisHandler = () => {
+      if (document.visibilityState !== 'visible') return;
+      loadStatus(true).then((d) => {
+        const t = document.getElementById('sw-text');
+        const m = document.getElementById('sw-meta');
+        const w = document.getElementById('status-widget');
+        if (!d || !t || !m || !w) return;
+        t.textContent = d.text;
+        m.textContent = `更新于 ${relTime(d.at)}`;
+        setLamp(d);
+        w.hidden = false;
+        alignToSlot(w);
+      });
+    };
+    document.addEventListener('visibilitychange', window.__swVisHandler);
 
     // 窗口缩放时校准位置
     if (!window.__swResizeBound) {
