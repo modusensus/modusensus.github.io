@@ -20,8 +20,9 @@ function loadKey() {
 (async () => {
   const key = loadKey();
   if (!key) process.exit(1);
+  const endpoint = JSON.parse(readFileSync(path.join(here, 'config.json'), 'utf8')).endpoint;
   try {
-    await fetch('https://www.modusensus.space/api/status', {
+    await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ key, text: '睡觉中' }),

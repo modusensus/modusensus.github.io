@@ -13,9 +13,12 @@ node watch-status.mjs
 - 空闲 10 分钟以上自动显示"离开中"
 - 程序识别规则在脚本顶部 `APPS` 表里,想改措辞/加程序直接编辑
 
-## 口令
+## 配置
 
-`STATUS_KEY` 在 `.env`(已 gitignore,不会提交)。
+- `config.json`：端点、检测间隔、空闲阈值、程序识别规则表(`apps`)、兜底文案——改行为不用动代码
+- `.env`：`STATUS_KEY`(已 gitignore,不会提交)。规则里的正则不写 `i` 标记,默认忽略大小写
+
+规则表是字符串正则,JSON 里转义斜杠:匹配 `cmd.exe` 写 `^cmd\\.exe$`。
 
 ## 关机 → 自动显示"睡觉中"
 

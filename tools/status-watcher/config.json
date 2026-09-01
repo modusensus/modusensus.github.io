@@ -1,0 +1,19 @@
+{
+  "endpoint": "https://www.modusensus.space/api/status",
+  "pollMs": 30000,
+  "idleMin": 10,
+  "mapWithApp": false,
+  "forcePushEvery": 8,
+  "fallback": "摸鱼中",
+  "fallbackWithTitle": "用 {proc}",
+  "apps": [
+    { "name": "写代码中",      "match": ["^code$", "cursor", "webstorm", "pycharm"] },
+    { "name": "敲命令行中",    "match": ["windows terminal", "powershell", "^cmd\\.exe$", "mintty"] },
+    { "name": "聊微信中",      "match": ["wechat", "微信"] },
+    { "name": "听音乐中",      "match": ["spotify", "cloudmusic", "网易云", "foobar"] },
+    { "name": "打游戏中",      "match": ["steam", "valorant", "league of legends", "原神", "genshin"] },
+    { "name": "网上冲浪中",    "match": ["chrome", "msedge", "firefox", "bilibili", "youtube"] },
+    { "name": "看文档中",      "match": ["^word\\.exe$", "wps", "obsidian", "notion"] },
+    { "name": "敲代码中",      "match": ["visual studio", "studio code", "vs code"] }
+  ]
+}
