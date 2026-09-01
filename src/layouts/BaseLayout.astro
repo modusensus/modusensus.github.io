@@ -76,16 +76,18 @@ const navGroups = [
   <!-- ── 左侧导航：mix-blend-difference，深浅背景自动反色 ── -->
   <nav class="site-nav" aria-label="Main navigation">
     <a href="/" class="site-nav-brand">MODUSENSUS</a>
-    <div class="site-nav-links">
-      {navGroups.map((group, groupIndex) => (
-        <div class:list={['site-nav-group', { separated: groupIndex > 0 }]}>
-          {group.map(link => (
-            <a href={link.href} class:list={['site-nav-link', { active: activeNav === link.key }]}>
-              {link.label}
-            </a>
-          ))}
-        </div>
-      ))}
+    <div class="site-nav-links" id="site-nav-links">
+      <div class="site-nav-links-inner">
+        {navGroups.map((group, groupIndex) => (
+          <div class:list={['site-nav-group', { separated: groupIndex > 0 }]}>
+            {group.map(link => (
+              <a href={link.href} class:list={['site-nav-link', { active: activeNav === link.key }]}>
+                {link.label}
+              </a>
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
     <div class="site-nav-bottom">
       <!-- 状态小部件锚点：头像按钮对齐此占位（组件 fixed 定位，避开 nav 的 mix-blend-difference） -->
@@ -99,6 +101,10 @@ const navGroups = [
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/><circle cx="13.5" cy="6.5" r="0.5" fill="currentColor"/><circle cx="17.5" cy="10.5" r="0.5" fill="currentColor"/><circle cx="8.5" cy="7.5" r="0.5" fill="currentColor"/><circle cx="6.5" cy="12.5" r="0.5" fill="currentColor"/></svg>
         </button>
       </div>
+      <!-- 移动端底部导航的菜单开合按钮（≤899px 显示，桌面隐藏） -->
+      <button class="nav-menu-toggle" id="nav-menu-toggle" type="button" aria-label="展开菜单" aria-expanded="false" aria-controls="site-nav-links">
+        <span class="nav-menu-icon" aria-hidden="true"></span>
+      </button>
       <div class="site-nav-foot">VOL.4<br />2026</div>
     </div>
   </nav>
@@ -364,10 +370,23 @@ const navGroups = [
       }
     }
 
+    // ── 移动端底部悬浮导航：菜单按钮开合链接面板（≤899px 生效，桌面按钮隐藏）。
+    //    ViewTransitions 路由切换后 nav 是全新 DOM，默认收起状态，需在 after-swap 重新绑定 ──
+    function bindMobileNav() {
+      const nav = document.querySelector('.site-nav');
+      const toggle = nav && nav.querySelector('.nav-menu-toggle');
+      if (!nav || !toggle) return;
+      toggle.addEventListener('click', () => {
+        const open = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+
     bindThemeToggle();
     bindAccentPalette();
     bindOnlineWidget();
     bindPostPop();
+    bindMobileNav();
     document.addEventListener('astro:after-swap', () => {
       applyStoredTheme();
       applyStoredAccent();
@@ -375,6 +394,7 @@ const navGroups = [
       bindAccentPalette();
       bindOnlineWidget();
       bindPostPop();
+      bindMobileNav();
     });
 
     // ── 文章行悬浮描述卡：悬停带 data-desc 的文章行时弹出（自下而上），
