@@ -606,6 +606,8 @@ import { fetchRecentComments, renderRecentList } from '../lib/recent-comments';
 // ── 封面 ↔ 主页双态（模块级，跨路由切换存活）──
 let splashCleanup = null; // 当前封面态的事件清理器
 let splashGoCover = null; // 「渐变回封面」入口，供品牌链接点击调用
+let splashEnterBoard = null; // 「切入主页正文」入口，供 HOME 链接同页跳转调用
+let skipCoverFlag = false; // 点导航 HOME 跳回首页时置位：到达后直达主页正文，不落封面
 let splashMode = 'cover'; // cover = 封面层显示；board = 主页正文
 
 // 站点启用了 <ViewTransitions />：打包脚本一次完整加载只执行一次，客户端路由回首页不会重跑，
@@ -619,11 +621,6 @@ if (splashCleanup) { splashCleanup(); splashCleanup = null; }
 const cover = document.getElementById('cover');
 const pageOffset = document.querySelector('.page-offset') as HTMLElement | null;
 if (cover && pageOffset) {
-  splashMode = 'cover';
-  document.documentElement.classList.add('cover-mode');
-  pageOffset.inert = true; // 封面态下正文不参与焦点与读屏
-  window.scrollTo(0, 0);
-
   const enterBoard = () => {
     if (splashMode !== 'cover') return;
     splashMode = 'board';
@@ -652,6 +649,19 @@ if (cover && pageOffset) {
     gsap.fromTo(cover, { autoAlpha: 0, y: -30 }, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'power2.out', clearProps: 'transform' });
   };
   splashGoCover = enterCover;
+  splashEnterBoard = enterBoard;
+
+  // 点导航 HOME 跳回首页：直接进主页正文，不落封面（保持 ViewTransitions 带来的滚动位置）
+  if (skipCoverFlag) {
+    skipCoverFlag = false;
+    splashMode = 'board';
+    cover.style.display = 'none';
+  } else {
+    splashMode = 'cover';
+    document.documentElement.classList.add('cover-mode');
+    pageOffset.inert = true; // 封面态下正文不参与焦点与读屏
+    window.scrollTo(0, 0);
+  }
 
   const onWheel = e => { if (splashMode === 'cover' && e.deltaY > 8) enterBoard(); };
   const onKey = e => {
@@ -768,14 +778,29 @@ if (!reduce) {
 }
 });
 
-// ── 左上角 MODUSENSUS 品牌链接：主页正文态点击 = 渐变回封面（阻止同页跳转）；
-//    其他页面点击保持默认跳转（到达首页即封面态） ──
+// ── 导航链接点击 ──
+// 左上角 MODUSENSUS 品牌：主页正文态点击 = 渐变回封面（阻止同页跳转）；其他页面保持默认跳转。
+// 导航 HOME：只落主页正文不落封面——同页（已在首页封面态）直接切入正文，
+// 跨页跳回首页时置旗标，到达后由 astro:page-load 跳过封面（保持滚动位置）。
 document.addEventListener('click', e => {
   if (!(e.target instanceof Element)) return;
-  if (!e.target.closest('a.site-nav-brand')) return;
-  const coverEl = document.getElementById('cover');
-  if (!coverEl || splashMode !== 'board' || !splashGoCover) return;
-  e.preventDefault();
-  splashGoCover();
+
+  const brand = e.target.closest('a.site-nav-brand');
+  if (brand) {
+    const coverEl = document.getElementById('cover');
+    if (!coverEl || splashMode !== 'board' || !splashGoCover) return;
+    e.preventDefault();
+    splashGoCover();
+    return;
+  }
+
+  const home = e.target.closest('a.site-nav-link[href="/"]');
+  if (!home) return;
+  if (window.location.pathname === '/') {
+    e.preventDefault();
+    if (splashMode === 'cover' && splashEnterBoard) splashEnterBoard();
+    return;
+  }
+  skipCoverFlag = true;
 });
 </script>
