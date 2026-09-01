@@ -167,12 +167,16 @@ let shutdownWatchAlive = true;  // WMI 监听子进程是否存活（面板显�
 let lastSent = '';
 const history = []; // 最近推送记录（本地控制台展示）
 const now = () => new Date().toLocaleTimeString('zh-CN', { hour12: false });
-async function push(text) {
+async function push(text, isOfflinePush = false) {
+  // 下线闸门：已下线后拒绝一切普通推送——挡住"点下线瞬间还在 await 窗口查询的竞态轮"，
+  // 防止下线状态被旧查询结果覆盖。只有下线标记推送本身（isOfflinePush）允许通过。
+  if (offline && !isOfflinePush) return;
   try {
     const r = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: STATUS_KEY, text }),
+      // offline 标记随推送入库：true = 下线（博客灯立即变灰），false/缺省 = 在线
+      body: JSON.stringify({ key: STATUS_KEY, text, offline: isOfflinePush }),
     });
     if (r.ok) {
       lastSent = text;
@@ -222,13 +226,13 @@ createServer(async (req, res) => {
     });
   }
   if (req.method === 'POST' && url.pathname === '/api/offline') {
-    // 下线：先推送下线状态文字（若有），再停掉一切推送，
-    // 博客状态灯靠 updated_at 过期约 6 分钟后自动变灰
+    // 下线：先推送下线状态文字（若有）+ offline 标记（博客灯立即变灰），再停掉一切推送。
+    // 即使没选下线文案也推一次空文字标记，确保灯立刻灰而不是等 6 分钟超时。
     let body = '';
     for await (const c of req) body += c;
     const { text } = body ? JSON.parse(body) : {};
     offlineText = (typeof text === 'string' && text.trim()) ? text.trim().slice(0, 30) : '';
-    if (offlineText) await push(offlineText);
+    await push(offlineText || '', true); // isOfflinePush=true：先于 offline=true 调用，闸门放行
     offline = true;
     mode = 'auto';
     manualText = '';

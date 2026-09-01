@@ -170,10 +170,12 @@
     const avatar = document.getElementById('sw-avatar');
     if (!btn || !textEl || !metaEl || !lampEl) return;
 
-    // 在线判定：updated_at 距今超过 6 分钟视为下线（watch-status 每 4 分钟强制推一次心跳）。
+    // 在线判定：offline 标记（watch-status 手动下线时推送）→ 立即灰；
+    // 否则 updated_at 距今超过 6 分钟视为下线（watch-status 每 4 分钟强制推一次心跳）。
     // 关机/睡眠/进程停止后无新推送，灯变灰。
     const ONLINE_WINDOW = 6 * 60 * 1000;
     const setLamp = (d) => {
+      if (d && d.offline === true) { lampEl.classList.add('off'); return; }
       const at = d && d.at ? new Date(d.at).getTime() : NaN;
       lampEl.classList.toggle('off', !Number.isFinite(at) || Date.now() - at > ONLINE_WINDOW);
     };

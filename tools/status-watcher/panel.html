@@ -142,7 +142,7 @@ async function poll() {
   const lamp = document.getElementById('lamp');
   lamp.classList.toggle('off', offline);
   document.getElementById('lampText').textContent = offline
-    ? '已下线 · 博客灯约 6 分钟后变灰'
+    ? '已下线 · 博客灯已变灰'
     : (s.mode === 'manual' ? '在线 · 手动状态' : '在线 · 自动同步');
   document.getElementById('meta').textContent = s.lastPushAt ? `上次推送 ${s.lastPushAt}` : '尚未推送';
   const sd = document.getElementById('shutdown');
