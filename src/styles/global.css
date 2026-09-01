@@ -142,6 +142,13 @@ img { max-width: 100%; display: block; }
   font-family: var(--font-mono); font-weight: 700;
   font-size: 12px; letter-spacing: 0.2em;
 }
+/* 状态小部件锚点（与头像按钮同高，桌面专用；组件 fixed 定位对齐此处） */
+.nav-status-slot {
+  height: 52px; margin-top: 24px;
+}
+@media (max-width: 899px) {
+  .nav-status-slot { display: none; }
+}
 .site-nav-links { display: flex; flex-direction: column; gap: 16px; }
 .site-nav-group { display: flex; flex-direction: column; gap: 16px; }
 .site-nav-group.separated {

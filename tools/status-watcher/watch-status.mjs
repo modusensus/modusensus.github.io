@@ -166,9 +166,12 @@ async function push(text) {
 }
 
 console.log('状态同步已启动，Ctrl+C 停止。检测间隔', POLL_MS / 1000, 's');
+let forceTick = 0;
 (async function loop() {
   const w = await queryWindow();
   const text = await composeStatus(w);
-  if (text && text !== lastSent) await push(text);
+  // 每 20 轮（10 分钟）强制推一次，覆盖外部写入的状态（如关机通知"睡觉中"）
+  forceTick++;
+  if (text && (forceTick % 20 === 0 || text !== lastSent)) await push(text);
   setTimeout(loop, POLL_MS);
 })();

@@ -76,6 +76,8 @@ const navGroups = [
   <!-- ── 左侧导航：mix-blend-difference，深浅背景自动反色 ── -->
   <nav class="site-nav" aria-label="Main navigation">
     <a href="/" class="site-nav-brand">MODUSENSUS</a>
+    <!-- 状态小部件锚点：头像按钮对齐此占位（组件 fixed 定位，避开 nav 的 mix-blend-difference） -->
+    <div class="nav-status-slot" id="nav-status-slot" aria-hidden="true"></div>
     <div class="site-nav-links">
       {navGroups.map((group, groupIndex) => (
         <div class:list={['site-nav-group', { separated: groupIndex > 0 }]}>
