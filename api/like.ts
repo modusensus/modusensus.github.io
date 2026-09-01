@@ -66,7 +66,7 @@ export default async function handler(req: Req, res: Res) {
       } else {
         if (already) {
           likes = await kv.decr(key);
-          if (likes < 0) likes = await kv.set(key, 0); // 防 DECR 溢出负数
+          if (likes < 0) { await kv.set(key, 0); likes = 0; } // 防 DECR 溢出负数
           res.setHeader('Set-Cookie', `modusensus_like_${slug}=1; Max-Age=0; Path=/; SameSite=Lax`);
         } else {
           likes = await read(); // 本浏览器没点过赞：不扣减
