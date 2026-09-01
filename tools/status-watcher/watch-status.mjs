@@ -14,18 +14,18 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const ENDPOINT = 'https://www.modusensus.space/api/status';
 const POLL_MS = 30_000;        // 检测间隔
 const IDLE_MIN = 10;           // 空闲超过多少分钟显示"离开"
-const MAP_WITH_APP = false;    // true: "在写代码 · VSCode"；false: "在写代码"
+const MAP_WITH_APP = false;    // true: "写代码中 · VSCode"；false: "写代码中"
 const APPS = [
-  { name: '在写代码',      match: [/^code$/i, /cursor/i, /webstorm/i, /pycharm/i] },
-  { name: '在敲命令行',    match: [/windows terminal/i, /powershell/i, /cmd\.exe/i, /mintty/i] },
-  { name: '在聊微信',      match: [/wechat/i, /微信/i] },
-  { name: '在听音乐',      match: [/spotify/i, /cloudmusic/i, /网易云/i, /foobar/i] },
-  { name: '在打游戏',      match: [/steam/i, /valorant/i, /league of legends/i, /原神/i, /genshin/i] },
-  { name: '在网上冲浪',    match: [/chrome/i, /msedge/i, /firefox/i, /bilibili/i, /youtube/i] },
-  { name: '在看文档',      match: [/word\.exe/i, /wps/i, /obsidian/i, /notion/i] },
-  { name: '在敲代码',      match: [/visual studio/i, /studio code/i, /vs code/i] },
+  { name: '写代码中',      match: [/^code$/i, /cursor/i, /webstorm/i, /pycharm/i] },
+  { name: '敲命令行中',    match: [/windows terminal/i, /powershell/i, /cmd\.exe/i, /mintty/i] },
+  { name: '聊微信中',      match: [/wechat/i, /微信/i] },
+  { name: '听音乐中',      match: [/spotify/i, /cloudmusic/i, /网易云/i, /foobar/i] },
+  { name: '打游戏中',      match: [/steam/i, /valorant/i, /league of legends/i, /原神/i, /genshin/i] },
+  { name: '网上冲浪中',    match: [/chrome/i, /msedge/i, /firefox/i, /bilibili/i, /youtube/i] },
+  { name: '看文档中',      match: [/word\.exe/i, /wps/i, /obsidian/i, /notion/i] },
+  { name: '敲代码中',      match: [/visual studio/i, /studio code/i, /vs code/i] },
 ];
-const fallback = (title, proc) => (title && proc ? `正在用 ${proc}` : '在摸鱼');
+const fallback = (title, proc) => (title && proc ? `用 ${proc}` : '摸鱼中');
 
 // ── 口令：环境变量 STATUS_KEY > tools/status-watcher/.env ──
 function loadKey() {
@@ -79,7 +79,7 @@ function queryWindow() {
 // ── 窗口 → 状态文字 ──
 function composeStatus(w) {
   if (!w) return null;
-  if (w.idle >= IDLE_MIN * 60) return '离开了一下';
+  if (w.idle >= IDLE_MIN * 60) return '离开中';
   const hit = APPS.find((a) =>
     a.match.some((re) => re.test(w.title) || re.test(w.proc)));
   if (hit) return MAP_WITH_APP && w.proc ? `${hit.name} · ${w.proc}` : hit.name;
