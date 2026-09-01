@@ -112,12 +112,35 @@ function queryNowPlaying() {
   });
 }
 
-// ── 状态合成：有歌在播放（不限前台窗口）→ 听音乐中 · 歌曲；否则按前台窗口 ──
+// ── 降级通道：网易云主窗口标题 "歌名 - 歌手"（SMTC 读不到时用） ──
+function queryCloudTitle() {
+  return new Promise((resolve) => {
+    execFile('powershell', ['-NoProfile', '-NonInteractive', '-Command',
+      '[Console]::OutputEncoding = [Text.Encoding]::UTF8; (Get-Process -Name cloudmusic -ErrorAction SilentlyContinue | Where-Object { $_.MainWindowTitle } | Select-Object -First 1).MainWindowTitle'],
+      { windowsHide: true, timeout: 10_000 }, (_err, stdout) => {
+        resolve(String(stdout || '').trim());
+      });
+  });
+}
+function parseCloudTitle(title) {
+  const parts = title.split(' - ').map((s) => s.trim()).filter(Boolean);
+  if (parts.length >= 2) return { title: parts[0], artist: parts[1] };
+  if (parts.length === 1) return { title: parts[0], artist: '' };
+  return null;
+}
+const songText = (t, a) => (a ? `听音乐中 · ${t} — ${a}` : `听音乐中 · ${t}`);
+
+// ── 状态合成：SMTC（所有播放器）→ 网易云窗口标题 → 前台窗口 ──
 async function composeStatus(w) {
   if (!w) return null;
   if (w.idle >= IDLE_MIN * 60) return '离开中';
   const np = await queryNowPlaying();
-  if (np.playing && np.title) return np.artist ? `听音乐中 · ${np.title} — ${np.artist}` : `听音乐中 · ${np.title}`;
+  if (np.playing && np.title) return songText(np.title, np.artist);
+  // SMTC 没读到（如网易云未注册媒体会话）→ 从网易云窗口标题解析。
+  // 局限：网易云暂停时标题仍留旧歌，可能短暂误报，实测后再说。
+  const ct = await queryCloudTitle();
+  const cloud = parseCloudTitle(ct);
+  if (cloud) return songText(cloud.title, cloud.artist);
   const hit = APPS.find((a) =>
     a.match.some((re) => re.test(w.title) || re.test(w.proc)));
   if (!hit) return fallback(w.title, w.proc);

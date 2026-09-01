@@ -105,6 +105,7 @@
   let cache = null;
   let cacheAt = 0;
   let docHandlers = null;
+  let pollTimer = null;
 
   function relTime(iso) {
     const t = new Date(iso).getTime();
@@ -119,8 +120,8 @@
     return new Date(t).toLocaleDateString('zh-CN');
   }
 
-  async function loadStatus() {
-    if (cache && Date.now() - cacheAt < 60000) return cache;
+  async function loadStatus(force = false) {
+    if (!force && cache && Date.now() - cacheAt < 60000) return cache;
     try {
       const r = await fetch('/api/status');
       const j = await r.json();
@@ -145,6 +146,18 @@
       metaEl.textContent = `更新于 ${relTime(data.at)}`;
       wrap.hidden = false;
     });
+
+    // 每 30 秒强制刷新（绕过 60s 缓存），状态变化即时可见，无需手动刷新页面
+    if (pollTimer) clearInterval(pollTimer);
+    pollTimer = setInterval(async () => {
+      const d = await loadStatus(true);
+      if (!d) return;
+      if (textEl.textContent !== d.text || metaEl.textContent !== `更新于 ${relTime(d.at)}`) {
+        textEl.textContent = d.text;
+        metaEl.textContent = `更新于 ${relTime(d.at)}`;
+        wrap.hidden = false;
+      }
+    }, 30_000);
 
     // 头像缺失（public/avatar.jpg 不存在）时移除 img，露出 "M" 字标
     if (avatar) avatar.addEventListener('error', () => avatar.remove(), { once: true });
