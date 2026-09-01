@@ -36,22 +36,6 @@
   .lamp.off { background:#9B958A; animation:none; }
   @keyframes breath { 0%,100% { opacity:.35; } 50% { opacity:1; } }
   .lamp-row { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--ink-soft); margin-bottom:10px; }
-  /* 音乐进度条：细线 + 流动渐变 + 随进度移动的点 */
-  .np-bar { margin-top:14px; }
-  .np-line { position:relative; height:3px; border-radius:2px; background:#E4DCCB; overflow:visible; }
-  .np-fill { position:absolute; left:0; top:0; bottom:0; border-radius:2px; width:0%;
-    background:linear-gradient(90deg, rgba(194,94,27,.35), var(--accent));
-    transition:width .6s linear; }
-  .np-fill::after { content:''; position:absolute; inset:0; border-radius:2px;
-    background:linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
-    background-size:200% 100%; animation:flow 2.2s linear infinite; }
-  @keyframes flow { from { background-position:200% 0; } to { background-position:-200% 0; } }
-  .np-dot { position:absolute; top:50%; left:0%; width:9px; height:9px; border-radius:50%;
-    background:var(--accent); transform:translate(-50%,-50%);
-    box-shadow:0 0 0 3px rgba(194,94,27,.18); transition:left .6s linear;
-    animation:dotpulse 1.6s ease-in-out infinite; }
-  @keyframes dotpulse { 0%,100% { box-shadow:0 0 0 2px rgba(194,94,27,.12); } 50% { box-shadow:0 0 0 5px rgba(194,94,27,.26); } }
-  .np-meta { margin-top:8px; font-size:11px; color:var(--ink-soft); display:flex; justify-content:space-between; }
   .history { font-size:12px; color:var(--ink-soft); line-height:1.9; }
   .history span { color:var(--ink); }
 </style>
@@ -65,10 +49,6 @@
   <div class="card">
     <div class="lamp-row"><span class="lamp" id="lamp"></span><span id="lampText">在线 · 自动同步</span></div>
     <div class="status-text" id="status">加载中…</div>
-    <div class="np-bar" id="npBar" hidden>
-      <div class="np-line"><span class="np-fill" id="npFill"></span><span class="np-dot" id="npDot"></span></div>
-      <div class="np-meta"><span id="npCur">0:00</span><span id="npDur">0:00</span></div>
-    </div>
     <div class="meta" id="meta">—</div>
   </div>
   <div class="grid" id="quick"></div>
@@ -109,7 +89,6 @@ QUICK.forEach((t) => {
   grid.appendChild(b);
 });
 let offline = false;
-const fmt = (s) => { s = Math.max(0, Math.floor(s)); return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`; };
 async function setState(text) {
   await fetch('/api/set', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
   poll();
@@ -143,18 +122,6 @@ document.getElementById('toggleOffline').onclick = async () => {
   }
   poll();
 };
-// 进度条：用服务端缓存的 pos 起算，前端每秒推进，过渡动画让点和线平滑移动。
-// 网易云模拟模式（simulated）：DB 没有实时 pos，曲目没变就不重置，从 0 持续推进
-let npPos = 0, npAt = 0, npDur = 0, npTitle = '';
-function tickProgress() {
-  if (!npDur) return;
-  const p = Math.min(npPos + (Date.now() - npAt) / 1000, npDur);
-  const ratio = (p / npDur) * 100;
-  document.getElementById('npFill').style.width = ratio + '%';
-  document.getElementById('npDot').style.left = ratio + '%';
-  document.getElementById('npCur').textContent = fmt(p);
-}
-setInterval(tickProgress, 1000);
 async function poll() {
   let s;
   try {
@@ -178,22 +145,6 @@ async function poll() {
     ? '已下线 · 博客灯约 6 分钟后变灰'
     : (s.mode === 'manual' ? '在线 · 手动状态' : '在线 · 自动同步');
   document.getElementById('meta').textContent = s.lastPushAt ? `上次推送 ${s.lastPushAt}` : '尚未推送';
-  // 进度条：有播放且知道时长才显示；模拟模式下曲目没变不重置进度
-  const np = s.nowPlaying;
-  if (np && np.dur > 0) {
-    if (np.simulated && np.title === npTitle) {
-      // 同一首歌继续走本地推进
-    } else {
-      npPos = np.pos; npAt = Date.now(); npTitle = np.title;
-    }
-    npDur = np.dur;
-    document.getElementById('npBar').hidden = false;
-    document.getElementById('npDur').textContent = fmt(np.dur);
-    tickProgress();
-  } else {
-    npDur = 0;
-    document.getElementById('npBar').hidden = true;
-  }
   const sd = document.getElementById('shutdown');
   sd.innerHTML = `<span class="dot${s.shutdownWatch ? '' : ' down'}"></span>关机监听 ${s.shutdownWatch ? '正常' : '掉线'}`;
   document.getElementById('history').innerHTML = (s.history || []).map((h) => `${h.time} <span>${h.text}</span>`).join('<br>');
