@@ -7,6 +7,7 @@ import { execFile, spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { createServer } from 'node:http';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 
@@ -128,10 +129,8 @@ function parseCloudTitle(title) {
 }
 const songText = (t, a) => (a ? `听音乐中 · ${t} — ${a}` : `听音乐中 · ${t}`);
 
-// ── 状态合成：SMTC（所有播放器）→ 网易云窗口标题 → 前台窗口 ──
-async function composeStatus(w) {
-  if (!w) return null;
-  if (w.idle >= IDLE_MIN * 60) return '离开中';
+// ── 音乐合成：SMTC（所有播放器）→ 网易云窗口标题；与窗口检测无关，自动/手动模式共用 ──
+async function composeMusic() {
   const np = await queryNowPlaying();
   if (np.playing && np.title) return songText(np.title, np.artist);
   // SMTC 没读到（如网易云未注册媒体会话）→ 从网易云窗口标题解析。
@@ -139,14 +138,33 @@ async function composeStatus(w) {
   const ct = await queryCloudTitle();
   const cloud = parseCloudTitle(ct);
   if (cloud) return songText(cloud.title, cloud.artist);
+  return null; // 没在放歌
+}
+
+// ── 状态合成：SMTC（所有播放器）→ 网易云窗口标题 → 前台窗口 ──
+async function composeStatus(w) {
+  if (!w) return null;
+  if (w.idle >= IDLE_MIN * 60) return '离开中';
+  const music = await composeMusic();
+  if (music) return music;
   const hit = APPS.find((a) =>
     a.match.some((re) => re.test(w.title) || re.test(w.proc)));
   if (!hit) return fallback(w.title, w.proc);
   return MAP_WITH_APP && w.proc ? `${hit.name} · ${w.proc}` : hit.name;
 }
 
+// ── 本地控制台（127.0.0.1:8787）：手动切换优先于自动检测 ──
+// 手动设置后进入 manual 锁定，不再被窗口检测覆盖；点"恢复自动同步"回到 auto。
+const PANEL_PORT = 8787;
+let mode = 'auto';              // 'auto' | 'manual'
+let manualText = '';
+let manualMusic = false;        // 手动"听音乐中"：持续刷新歌名，不随窗口检测覆盖
+let shutdownWatchAlive = true;  // WMI 监听子进程是否存活（面板显示）
+
 // ── 推送到博客接口（仅状态变化时发送）──
 let lastSent = '';
+const history = []; // 最近推送记录（本地控制台展示）
+const now = () => new Date().toLocaleTimeString('zh-CN', { hour12: false });
 async function push(text) {
   try {
     const r = await fetch(ENDPOINT, {
@@ -156,7 +174,9 @@ async function push(text) {
     });
     if (r.ok) {
       lastSent = text;
-      console.log(new Date().toLocaleTimeString('zh-CN', { hour12: false }), '→', text);
+      history.unshift({ time: now(), text });
+      if (history.length > 20) history.pop();
+      console.log(now(), '→', text);
     } else {
       console.error('推送失败:', r.status);
     }
@@ -174,18 +194,80 @@ Write-Output 'SHUTDOWN'
 const watchShutdown = spawn('powershell', ['-NoProfile', '-NonInteractive', '-Command', SHUTDOWN_WATCH],
   { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] });
 watchShutdown.stdout.on('data', () => {
-  console.log(new Date().toLocaleTimeString('zh-CN', { hour12: false }), '→', '检测到关机，推送睡觉中');
+  console.log(now(), '→', '检测到关机，推送睡觉中');
   push('睡觉中');
+});
+watchShutdown.on('exit', () => { shutdownWatchAlive = false; }); // WMI 监听进程退出 → 控制台显示掉线
+
+// ── 本地控制台 HTTP 服务：GET / 面板页；GET /api/state 状态；POST /api/set 手动切换；POST /api/resume 恢复自动 ──
+const panelHtml = readFileSync(path.join(here, 'panel.html'), 'utf8');
+createServer(async (req, res) => {
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const send = (code, body, type = 'application/json') => {
+    res.writeHead(code, { 'Content-Type': type, 'Cache-Control': 'no-store' });
+    res.end(typeof body === 'string' ? body : JSON.stringify(body));
+  };
+  if (req.method === 'GET' && url.pathname === '/') return send(200, panelHtml, 'text/html; charset=utf-8');
+  if (req.method === 'GET' && url.pathname === '/api/state') {
+    return send(200, {
+      mode,
+      text: history[0]?.text || '',
+      lastPushAt: history[0]?.time || null,
+      history,
+      shutdownWatch: shutdownWatchAlive,
+    });
+  }
+  if (req.method === 'POST' && url.pathname === '/api/set') {
+    let body = '';
+    for await (const c of req) body += c;
+    try {
+      const { text } = JSON.parse(body);
+      if (!text || text.length > 30) return send(400, { error: '状态文字无效（1-30 字符）' });
+      mode = 'manual';
+      manualText = text;
+      manualMusic = text === '听音乐中';
+      if (manualMusic) {
+        // 手动听音乐：立即抓当前歌名拼好再推，之后每轮自动刷新
+        const music = await composeMusic();
+        await push(music || text);
+        return send(200, { ok: true, text: music || text });
+      }
+      await push(text);
+      return send(200, { ok: true, text });
+    } catch { return send(400, { error: '请求体解析失败' }); }
+  }
+  if (req.method === 'POST' && url.pathname === '/api/resume') {
+    mode = 'auto';
+    manualText = '';
+    manualMusic = false;
+    lastSent = ''; // 清空后下一轮立即推送真实窗口状态
+    return send(200, { ok: true });
+  }
+  send(404, { error: 'not found' });
+}).listen(PANEL_PORT, '127.0.0.1', () => {
+  console.log(`本地控制台：http://127.0.0.1:${PANEL_PORT}（手动切换状态；Ctrl+C 退出）`);
 });
 
 console.log('状态同步已启动，Ctrl+C 停止。检测间隔', POLL_MS / 1000, 's');
 let forceTick = 0;
 (async function loop() {
-  const w = await queryWindow();
-  const text = await composeStatus(w);
-  // 每 8 轮（4 分钟）强制推一次：既覆盖外部写入的状态（如关机通知"睡觉中"），
-  // 也作为"在线心跳"刷新 updated_at，供前端状态灯判定在线/离线
-  forceTick++;
-  if (text && (forceTick % FORCE_PUSH_EVERY === 0 || text !== lastSent)) await push(text);
+  if (mode === 'auto') {
+    const w = await queryWindow();
+    const text = await composeStatus(w);
+    // 每 8 轮（4 分钟）强制推一次：既覆盖外部写入的状态（如关机通知"睡觉中"），
+    // 也作为"在线心跳"刷新 updated_at，供前端状态灯判定在线/离线
+    forceTick++;
+    if (text && (forceTick % FORCE_PUSH_EVERY === 0 || text !== lastSent)) await push(text);
+  } else if (manualText) {
+    // 手动模式：不检测窗口，仅按心跳节奏重推手动状态，维持在线灯。
+    // 手动"听音乐中"例外：每轮刷新歌名/歌手，歌变了立即推（音乐与窗口无关）
+    forceTick++;
+    if (manualMusic) {
+      const music = await composeMusic();
+      if (music && (forceTick % FORCE_PUSH_EVERY === 0 || music !== lastSent)) await push(music);
+    } else if (forceTick % FORCE_PUSH_EVERY === 0 && manualText !== lastSent) {
+      await push(manualText);
+    }
+  }
   setTimeout(loop, POLL_MS);
 })();

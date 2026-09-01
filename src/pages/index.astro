@@ -706,10 +706,15 @@ if (cover && pageOffset) {
   };
 }
 
-// ── 站点统计：运行天数用实时时钟计算，构建值仅作兜底 ──
+// ── 站点统计：运行天数按本地时区从上线日 00:00 起算，每分钟重算一次（跨天自动 +1，不用刷新）──
 const daysEl = document.getElementById('stat-days');
 if (daysEl) {
-  daysEl.textContent = String(Math.max(1, Math.floor((Date.now() - new Date('2026-07-14').getTime()) / 86400000)));
+  const siteStart = new Date(`${SITE_EST}T00:00:00`).getTime();
+  const updateDays = () => {
+    daysEl.textContent = String(Math.max(1, Math.floor((Date.now() - siteStart) / 86400000)));
+  };
+  updateDays();
+  setInterval(updateDays, 60000);
 }
 
 // ── 滚动显现：分隔线画出、时间轴生长、区块上浮错峰 ──

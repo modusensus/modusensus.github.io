@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>状态控制台 · MODUSENSUS</title>
+<style>
+  :root { --paper:#F2EDE2; --paper-raise:#F7F3EA; --ink:#221E18; --ink-soft:#55504A; --accent:#C25E1B; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--paper); color:var(--ink); font-family:ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif; min-height:100vh; display:flex; justify-content:center; padding:32px 16px; }
+  .panel { width:100%; max-width:520px; }
+  header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:20px; }
+  h1 { font-size:15px; letter-spacing:.14em; font-weight:700; }
+  .badge { font-size:11px; padding:3px 10px; border:1px solid var(--ink-soft); border-radius:999px; color:var(--ink-soft); }
+  .badge.manual { border-color:var(--accent); color:var(--accent); }
+  .card { background:var(--paper-raise); border:1px solid #E4DCCB; border-radius:12px; padding:18px; margin-bottom:14px; }
+  .status-text { font-size:26px; font-weight:700; letter-spacing:.02em; }
+  .status-text.locked { color:var(--accent); }
+  .meta { margin-top:8px; font-size:12px; color:var(--ink-soft); }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .btn { background:var(--paper-raise); border:1px solid #E4DCCB; border-radius:8px; padding:12px 6px; font-size:13px; color:var(--ink); cursor:pointer; font-family:inherit; }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .danger { border:1px solid var(--accent); color:var(--accent); background:transparent; width:100%; padding:12px; font-size:13px; border-radius:8px; cursor:pointer; font-family:inherit; }
+  .danger:hover { background:var(--accent); color:var(--paper); }
+  .row { display:flex; gap:8px; }
+  input { flex:1; background:var(--paper-raise); border:1px solid #E4DCCB; border-radius:8px; padding:10px 12px; font-size:14px; color:var(--ink); font-family:inherit; outline:none; }
+  input:focus { border-color:var(--accent); }
+  .set { background:var(--ink); color:var(--paper); border:none; border-radius:8px; padding:10px 18px; font-size:14px; cursor:pointer; font-family:inherit; }
+  .foot { font-size:11px; color:var(--ink-soft); display:flex; justify-content:space-between; }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%; background:#7FA36A; margin-right:5px; vertical-align:1px; }
+  .dot.down { background:#B3503A; }
+  .history { font-size:12px; color:var(--ink-soft); line-height:1.9; }
+  .history span { color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="panel">
+  <header>
+    <h1>MODUSENSUS · 状态控制台</h1>
+    <div class="badge" id="badge">自动同步中</div>
+  </header>
+  <div class="card">
+    <div class="status-text" id="status">加载中…</div>
+    <div class="meta" id="meta">—</div>
+  </div>
+  <div class="grid" id="quick"></div>
+  <div class="row">
+    <input id="custom" placeholder="自定义状态，如：做晚饭中" maxlength="30">
+    <button class="set" id="setCustom">设置</button>
+  </div>
+  <div style="margin-top:14px"><button class="danger" id="resume" hidden>恢复自动同步</button></div>
+  <div class="card" style="margin-top:14px">
+    <div class="history" id="history"></div>
+  </div>
+  <div class="foot">
+    <span id="shutdown"><span class="dot"></span>关机监听</span>
+    <span>心跳 · 每 4 分钟</span>
+  </div>
+</div>
+<script>
+const QUICK = ['写代码中','敲代码中','聊微信中','听音乐中','打游戏中','网上冲浪中','看文档中','离开中','睡觉中','摸鱼中'];
+const grid = document.getElementById('quick');
+QUICK.forEach((t) => {
+  const b = document.createElement('button');
+  b.className = 'btn'; b.textContent = t;
+  b.onclick = () => setState(t);
+  grid.appendChild(b);
+});
+async function setState(text) {
+  await fetch('/api/set', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text }) });
+  poll();
+}
+document.getElementById('setCustom').onclick = () => {
+  const v = document.getElementById('custom').value.trim();
+  if (v) setState(v);
+};
+document.getElementById('resume').onclick = async () => {
+  await fetch('/api/resume', { method: 'POST' });
+  poll();
+};
+async function poll() {
+  const s = await (await fetch('/api/state')).json();
+  const el = document.getElementById('status');
+  el.textContent = s.text || '—';
+  el.classList.toggle('locked', s.mode === 'manual');
+  const badge = document.getElementById('badge');
+  badge.textContent = s.mode === 'manual' ? '手动切换中' : '自动同步中';
+  badge.classList.toggle('manual', s.mode === 'manual');
+  document.getElementById('resume').hidden = s.mode !== 'manual';
+  document.getElementById('meta').textContent = s.lastPushAt ? `上次推送 ${s.lastPushAt}` : '尚未推送';
+  const sd = document.getElementById('shutdown');
+  sd.innerHTML = `<span class="dot${s.shutdownWatch ? '' : ' down'}"></span>关机监听 ${s.shutdownWatch ? '正常' : '掉线'}`;
+  document.getElementById('history').innerHTML = (s.history || []).map((h) => `${h.time} <span>${h.text}</span>`).join('<br>');
+}
+setInterval(poll, 3000);
+poll();
+</script>
+</body>
+</html>
