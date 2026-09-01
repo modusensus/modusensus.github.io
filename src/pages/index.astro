@@ -486,7 +486,7 @@ function fmtYear(date: Date) {
 /* 01 — 站点统计（左）+ 02 — 分区（右）：两列并排 */
 .stats-row {
   display: grid; grid-template-columns: 1fr 1fr;
-  gap: 72px; align-items: start;
+  gap: 72px; align-items: center;
   margin-bottom: 64px;
 }
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
@@ -583,7 +583,7 @@ html.js .timeline.tl-draw::before { transform: scaleY(1); }
 
 @media (max-width: 1024px) {
   .home-grid { grid-template-columns: 1fr; gap: 48px; }
-  .stats-row { grid-template-columns: 1fr; gap: 48px; }
+  .stats-row { grid-template-columns: 1fr; gap: 48px; align-items: start; }
 }
 @media (max-width: 899px) {
   .hero-avatar { width: 92px; height: 92px; }
