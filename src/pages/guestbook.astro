@@ -22,7 +22,7 @@ const walineReady = Boolean(waline.serverURL);
 
       <!-- 上方：全站留言便签墙（文章评论 + 留言板留言聚合） -->
       <div class="gb-wall" id="gb-wall" hidden>
-        <div class="mono-label gb-wall-label">WALL · 来自全站的便签</div>
+        <div class="mono-label gb-wall-label">WALL · 留言板便签</div>
         <div class="gb-note-wall" id="gb-note-wall"></div>
       </div>
 
@@ -57,15 +57,18 @@ const walineReady = Boolean(waline.serverURL);
   let walineInstance = null;
 
   function mountWaline() {
+    // ViewTransitions 客户端路由复用同一 document：本页监听器在切页后依然存活。
+    // 不在留言板页就立即返回，防止它跑到文章页把评论区误初始化成 /guestbook 路径
+    if (location.pathname.replace(/\/$/, '') !== '/guestbook') return;
     if (walineInstance) {
       try { walineInstance.destroy(); } catch { /* 已销毁 */ }
       walineInstance = null;
       // destroy 会清空 .waline 内部 DOM；若不清除挂载标志，下次 mount 会被
       // dataset.walineMounted 挡住而跳过重新 init，评论区就永久空白（登录后必现）
-      const prev = document.querySelector('.waline');
+      const prev = document.querySelector('.waline-shell .waline');
       if (prev) delete prev.dataset.walineMounted;
     }
-    const mount = document.querySelector('.waline');
+    const mount = document.querySelector('.waline-shell .waline');
     if (mount && !mount.dataset.walineMounted) {
       mount.dataset.walineMounted = 'true'; // 同一 DOM 只挂载一次，防止重复 init
       walineInstance = init({

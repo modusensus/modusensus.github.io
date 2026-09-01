@@ -237,7 +237,14 @@ const tocItems = headings.filter(h => h.depth === 2);
       if (prev) delete prev.dataset.walineMounted;
     }
     const mount = document.querySelector('.waline[data-waline-path]');
-    if (!mount || mount.dataset.walineMounted) return;
+    if (!mount) return;
+    // 防御：挂载标志若是别的页面脚本留下的（挂载路径与当前页不符），清掉重新挂，
+    // 避免文章评论区被错误初始化成其他路径（如留言板的 /guestbook）
+    const mountPath = (mount.dataset.walinePath || '').replace(/\/$/, '');
+    if (mount.dataset.walineMounted && mountPath && mountPath !== location.pathname.replace(/\/$/, '')) {
+      delete mount.dataset.walineMounted;
+    }
+    if (mount.dataset.walineMounted) return;
     mount.dataset.walineMounted = 'true'; // 同一 DOM 只挂载一次，防止重复 init
     walineInstance = init({
       el: mount,
