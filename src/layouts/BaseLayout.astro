@@ -155,7 +155,7 @@ const navGroups = [
         </nav>
       </div>
       <div class="container site-footer-bottom">
-        <span class="site-online" id="site-online" hidden><i class="online-dot" aria-hidden="true"></i><span id="site-visits" hidden></span><span id="visits-sep" hidden> · </span><span id="online-count">–</span> 人在线</span>
+        <span class="site-online" id="site-online" hidden><i class="online-dot" aria-hidden="true"></i><span id="site-visits" hidden>浏览 0</span><span id="visits-sep" hidden> · </span><span id="online-count">–</span> 人在线</span>
         <span class="site-footer-right">
           <span>VOL. 4 — 2026 EDITION</span>
           <a class="site-footer-icp" href="https://icp.gov.moe/?keyword=20260447" target="_blank" rel="noopener noreferrer">萌ICP备20260447号</a>
@@ -319,9 +319,11 @@ const navGroups = [
           const countEl = document.getElementById('online-count');
           if (countEl) countEl.textContent = String(data.online);
           const visitsEl = document.getElementById('site-visits');
-          if (visitsEl && typeof data.visits === 'number') {
-            visitsEl.textContent = data.visits.toLocaleString('en-US');
+          const sepEl = document.getElementById('visits-sep');
+          if (visitsEl && sepEl && typeof data.visits === 'number') {
+            visitsEl.textContent = `浏览 ${data.visits.toLocaleString('en-US')}`;
             visitsEl.hidden = false;
+            sepEl.hidden = false;
           }
           wrap.hidden = false;
         })
