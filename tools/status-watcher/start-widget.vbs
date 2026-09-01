@@ -12,4 +12,4 @@ Else
 End If
 WScript.Sleep 3000 ' wait for watch-status to finish starting
 Set sh = CreateObject("WScript.Shell")
-sh.Run """" & edge & """ --app=http://127.0.0.1:8787 --window-size=400,620 --user-data-dir=""D:\modusensus.github.io\tools\status-watcher\.edge-widget""", 0, False
+sh.Run """" & edge & """ --app=http://127.0.0.1:8787 --window-size=400,620 --user-data-dir=""D:\modusensus.github.io\tools\status-watcher\.edge-widget""", 1, False
