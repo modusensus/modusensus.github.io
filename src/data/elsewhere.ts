@@ -1,4 +1,4 @@
-export type ElsewhereKind = 'friends' | 'reading';
+export type ElsewhereKind = 'friends' | 'reading' | 'community';
 
 export interface ElsewhereLink {
   name: string;
@@ -78,5 +78,11 @@ export const elsewhereLinks: ElsewhereLink[] = [
     url: 'https://developer.mozilla.org/zh-CN/',
     description: 'Web 开发权威参考，HTML / CSS / JavaScript 的第一手册。',
     kind: 'reading',
+  },
+  {
+    name: '博客大平台',
+    url: 'https://bo.ke/',
+    description: '中文博客聚合与收录平台，独立博客都在这里互相发现。',
+    kind: 'community',
   },
 ];
