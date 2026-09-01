@@ -159,6 +159,7 @@ const PANEL_PORT = 8787;
 let mode = 'auto';              // 'auto' | 'manual'
 let manualText = '';
 let manualMusic = false;        // 手动"听音乐中"：持续刷新歌名，不随窗口检测覆盖
+let offline = false;            // 下线：暂停一切推送（含心跳），博客灯约 6 分钟后自动变灰
 let shutdownWatchAlive = true;  // WMI 监听子进程是否存活（面板显示）
 
 // ── 推送到博客接口（仅状态变化时发送）──
@@ -211,11 +212,27 @@ createServer(async (req, res) => {
   if (req.method === 'GET' && url.pathname === '/api/state') {
     return send(200, {
       mode,
+      offline,
       text: history[0]?.text || '',
       lastPushAt: history[0]?.time || null,
       history,
       shutdownWatch: shutdownWatchAlive,
     });
+  }
+  if (req.method === 'POST' && url.pathname === '/api/offline') {
+    // 下线：停掉一切推送，博客状态灯靠 updated_at 过期自动变灰
+    offline = true;
+    mode = 'auto';
+    manualText = '';
+    manualMusic = false;
+    lastSent = '';
+    return send(200, { ok: true, offline: true });
+  }
+  if (req.method === 'POST' && url.pathname === '/api/online') {
+    // 上线：恢复自动同步，下一轮立即推送真实窗口状态 → 灯变绿
+    offline = false;
+    lastSent = '';
+    return send(200, { ok: true, offline: false });
   }
   if (req.method === 'POST' && url.pathname === '/api/set') {
     let body = '';
@@ -251,7 +268,9 @@ createServer(async (req, res) => {
 console.log('状态同步已启动，Ctrl+C 停止。检测间隔', POLL_MS / 1000, 's');
 let forceTick = 0;
 (async function loop() {
-  if (mode === 'auto') {
+  if (offline) {
+    // 下线模式：不检测不推送，让博客 updated_at 过期 → 状态灯自动变灰
+  } else if (mode === 'auto') {
     const w = await queryWindow();
     const text = await composeStatus(w);
     // 每 8 轮（4 分钟）强制推一次：既覆盖外部写入的状态（如关机通知"睡觉中"），

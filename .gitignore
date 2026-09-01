@@ -7,6 +7,7 @@ Thumbs.db
 .claude/
 .env*
 .vercel/
+tools/status-watcher/.edge-widget/
 头像.jpg
 头图.jpg
 .vercel
