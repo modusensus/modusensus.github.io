@@ -144,24 +144,60 @@ const tocItems = headings.filter(h => h.depth === 2);
   document.addEventListener('scroll', onScroll, { passive: true });
   onScroll();
 
-  // ── 点赞（localStorage 本地记录） ──
+  // ── 点赞（全站累计：Upstash KV + cookie 去重；API 不可用时退回本地计数） ──
   var likeBtn = document.getElementById('like-btn');
   if (likeBtn) {
     var slug = likeBtn.dataset.slug || '';
     var key = 'modusensus_like_' + slug;
-    var state = JSON.parse(localStorage.getItem(key) || '{"liked":false,"count":0}');
+    var state = JSON.parse(localStorage.getItem(key) || '{"liked":false}');
     var countEl = document.getElementById('like-count');
+    var count = 0;
+    var serverLive = false;
 
     var renderLike = function () {
-      countEl.textContent = String(state.count);
+      countEl.textContent = String(count);
       likeBtn.classList.toggle('liked', state.liked);
     };
 
+    var applyCount = function (n) {
+      count = Math.max(0, Math.round(Number(n) || 0));
+      renderLike();
+    };
+
+    fetch('/api/like?slug=' + encodeURIComponent(slug), { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && typeof d.likes === 'number') {
+          serverLive = true;
+          applyCount(d.likes);
+        }
+      })
+      .catch(function () { /* API 不可用：保持本地计数 */ });
+
     likeBtn.addEventListener('click', function () {
-      state.liked = !state.liked;
-      state.count += state.liked ? 1 : -1;
+      var next = !state.liked;
+      var delta = next ? 1 : -1;
+      state.liked = next;
+      count += delta; // 乐观更新，等服务端确认
       localStorage.setItem(key, JSON.stringify(state));
       renderLike();
+      if (!serverLive) return; // API 不可用时纯本地
+      fetch('/api/like', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug: slug, liked: next }),
+      })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (d) {
+          if (d && typeof d.likes === 'number') applyCount(d.likes);
+        })
+        .catch(function () {
+          // 同步失败：回滚本地状态与计数
+          state.liked = !next;
+          count -= delta;
+          localStorage.setItem(key, JSON.stringify(state));
+          renderLike();
+        });
     });
 
     renderLike();
