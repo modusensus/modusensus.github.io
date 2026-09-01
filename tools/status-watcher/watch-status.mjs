@@ -95,7 +95,8 @@ try {
   }
   if (-not $playing) { '{"playing":false}'; exit }
   $props = Await ($playing.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
-  [PSCustomObject]@{ playing = $true; title = $props.Title; artist = $props.Artist } | ConvertTo-Json -Compress
+  $tl = Await ($playing.GetTimelinePropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionTimelineProperties])
+  [PSCustomObject]@{ playing = $true; title = $props.Title; artist = $props.Artist; pos = [math]::Round($tl.Position.TotalSeconds, 1); dur = [math]::Round($tl.EndTime.TotalSeconds, 1) } | ConvertTo-Json -Compress
 } catch { '{}' }
 `;
 
@@ -105,8 +106,8 @@ function queryNowPlaying() {
       { windowsHide: true, timeout: 10_000 }, (_err, stdout) => {
         try {
           const j = JSON.parse(stdout);
-          resolve({ playing: !!j.playing, title: String(j.title || '').trim(), artist: String(j.artist || '').trim() });
-        } catch { resolve({ playing: false, title: '', artist: '' }); }
+          resolve({ playing: !!j.playing, title: String(j.title || '').trim(), artist: String(j.artist || '').trim(), pos: Number(j.pos) || 0, dur: Number(j.dur) || 0 });
+        } catch { resolve({ playing: false, title: '', artist: '', pos: 0, dur: 0 }); }
       });
   });
 }
@@ -130,15 +131,23 @@ function parseCloudTitle(title) {
 const songText = (t, a) => (a ? `听音乐中 · ${t} — ${a}` : `听音乐中 · ${t}`);
 
 // ── 音乐合成：SMTC（所有播放器）→ 网易云窗口标题；与窗口检测无关，自动/手动模式共用 ──
+let nowPlaying = null; // 最近一次播放信息（面板进度条用）：{title, artist, pos, dur, at}
 async function composeMusic() {
   const np = await queryNowPlaying();
-  if (np.playing && np.title) return songText(np.title, np.artist);
+  if (np.playing && np.title) {
+    nowPlaying = { title: np.title, artist: np.artist, pos: np.pos, dur: np.dur, at: Date.now() };
+    return songText(np.title, np.artist);
+  }
   // SMTC 没读到（如网易云未注册媒体会话）→ 从网易云窗口标题解析。
   // 局限：网易云暂停时标题仍留旧歌，可能短暂误报，实测后再说。
   const ct = await queryCloudTitle();
   const cloud = parseCloudTitle(ct);
-  if (cloud) return songText(cloud.title, cloud.artist);
-  return null; // 没在放歌
+  if (cloud) {
+    nowPlaying = { title: cloud.title, artist: cloud.artist, pos: 0, dur: 0, at: Date.now() };
+    return songText(cloud.title, cloud.artist);
+  }
+  nowPlaying = null; // 没在放歌
+  return null;
 }
 
 // ── 状态合成：SMTC（所有播放器）→ 网易云窗口标题 → 前台窗口 ──
@@ -160,6 +169,7 @@ let mode = 'auto';              // 'auto' | 'manual'
 let manualText = '';
 let manualMusic = false;        // 手动"听音乐中"：持续刷新歌名，不随窗口检测覆盖
 let offline = false;            // 下线：暂停一切推送（含心跳），博客灯约 6 分钟后自动变灰
+let offlineText = '';           // 下线时推送的状态文字（睡觉中/离开中/摸鱼中…），之后不再推送
 let shutdownWatchAlive = true;  // WMI 监听子进程是否存活（面板显示）
 
 // ── 推送到博客接口（仅状态变化时发送）──
@@ -213,24 +223,33 @@ createServer(async (req, res) => {
     return send(200, {
       mode,
       offline,
+      offlineText,
       text: history[0]?.text || '',
       lastPushAt: history[0]?.time || null,
       history,
+      nowPlaying,
       shutdownWatch: shutdownWatchAlive,
     });
   }
   if (req.method === 'POST' && url.pathname === '/api/offline') {
-    // 下线：停掉一切推送，博客状态灯靠 updated_at 过期自动变灰
+    // 下线：先推送下线状态文字（若有），再停掉一切推送，
+    // 博客状态灯靠 updated_at 过期约 6 分钟后自动变灰
+    let body = '';
+    for await (const c of req) body += c;
+    const { text } = body ? JSON.parse(body) : {};
+    offlineText = (typeof text === 'string' && text.trim()) ? text.trim().slice(0, 30) : '';
+    if (offlineText) await push(offlineText);
     offline = true;
     mode = 'auto';
     manualText = '';
     manualMusic = false;
     lastSent = '';
-    return send(200, { ok: true, offline: true });
+    return send(200, { ok: true, offline: true, text: offlineText || null });
   }
   if (req.method === 'POST' && url.pathname === '/api/online') {
     // 上线：恢复自动同步，下一轮立即推送真实窗口状态 → 灯变绿
     offline = false;
+    offlineText = '';
     lastSent = '';
     return send(200, { ok: true, offline: false });
   }
