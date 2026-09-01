@@ -169,11 +169,13 @@ img { max-width: 100%; display: block; }
   opacity: 0.45; line-height: 1.8;
 }
 
-/* 导航底部：调色盘/主题切换按钮 + 版本号 */
+/* 导航底部：状态头像 + 主题/调色盘按钮 + 版本号，同轴居中排列 */
 .site-nav-bottom {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
 }
-.nav-actions { display: flex; gap: 10px; }
+.nav-actions {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
 .theme-toggle {
   display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 30px;
