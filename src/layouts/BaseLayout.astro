@@ -155,7 +155,7 @@ const navGroups = [
         </nav>
       </div>
       <div class="container site-footer-bottom">
-        <span class="site-online" id="site-online" hidden><i class="online-dot" aria-hidden="true"></i><span id="online-count">–</span> 人正在浏览</span>
+        <span class="site-online" id="site-online" hidden><i class="online-dot" aria-hidden="true"></i><span id="site-visits" hidden></span><span id="visits-sep" hidden> · </span><span id="online-count">–</span> 人在线</span>
         <span class="site-footer-right">
           <span>VOL. 4 — 2026 EDITION</span>
           <a class="site-footer-icp" href="https://icp.gov.moe/?keyword=20260447" target="_blank" rel="noopener noreferrer">萌ICP备20260447号</a>
@@ -301,22 +301,28 @@ const navGroups = [
       syncActive();
     }
 
-    // ── 在线人数心跳：POST /api/online 上报随机会话标识，服务端以 65 秒窗口计在线数 ──
+    // ── 站点统计：进入页面/切换路由上报 view（总浏览 +1 并刷新在线心跳）；
+    //    停留期间每 25 秒上报 beat（只刷新心跳）。服务端 Upstash KV 以 65 秒窗口计在线数 ──
     let onlineBeatTimer = null; // 模块级单例：打包脚本一次完整加载只实例化一次，跨路由切换不重复
 
-    function beatOnline(sid) {
+    function beatOnline(sid, type) {
       const wrap = document.getElementById('site-online');
       if (!wrap) return;
       fetch('/api/online', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sid }),
+        body: JSON.stringify({ sid, type }),
       })
         .then(r => (r.ok ? r.json() : null))
         .then(data => {
           if (!data || typeof data.online !== 'number') return;
           const countEl = document.getElementById('online-count');
           if (countEl) countEl.textContent = String(data.online);
+          const visitsEl = document.getElementById('site-visits');
+          if (visitsEl && typeof data.visits === 'number') {
+            visitsEl.textContent = data.visits.toLocaleString('en-US');
+            visitsEl.hidden = false;
+          }
           wrap.hidden = false;
         })
         .catch(() => { /* 接口不可用时静默保持隐藏 */ });
@@ -334,9 +340,9 @@ const navGroups = [
         }
       } catch (e) { sid = 'anon-' + Date.now().toString(36); }
 
-      beatOnline(sid); // 每次进入/切换页面立即上报一次
+      beatOnline(sid, 'view'); // 每次进入/切换页面：计一次浏览 + 刷新在线心跳
       if (!onlineBeatTimer) {
-        onlineBeatTimer = setInterval(() => beatOnline(sid), 25000); // 停留期间每 25 秒续心跳
+        onlineBeatTimer = setInterval(() => beatOnline(sid, 'beat'), 25000); // 停留期间每 25 秒续心跳
       }
     }
 
