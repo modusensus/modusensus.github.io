@@ -76,14 +76,52 @@ function queryWindow() {
   });
 }
 
-// ── 窗口 → 状态文字 ──
-function composeStatus(w) {
+// ── 用 SMTC（系统媒体控制）取当前歌曲：所有接入系统媒体控制的播放器都能读到 ──
+const NP_SCRIPT = `
+[Console]::OutputEncoding = [Text.Encoding]::UTF8
+Add-Type -AssemblyName System.Runtime.WindowsRuntime
+[Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.System, ContentType = WindowsRuntime] | Out-Null
+$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation\`1' })[0]
+function Await($WinRtTask, $ResultType) {
+  $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)
+  $netTask = $asTask.Invoke($null, @($WinRtTask))
+  $netTask.Wait(-1) | Out-Null
+  $netTask.Result
+}
+try {
+  $mgr = Await ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager]::RequestAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager])
+  $playing = $null
+  foreach ($s in $mgr.GetSessions()) {
+    if ($s.GetPlaybackInfo().PlaybackStatus -eq 4) { $playing = $s; break }  # 4 = Playing
+  }
+  if (-not $playing) { '{"playing":false}'; exit }
+  $props = Await ($playing.TryGetMediaPropertiesAsync()) ([Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties])
+  [PSCustomObject]@{ playing = $true; title = $props.Title; artist = $props.Artist } | ConvertTo-Json -Compress
+} catch { '{}' }
+`;
+
+function queryNowPlaying() {
+  return new Promise((resolve) => {
+    execFile('powershell', ['-NoProfile', '-NonInteractive', '-Command', NP_SCRIPT],
+      { windowsHide: true, timeout: 10_000 }, (_err, stdout) => {
+        try {
+          const j = JSON.parse(stdout);
+          resolve({ playing: !!j.playing, title: String(j.title || '').trim(), artist: String(j.artist || '').trim() });
+        } catch { resolve({ playing: false, title: '', artist: '' }); }
+      });
+  });
+}
+
+// ── 状态合成：有歌在播放（不限前台窗口）→ 听音乐中 · 歌曲；否则按前台窗口 ──
+async function composeStatus(w) {
   if (!w) return null;
   if (w.idle >= IDLE_MIN * 60) return '离开中';
+  const np = await queryNowPlaying();
+  if (np.playing && np.title) return np.artist ? `听音乐中 · ${np.title} — ${np.artist}` : `听音乐中 · ${np.title}`;
   const hit = APPS.find((a) =>
     a.match.some((re) => re.test(w.title) || re.test(w.proc)));
-  if (hit) return MAP_WITH_APP && w.proc ? `${hit.name} · ${w.proc}` : hit.name;
-  return fallback(w.title, w.proc);
+  if (!hit) return fallback(w.title, w.proc);
+  return MAP_WITH_APP && w.proc ? `${hit.name} · ${w.proc}` : hit.name;
 }
 
 // ── 推送到博客接口（仅状态变化时发送）──
@@ -107,7 +145,7 @@ async function push(text) {
 console.log('状态同步已启动，Ctrl+C 停止。检测间隔', POLL_MS / 1000, 's');
 (async function loop() {
   const w = await queryWindow();
-  const text = composeStatus(w);
+  const text = await composeStatus(w);
   if (text && text !== lastSent) await push(text);
   setTimeout(loop, POLL_MS);
 })();
