@@ -144,7 +144,7 @@ img { max-width: 100%; display: block; }
 }
 /* 状态小部件锚点（与头像按钮同高，桌面专用；组件 fixed 定位对齐此处） */
 .nav-status-slot {
-  height: 52px; margin-top: 24px;
+  height: 52px; margin-bottom: 4px;
 }
 @media (max-width: 899px) {
   .nav-status-slot { display: none; }
@@ -779,6 +779,12 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
 /* ═══ Prose — 文章正文（杂志排版：宋体正文 · 两端对齐 · 首段下沉） ═══ */
 .prose { font-family: var(--font-serif); font-size: 15.5px; line-height: 2.05; color: var(--ink); text-align: justify; }
 .prose p { margin-bottom: 1.15rem; }
+/* 强调下划线：偏移下沉、细线，与站点 hover 下划线风格一致 */
+.prose u {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+  text-decoration-thickness: 1px;
+}
 
 /* 杂志式首段下沉大字（仅当文章以段落开头时生效） */
 .prose > p:first-child::first-letter {
