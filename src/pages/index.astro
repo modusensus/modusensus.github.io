@@ -78,6 +78,18 @@ function fmtYear(date: Date) {
           ))}
         </h1>
 
+        <!-- 主页双入口：BLOG 进入博客正文，STUDIO 前往工作室看板 -->
+        <div class="hero-entries">
+          <a class="hero-entry" href="/blog" data-enter-board>
+            <span class="hero-entry-label">BLOG <span class="hero-entry-arrow">↓</span></span>
+            <span class="hero-entry-desc">博客 · 写作与档案</span>
+          </a>
+          <a class="hero-entry" href="/studio">
+            <span class="hero-entry-label">STUDIO <span class="hero-entry-arrow">→</span></span>
+            <span class="hero-entry-desc">工作室 · 服务与看板</span>
+          </a>
+        </div>
+
         <!-- 社交图标：GitHub / Email / RSS / LinkedIn / Substack -->
         <div class="hero-icons">
           <a href="https://github.com/modusensus" target="_blank" rel="noopener" aria-label="GitHub" title="GitHub">
@@ -142,8 +154,8 @@ function fmtYear(date: Date) {
   <!-- ── 切入横条：纸底跑马灯（两份相同内容实现无缝循环） ── -->
   <div class="hero-ticker" aria-hidden="true">
     <div class="hero-ticker-track">
-      <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
-      <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — THRESHOLD NOTES / LAB / ARCHIVE / FRAGMENTS — EST. 2025 —&nbsp;</span>
+      <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — STUDIO / THRESHOLD NOTES / LAB / ARCHIVE — EST. 2025 —&nbsp;</span>
+      <span>MODUSENSUS — INDEPENDENT DIGITAL STUDIO — 城市 · 数据 · 创造力 — STUDIO / THRESHOLD NOTES / LAB / ARCHIVE — EST. 2025 —&nbsp;</span>
     </div>
   </div>
 
@@ -356,9 +368,34 @@ function fmtYear(date: Date) {
 .hero-foot .scroll { animation: nudge 2.2s ease-in-out infinite; cursor: pointer; }
 @keyframes nudge { 0%, 100% { translate: 0 0; } 50% { translate: 0 5px; } }
 
+.hero-entry-arrow { display: inline-block; transition: transform 0.2s var(--ease-out); }
+
+/* 主页双入口卡片 */
+.hero-entries {
+  display: flex; gap: 14px; margin-top: 32px;
+}
+.hero-entry {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  min-width: 132px; padding: 13px 22px 12px;
+  border: 1px solid rgba(244, 244, 242, 0.4); border-radius: 10px;
+  color: var(--hero-fg);
+  transition: border-color 0.2s, transform 0.25s var(--ease-out);
+}
+.hero-entry:hover { border-color: var(--c-pink); transform: translateY(-3px); }
+.hero-entry:hover .hero-entry-arrow { transform: translateX(3px); }
+.hero-entry-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-grot); font-weight: 900; font-size: 15px;
+  letter-spacing: 0.08em;
+}
+.hero-entry-desc {
+  font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.14em;
+  color: rgba(244, 244, 242, 0.6); text-transform: uppercase;
+}
+
 /* 社交图标行 */
 .hero-icons {
-  display: flex; gap: 13px; margin-top: 32px;
+  display: flex; gap: 13px; margin-top: 28px;
 }
 .hero-icons a {
   display: inline-flex; align-items: center; justify-content: center;
@@ -696,7 +733,11 @@ if (cover && pageOffset) {
     if (touchY - e.touches[0].clientY > 40) { touchY = null; enterBoard(); }
   };
   const onScrollHint = e => {
-    if (e.target instanceof Element && e.target.closest('.hero-foot .scroll')) enterBoard();
+    if (splashMode !== 'cover') return;
+    const t = e.target instanceof Element ? e.target.closest('.hero-foot .scroll, .hero-entry[data-enter-board]') : null;
+    if (!t) return;
+    if (t instanceof HTMLAnchorElement) e.preventDefault();
+    enterBoard();
   };
 
   document.addEventListener('wheel', onWheel, { passive: true });
@@ -771,6 +812,7 @@ if (!reduce) {
     .from('.hero-word span',
       { y: 90, opacity: 0, rotate: () => gsap.utils.random(-14, 14), duration: 0.8, stagger: 0.055, ease: 'back.out(1.6)' },
       0.5)
+    .from('.hero-entries a', { y: 18, opacity: 0, duration: 0.45, stagger: 0.08 }, 0.95)
     .from('.hero-icons a', { y: 16, opacity: 0, duration: 0.4, stagger: 0.06 }, 1.05)
     .from('.doodle', { opacity: 0, duration: 0.5, stagger: 0.07 }, 1.15)
     .from('.hero-foot', { opacity: 0, y: 12, duration: 0.5 }, 1.35);

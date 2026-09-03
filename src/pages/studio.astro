@@ -1,0 +1,298 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+interface BoardCard {
+  title: string;
+  note: string;
+  tag: string;
+}
+
+// 工作看板数据：直接在这里维护（新增/移动卡片改这三个数组即可）
+const inProgress: BoardCard[] = [
+  { title: 'tech-stack-map 技术栈学习地图', note: '自学路线的可视化整理，在 GitHub 持续更新。', tag: 'CODING' },
+  { title: 'STUDIO 服务包打磨', note: '工作室的服务内容、流程与案例整理（本页）。', tag: 'WRITING' },
+];
+
+const planned: BoardCard[] = [
+  { title: 'FIELDWORK 第二篇', note: '把等时圈方法迁移到新的城市样本。', tag: 'RESEARCH' },
+  { title: '阅读摘录自动化', note: '用 n8n 把读书笔记自动归档进 ARCHIVE。', tag: 'AUTOMATION' },
+];
+
+const shipped: BoardCard[] = [
+  { title: 'V4 全站改版', note: '涂鸦封面 × 杂志排版，2026-08 上线。', tag: 'DESIGN' },
+  { title: '长沙湿地公园可达性研究', note: '6 座公园的驾车等时圈 × 人口覆盖分析。', tag: 'GIS' },
+  { title: '品牌邮箱与域名基建', note: 'Cloudflare DNS + Email Routing + Resend 发信。', tag: 'INFRA' },
+];
+
+const services = [
+  {
+    name: '个人网站 · 博客搭建',
+    desc: '从域名、DNS 到部署上线的一站式建站：Astro 静态站、评论系统、RSS、统计与 SEO，交付后你可以自己维护。',
+    fit: '想拥有自己数字门牌的写作者与独立开发者',
+  },
+  {
+    name: '数据可视化 · GIS 分析',
+    desc: '地理数据分析与地图叙事：等时圈、人口叠加、交互式地图（QGIS / Python / Leaflet），产出报告与可复现脚本。',
+    fit: '研究报告、城市课题与作品集展示',
+  },
+  {
+    name: '定制小工具 · 自动化',
+    desc: '解决具体问题的小工具与自动化流水线：数据整理、批处理、工作流编排（Python / n8n），小而快地交付。',
+    fit: '想从重复劳动里解放出来的个人与小团队',
+  },
+];
+
+const steps = [
+  { n: '01', t: '写信描述需求', d: '把想做的事情发到 work@，越具体越好。' },
+  { n: '02', t: '方案与报价', d: '48 小时内回复：范围、周期、费用一次说清。' },
+  { n: '03', t: '开发与同步', d: '开发过程中定期同步进度，重要节点先确认。' },
+  { n: '04', t: '交付与维护', d: '交付源码与文档，后续小问题远程支持。' },
+];
+---
+
+<BaseLayout activeNav="studio" title="Studio — MODUSENSUS">
+  <header class="container page-header">
+    <div class="mono-label">WORKBOARD</div>
+    <h1 class="page-header-title">STUDIO</h1>
+    <p class="page-header-subtitle">工作室 — NOW / SERVICES / PROCESS</p>
+  </header>
+
+  <div class="container board">
+    <hr class="board-rule" />
+
+    <p class="studio-intro">
+      MODUSENSUS 既是博客，也是工作室——写作在这里发生，服务也从这里出发。
+      等它长大些，工作室会搬去自己的门牌；现在，先合署办公。
+    </p>
+
+    <!-- 01 工作看板 -->
+    <section class="wb-section">
+      <div class="section-head">
+        <span class="mono-label">01 — NOW · 工作看板</span>
+        <span class="col-sub">最近在做什么</span>
+      </div>
+      <div class="wb-columns">
+        <div class="wb-col">
+          <div class="wb-col-head"><span class="wb-dot wb-dot--now"></span>IN PROGRESS</div>
+          {inProgress.map(card => (
+            <div class="wb-card">
+              <div class="wb-card-title">{card.title}</div>
+              <p class="wb-card-note">{card.note}</p>
+              <span class="wb-card-tag">{card.tag}</span>
+            </div>
+          ))}
+        </div>
+        <div class="wb-col">
+          <div class="wb-col-head"><span class="wb-dot wb-dot--next"></span>NEXT UP</div>
+          {planned.map(card => (
+            <div class="wb-card">
+              <div class="wb-card-title">{card.title}</div>
+              <p class="wb-card-note">{card.note}</p>
+              <span class="wb-card-tag">{card.tag}</span>
+            </div>
+          ))}
+        </div>
+        <div class="wb-col">
+          <div class="wb-col-head"><span class="wb-dot wb-dot--done"></span>SHIPPED</div>
+          {shipped.map(card => (
+            <div class="wb-card">
+              <div class="wb-card-title">{card.title}</div>
+              <p class="wb-card-note">{card.note}</p>
+              <span class="wb-card-tag">{card.tag}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 服务包 -->
+    <section class="wb-section">
+      <div class="section-head">
+        <span class="mono-label">02 — SERVICES · 服务包</span>
+        <span class="col-sub">我能帮你做什么</span>
+      </div>
+      <div class="sv-grid">
+        {services.map(sv => (
+          <div class="sv-card">
+            <div class="sv-name">{sv.name}</div>
+            <p class="sv-desc">{sv.desc}</p>
+            <div class="sv-fit"><span class="sv-fit-label">适合</span>{sv.fit}</div>
+          </div>
+        ))}
+      </div>
+      <p class="sv-note mono-meta">费用按项目范围一次性报价，学生与公益项目有优惠空间——先写信聊聊。</p>
+    </section>
+
+    <!-- 03 合作流程 -->
+    <section class="wb-section">
+      <div class="section-head">
+        <span class="mono-label">03 — PROCESS · 合作流程</span>
+        <span class="col-sub">四步走完</span>
+      </div>
+      <div class="pc-steps">
+        {steps.map(step => (
+          <div class="pc-step">
+            <span class="pc-step-n">{step.n}</span>
+            <span class="pc-step-t">{step.t}</span>
+            <p class="pc-step-d">{step.d}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- 04 合作咨询 -->
+    <section class="wb-contact">
+      <div class="mono-label wb-contact-label">04 — CONTACT · 合作咨询</div>
+      <p class="wb-contact-lead">有想法或需求？写信描述你想做的事情。</p>
+      <a class="wb-mail" href="mailto:work@modusensus.space?subject=%E5%B7%A5%E4%BD%9C%E5%AE%A4%E5%92%A8%E8%AF%A2">work@modusensus.space</a>
+      <p class="wb-contact-meta mono-meta">通常 48 小时内回复 · 也可以在 <a href="/elsewhere">Elsewhere</a> 留言，或通过 <a href="https://github.com/modusensus" target="_blank" rel="noopener noreferrer">GitHub</a> 找我</p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+.studio-intro {
+  max-width: 620px;
+  font-family: var(--font-cn);
+  font-size: 14px;
+  line-height: 1.95;
+  color: var(--muted);
+  padding-bottom: 26px;
+  border-bottom: 1px solid var(--rule);
+}
+.wb-section { margin-top: 52px; }
+
+/* ── 工作看板：三列卡片 ── */
+.wb-columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+.wb-col-head {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.16em; color: var(--muted);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--rule);
+}
+.wb-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+.wb-dot--now  { background: var(--c-pink); }
+.wb-dot--next { background: var(--c-yellow); }
+.wb-dot--done { background: var(--c-green); }
+.wb-card {
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  padding: 14px 16px;
+  margin-top: 14px;
+}
+.wb-card-title {
+  font-family: var(--font-grot); font-weight: 700; font-size: 14px;
+  color: var(--ink); line-height: 1.45;
+}
+.wb-card-note {
+  font-family: var(--font-cn); font-size: 12px; line-height: 1.75;
+  color: var(--muted); margin-top: 6px;
+}
+.wb-card-tag {
+  display: inline-block; margin-top: 10px;
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--muted);
+  border: 1px solid var(--rule);
+  padding: 2px 7px;
+}
+
+/* ── 服务包 ── */
+.sv-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+.sv-card {
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  padding: 22px 20px 18px;
+  transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+}
+.sv-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 3px 5px 0 rgba(34, 30, 24, 0.1);
+}
+.sv-name {
+  font-family: var(--font-grot); font-weight: 900; font-size: 16px;
+  color: var(--ink); line-height: 1.4;
+}
+.sv-desc {
+  font-family: var(--font-cn); font-size: 12.5px; line-height: 1.85;
+  color: var(--muted); margin-top: 10px;
+}
+.sv-fit {
+  font-family: var(--font-cn); font-size: 11.5px; line-height: 1.7;
+  color: var(--ink);
+  border-top: 1px dashed var(--rule);
+  margin-top: 14px; padding-top: 12px;
+}
+.sv-fit-label {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 0.14em; color: var(--c-pink);
+  margin-right: 8px;
+}
+.sv-note { margin-top: 18px; color: var(--muted); }
+
+/* ── 合作流程 ── */
+.pc-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  counter-reset: none;
+}
+.pc-step { border-top: 2px solid var(--rule); padding-top: 12px; }
+.pc-step-n {
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.14em; color: var(--c-pink);
+}
+.pc-step-t {
+  display: block;
+  font-family: var(--font-cn); font-weight: 700; font-size: 14px;
+  color: var(--ink); margin-top: 6px;
+}
+.pc-step-d {
+  font-family: var(--font-cn); font-size: 12px; line-height: 1.75;
+  color: var(--muted); margin-top: 6px;
+}
+
+/* ── 合作咨询 CTA ── */
+.wb-contact {
+  margin-top: 52px;
+  background: var(--paper-raise);
+  border: 1px solid var(--rule-soft);
+  padding: 34px 24px 30px;
+  text-align: center;
+}
+.wb-contact-label { color: var(--muted); }
+.wb-contact-lead {
+  font-family: var(--font-cn); font-size: 15px;
+  color: var(--ink); margin-top: 14px;
+}
+.wb-mail {
+  display: inline-block;
+  font-family: var(--font-grot); font-weight: 900;
+  font-size: clamp(17px, 3vw, 25px);
+  color: var(--ink);
+  border-bottom: 2px solid var(--c-pink);
+  margin-top: 14px;
+  transition: color 0.2s var(--ease-out);
+}
+.wb-mail:hover { color: var(--c-pink); }
+.wb-contact-meta { margin-top: 16px; color: var(--muted); }
+.wb-contact-meta a { color: var(--ink); border-bottom: 1px solid var(--rule); }
+.wb-contact-meta a:hover { color: var(--c-pink); border-color: var(--c-pink); }
+
+@media (max-width: 899px) {
+  .wb-columns, .sv-grid { grid-template-columns: 1fr; }
+  .pc-steps { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .pc-steps { grid-template-columns: 1fr; }
+}
+</style>

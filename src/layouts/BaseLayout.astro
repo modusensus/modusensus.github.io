@@ -9,7 +9,7 @@ import LoginModal from '../components/LoginModal.astro';
 interface Props {
   title?: string;
   description?: string;
-  activeNav?: 'home' | 'threshold' | 'lab' | 'archive' | 'fragments' | 'elsewhere' | 'guestbook' | 'colophon';
+  activeNav?: 'home' | 'studio' | 'threshold' | 'lab' | 'archive' | 'fragments' | 'elsewhere' | 'guestbook' | 'colophon';
 }
 
 const {
@@ -21,6 +21,9 @@ const {
 const navGroups = [
   [
     { href: '/',                label: 'HOME',       key: 'home' },
+  ],
+  [
+    { href: '/studio',          label: 'STUDIO',     key: 'studio' },
   ],
   [
     { href: '/threshold-notes', label: 'THRESHOLD',  key: 'threshold' },
@@ -139,6 +142,7 @@ const navGroups = [
         <nav class="footer-cols" aria-label="页脚导航">
           <div class="footer-col">
             <div class="footer-col-head">CONTENT</div>
+            <a href="/studio">Studio · 工作室</a>
             <a href="/threshold-notes">Threshold Notes</a>
             <a href="/lab">Lab</a>
             <a href="/archive">Archive</a>
