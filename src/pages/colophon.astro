@@ -102,18 +102,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </a>
       </div>
 
-      <div class="mono-label group-label">07 — NEWSLETTER</div>
-      <div class="newsletter-block">
-        <p class="nl-lead">新文章摘要与精选内容，直接送进邮箱。低频率、尊重注意力，随时可退。</p>
-        <a class="nl-cta" href="https://buttondown.com/modusensus" target="_blank" rel="noopener noreferrer">
-          <span>订阅专栏信</span>
-          <span class="nl-arrow" aria-hidden="true">→</span>
-        </a>
-      </div>
-
-      <div class="mono-label group-label">08 — CONTACT</div>
+      <div class="mono-label group-label">07 — CONTACT</div>
       <div class="about-block">
-        <div class="contact-row">
+        <div class="contact-row" id="contact">
           <a href="https://github.com/modusensus" class="footer-icon" target="_blank" rel="noopener">
             <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
             <span>GITHUB</span>
@@ -137,14 +128,14 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
-      <div class="mono-label group-label">09 — RESEARCH</div>
+      <div class="mono-label group-label">08 — RESEARCH</div>
       <div class="about-block pills-row">
         <span class="pill">空间公平与城市可达性</span>
         <span class="pill">数字治理与 AI 政策</span>
         <span class="pill">人机协作与自动化工作流</span>
       </div>
 
-      <div class="mono-label group-label">10 — PRIVACY &amp; SECURITY</div>
+      <div class="mono-label group-label">09 — PRIVACY &amp; SECURITY</div>
       <div class="about-block legal-block">
         <div class="legal-row" id="privacy">
           <span class="mono-meta">PRIVACY · 隐私声明</span>
@@ -161,7 +152,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             <li>评论服务端仅保存留言内容与填写的昵称/邮箱/网址，无账号密码凭证。</li>
             <li>页脚总浏览与在线人数统计存于 Upstash KV（Redis），仅记录匿名会话标识与累计计数，不存 IP 或设备指纹；在线心跳 65 秒内自动过期，总浏览数可随时清零。</li>
             <li>评论客户端随站点同源打包，不加载第三方 CDN 脚本。</li>
-            <li>如发现安全问题，欢迎通过上方 Email 联系。</li>
+            <li>如发现安全问题，欢迎通过上方 <a class="legal-email" href="#contact">CONTACT · EMAIL</a> 与我们联络。</li>
           </ul>
         </div>
       </div>
@@ -171,6 +162,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 </BaseLayout>
 
 <style>
+.group-label { margin-top: 26px; }
 .about-block {
   padding: 20px 0 8px;
   border-top: 1px solid var(--rule);
@@ -246,42 +238,15 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   position: absolute; left: 0; top: 0.5em;
   font-size: 8px; color: var(--muted);
 }
+.legal-email {
+  color: var(--c-accent-deep);
+  border-bottom: 1px solid color-mix(in srgb, var(--c-accent-deep) 45%, transparent);
+  transition: color 0.2s, border-color 0.2s;
+}
+.legal-email:hover { color: var(--c-pink); border-color: var(--c-pink); }
 
 @media (max-width: 640px) {
   .stack-row { grid-template-columns: 1fr; gap: 8px; }
   .legal-row { grid-template-columns: 1fr; gap: 6px; }
 }
-
-/* ── NEWSLETTER 订阅块：报纸风，油墨双线框 + mono 标签 + 大号 CTA ── */
-.newsletter-block {
-  padding: 22px 24px;
-  margin: 6px 0 8px;
-  background: var(--paper-raise);
-  border: 1px solid var(--ink);
-  box-shadow: 3px 5px 0 rgba(34, 30, 24, 0.08);
-}
-.nl-lead {
-  font-family: var(--font-cn);
-  font-size: 14px; line-height: 1.8;
-  color: var(--ink-soft);
-  margin: 0 0 18px;
-}
-.nl-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  text-decoration: none;
-  background: var(--ink); color: var(--paper);
-  padding: 11px 20px;
-  font-family: var(--font-mono);
-  font-size: 12px; font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: background 0.2s var(--ease-out), gap 0.2s var(--ease-out);
-}
-.nl-cta:hover {
-  background: var(--c-pink);
-  gap: 16px;
-}
-.nl-arrow { font-size: 15px; line-height: 1; }
 </style>
