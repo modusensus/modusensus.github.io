@@ -13,6 +13,7 @@ const blog = defineCollection({
     cover:       z.string().optional(),
     excerpt:     z.string().optional(),
     module:      z.enum(['threshold', 'lab', 'archive']).default('archive'),
+    group:       z.string().optional(), // 栏目内小专栏（如 lab 下的 fieldwork）
     ai:          z.boolean().default(false), // AI 参与创作标注
     // Legacy compat
     tag:         z.string().optional(),

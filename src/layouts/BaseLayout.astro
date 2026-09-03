@@ -484,7 +484,7 @@ const navGroups = [
       }
 
       // 3) 列表项进入视口时批量上浮；clearProps 释放内联 transform，避免盖住 hover 位移
-      const items = document.querySelectorAll('.ar-item, .fragment-item, .friend-card, .build-card, .lab-row');
+      const items = document.querySelectorAll('.ar-item, .fragment-item, .friend-card, .build-card, .lab-row, .lab-card');
       if (items.length) {
         gsap.set(items, { opacity: 0, y: 24 });
         ScrollTrigger.batch(items, {

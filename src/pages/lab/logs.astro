@@ -1,0 +1,54 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog');
+const posts = allPosts
+  .filter(p => p.data.module === 'lab' && p.data.group !== 'fieldwork')
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+function fmtShort(date: Date) {
+  const m = date.toLocaleDateString('en-US', { month: 'short' });
+  return `${m}. ${String(date.getDate()).padStart(2, '0')}`;
+}
+---
+
+<BaseLayout activeNav="lab" title="Logs — MODUSENSUS LAB">
+  <header class="container page-header">
+    <a class="back-link" href="/lab">← LAB</a>
+    <div class="mono-label">02 — LOGS</div>
+    <h1 class="page-header-title">LOGS</h1>
+    <p class="page-header-subtitle">开发日志 — BUILD · ITERATE · SHIP</p>
+  </header>
+
+  <div class="container board">
+    <hr class="board-rule" />
+
+    <div class="group-head">
+      <div class="mono-label group-label">{String(posts.length).padStart(2, '0')} ENTRIES</div>
+      <p class="group-note">从想法到上线</p>
+    </div>
+    <div>
+      {posts.map((post, idx) => (
+        <a
+          class="ar-item"
+          href={`/blog/${post.slug}`}
+          data-desc={post.data.subtitle || post.data.excerpt || ''}
+          data-ai={post.data.ai ? 'ai' : undefined}
+        >
+          <div class="ar-meta">
+            <span>LOG — {String(posts.length - idx).padStart(2, '0')}</span>
+            <span>{fmtShort(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
+          </div>
+          <div class="ar-title">{post.data.title}</div>
+          {post.data.tags && post.data.tags.length > 0 && (
+            <div class="ar-tags">
+              {post.data.tags.map(t => <span class="ar-tag">#{t}</span>)}
+            </div>
+          )}
+        </a>
+      ))}
+      {posts.length === 0 && <p class="mono-meta">NO LOGS YET.</p>}
+    </div>
+  </div>
+</BaseLayout>

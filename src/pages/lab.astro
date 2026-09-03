@@ -3,22 +3,42 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
-const posts = allPosts
-  .filter(p => p.data.module === 'lab')
-  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+const labPosts = allPosts.filter(p => p.data.module === 'lab');
+const fieldworkCount = labPosts.filter(p => p.data.group === 'fieldwork').length;
+const logCount = labPosts.filter(p => p.data.group !== 'fieldwork').length;
 
-const projects = [
-  { name: 'Nest',       year: '2026', badge: 'AI/APP',  desc: '对话驱动的个人 AI 工作台。聊天即可管理项目、任务、习惯、文章，React + FastAPI + SQLite，支持 Function Calling 与记忆库。', link: 'https://github.com/modusensus/nest' },
-  { name: 'dsh-mneme',  year: '2026', badge: 'MEMORY',  desc: 'The memory that dreams — self-evolving memory for DeepSeek Harness: your AI remembers across sessions, consolidates in its sleep, forgets what matters less, and grows smarter over time. Fully offline & private.', link: 'https://github.com/modusensus/dsh-mneme' },
-  { name: 'CaseForge',  year: '2026', badge: 'LLM',     desc: '学术论文深度拆解框架。8 字段结构化提取 + 4 格式输出。', link: 'https://github.com/modusensus/CaseForge' },
-  { name: 'MindOS',     year: '2026', badge: 'WIDGET',  desc: 'AI 驱动的个人成长系统。8 模块单文件 HTML Widget。', link: 'https://github.com/modusensus/Mindos' },
-  { name: 'Ponte',      year: '2026', badge: 'CLI',     desc: 'Persistent SSH reverse tunnel daemon CLI. Auto-reconnect with exponential backoff + jitter.', link: 'https://github.com/modusensus/ponte' },
+const cards = [
+  {
+    key: 'fieldwork',
+    label: '01 — FIELDWORK',
+    title: '空间研究',
+    note: '用数据与地图读城市',
+    count: `${String(fieldworkCount).padStart(2, '0')} ENTRIES`,
+    href: '/lab/fieldwork',
+    image: '/images/lab/demeter-cover.jpg',
+    deity: 'Demeter',
+  },
+  {
+    key: 'logs',
+    label: '02 — LOGS',
+    title: '开发日志',
+    note: '从想法到上线',
+    count: `${String(logCount).padStart(2, '0')} ENTRIES`,
+    href: '/lab/logs',
+    image: '/images/lab/hermes-cover.jpg',
+    deity: 'Hermes',
+  },
+  {
+    key: 'builds',
+    label: '03 — BUILDS',
+    title: '开源项目',
+    note: '发布在 GitHub 的作品',
+    count: '05 PROJECTS',
+    href: '/lab/builds',
+    image: '/images/lab/hephaestus-cover.jpg',
+    deity: 'Hephaestus',
+  },
 ];
-
-function fmtShort(date: Date) {
-  const m = date.toLocaleDateString('en-US', { month: 'short' });
-  return `${m}. ${String(date.getDate()).padStart(2, '0')}`;
-}
 ---
 
 <BaseLayout activeNav="lab" title="Modusensus Lab — MODUSENSUS">
@@ -27,149 +47,170 @@ function fmtShort(date: Date) {
       <img class="column-art" data-art="light" src="/images/columns/lab-light.png" alt="" width="480" height="480" loading="lazy" />
       <img class="column-art" data-art="dark" src="/images/columns/lab-dark.png" alt="" width="480" height="480" loading="lazy" />
     </div>
-    <div class="mono-label">02 — BUILDS</div>
-    <h1 class="page-header-title">MODUSENSUS<br />LAB</h1>
-    <p class="page-header-subtitle">AI EXPERIMENTS · TOOLS · AUTOMATION · SYSTEMS</p>
+    <div class="mono-label">02 — LAB</div>
+    <h1 class="page-header-title">LAB</h1>
+    <p class="page-header-subtitle">工作室 — AI EXPERIMENTS · TOOLS · SPATIAL RESEARCH · SYSTEMS</p>
   </header>
 
   <div class="container board">
     <hr class="board-rule" />
 
-    <div class="lab-layout">
-      <!-- 左主栏：LOGS 文章列表 -->
-      <section class="lab-col lab-col-logs">
-        <div class="mono-label group-label">LOGS</div>
-        <div>
-          {posts.map((post, idx) => (
-            <a
-              class="ar-item"
-              href={`/blog/${post.slug}`}
-              data-desc={post.data.subtitle || post.data.excerpt || ''}
-              data-ai={post.data.ai ? 'ai' : undefined}
-            >
-              <div class="ar-meta">
-                <span>LOG — {String(posts.length - idx).padStart(2, '0')}</span>
-                <span>{fmtShort(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
-              </div>
-              <div class="ar-title">{post.data.title}</div>
-            </a>
-          ))}
-          {posts.length === 0 && <p class="mono-meta">NO LOGS YET.</p>}
-        </div>
-      </section>
-
-      <!-- 右侧栏：BUILDS 卡片组 -->
-      <aside class="lab-col lab-col-builds">
-        <div class="mono-label group-label">BUILDS</div>
-        <div class="build-grid">
-          {projects.map(p => (
-            <a class="build-card" href={p.link} target="_blank" rel="noopener">
-              <span class="build-card-head">
-                <span class="build-card-name">{p.name}</span>
-                <span class="badge">{p.badge}</span>
-              </span>
-              <span class="build-card-year">{p.year}</span>
-              <span class="build-card-desc">{p.desc}</span>
-            </a>
-          ))}
-        </div>
-      </aside>
+    <div class="lab-cards">
+      {cards.map((card, idx) => (
+        <a class="lab-card" href={card.href} data-section={card.key}>
+          <div class={`card-image-wrap ${card.key === 'builds' ? 'builds-image' : ''}`}>
+            <img src={card.image} alt={`${card.deity} sculpture`} width="480" height="480" loading={idx === 0 ? 'eager' : 'lazy'} />
+          </div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="card-label">{card.label}</span>
+              <span class="card-count">{card.count}</span>
+            </div>
+            <h2 class="card-title">{card.title}</h2>
+            <p class="card-note">{card.note}</p>
+            <span class="card-cta">
+              <span>进入专栏</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </span>
+          </div>
+        </a>
+      ))}
     </div>
   </div>
 </BaseLayout>
 
 <style>
-  /* ── 两栏布局：左 LOGS 主栏 / 右 BUILDS 窄侧栏 ── */
-  .lab-layout {
+  /* ── 三张专栏卡片：桌面三列，平板两列，手机一列 ── */
+  .lab-cards {
     display: grid;
-    grid-template-columns: minmax(0, 1.5fr) 250px;
-    gap: 44px;
-    align-items: start;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    padding: 8px 0 40px;
+    max-width: 780px;
+    margin: 0 auto;
   }
 
-  /* 侧栏吸顶：日志滚动时 BUILDS 卡片持续可见 */
-  .lab-col-builds {
-    position: sticky;
-    top: 32px;
-  }
-
-  /* ── BUILDS 卡片组：窄卡 + 纵向滚动 ── */
-  .build-grid {
-    display: grid;
-    gap: 10px;
-    max-height: calc(100vh - 130px);
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    padding-right: 8px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--rule) transparent;
-  }
-  .build-grid::-webkit-scrollbar { width: 4px; }
-  .build-grid::-webkit-scrollbar-thumb { background: var(--rule); }
-  .build-grid::-webkit-scrollbar-track { background: transparent; }
-
-  .build-card {
+  .lab-card {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    background: var(--paper-raise);
-    border: 1px solid var(--rule-soft);
-    border-radius: 4px;
-    padding: 13px 14px;
-    transition: transform 0.25s var(--ease-out), border-color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    overflow: visible;
+    text-decoration: none;
+    transition: transform 0.35s var(--ease-out);
   }
-  .build-card:hover {
-    transform: translateY(-3px);
-    border-color: var(--ink);
-    box-shadow: 0 6px 18px rgba(26, 26, 26, 0.1);
+  .lab-card:hover {
+    transform: translateY(-4px);
   }
 
-  .build-card-head {
+  .card-image-wrap {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: #E8E3D8;
+  }
+  .card-image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 55%;
+    transition: transform 0.7s var(--ease-out);
+  }
+  .card-image-wrap.builds-image img {
+    object-position: center 78%;
+  }
+  .lab-card:hover .card-image-wrap img {
+    transform: scale(1.05);
+  }
+
+  .card-body {
     display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 10px;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px 0 0;
+    flex: 1;
+    border-top: none;
   }
-  .build-card-name {
-    font-family: var(--font-grot);
-    font-weight: 700;
-    font-size: 14px;
-    line-height: 1.35;
-    color: var(--ink);
-    transition: color 0.25s var(--ease-out);
-  }
-  .build-card:hover .build-card-name { color: var(--c-pink); }
 
-  .build-card-year {
+  .card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--muted);
   }
-  .build-card-desc {
-    font-family: var(--font-cn);
-    font-size: 12px;
-    line-height: 1.65;
-    color: var(--muted);
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+  .card-count {
+    color: var(--ink-soft);
   }
 
-  /* ── 响应式：≤899px 收成单栏，LOGS 在前、BUILDS 在后，去掉吸顶与滚动 ── */
-  @media (max-width: 899px) {
-    .lab-layout {
-      grid-template-columns: 1fr;
-      gap: 36px;
+  .card-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--ink);
+    margin: 0;
+    position: relative;
+    display: inline-block;
+  }
+  .card-title::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 1px;
+    width: 0;
+    height: 1px;
+    background: var(--c-pink);
+    transition: width 0.35s var(--ease-out);
+  }
+  .lab-card:hover .card-title::after {
+    width: 100%;
+  }
+
+  .card-note {
+    font-family: var(--font-cn);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  .card-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 12px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    transition: gap 0.25s var(--ease-out), color 0.25s var(--ease-out);
+  }
+  .lab-card:hover .card-cta {
+    gap: 12px;
+    color: var(--c-pink);
+  }
+
+  /* ── 响应式 ── */
+  @media (max-width: 1040px) {
+    .lab-cards {
+      grid-template-columns: repeat(2, 1fr);
     }
-    .lab-col-logs { order: 1; }
-    .lab-col-builds { order: 2; position: static; }
-    .build-grid {
-      max-height: none;
-      overflow: visible;
-      padding-right: 0;
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  @media (max-width: 680px) {
+    .lab-cards {
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+    .card-title {
+      font-size: 22px;
     }
   }
 </style>
