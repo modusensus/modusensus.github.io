@@ -34,13 +34,19 @@ function postTags(p: { data: { tags?: string[]; category?: string } }): string[]
   return p.data.tags || (p.data.category || '').split('/').map((c) => c.trim()).filter(Boolean);
 }
 
-// 分区（SECTIONS）：按 module 聚合，标出该分区用到的全部 tag
+// 分区（SECTIONS）：按 module 聚合，标出该分区用到的全部 tag 与一句话概括
+const sectionIntro: Record<string, string> = {
+  threshold: '思想随笔与长期观察——关于城市、媒介与自我的慢思考。',
+  lab: '动手实验的完整记录：空间研究、数据可视化、小工具与构建日志。',
+  archive: '知识档案与方法存档——可复现的流程、踩坑笔记与技术细节。',
+};
 const sections = ['threshold', 'lab', 'archive'].map((m) => {
   const posts = sorted.filter((p) => p.data.module === m);
   const tags = [...new Set(posts.flatMap((p) => postTags(p)))];
   return {
     key: m,
     name: moduleNames[m],
+    desc: sectionIntro[m],
     href: m === 'threshold' ? '/threshold-notes' : `/${m}`,
     count: posts.length,
     tags,
@@ -180,6 +186,7 @@ function fmtYear(date: Date) {
                 <span class="sections-name">{s.name}</span>
                 <span class="sections-count">{s.count} POSTS</span>
               </div>
+              <p class="sections-desc">{s.desc}</p>
               <div class="sections-tags">
                 {s.tags.map(t => <span class="sections-tag">{t}</span>)}
               </div>
@@ -537,6 +544,10 @@ function fmtYear(date: Date) {
   transition: color 0.2s var(--ease-out);
 }
 .sections-item:hover .sections-name { color: var(--c-pink); }
+.sections-desc {
+  font-family: var(--font-cn); font-size: 12.5px; line-height: 1.75;
+  color: var(--muted); margin-top: 6px;
+}
 .sections-count {
   font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
   letter-spacing: 0.14em; color: var(--muted); white-space: nowrap;
