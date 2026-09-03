@@ -736,7 +736,9 @@ if (cover && pageOffset) {
     if (splashMode !== 'cover') return;
     const t = e.target instanceof Element ? e.target.closest('.hero-foot .scroll, .hero-entry[data-enter-board]') : null;
     if (!t) return;
-    if (t instanceof HTMLAnchorElement) e.preventDefault();
+    // 捕获阶段拦截：阻止 Astro ViewTransitions 路由器把 BLOG 链接当成跳转
+    e.preventDefault();
+    e.stopPropagation();
     enterBoard();
   };
 
@@ -744,14 +746,14 @@ if (cover && pageOffset) {
   document.addEventListener('keydown', onKey);
   document.addEventListener('touchstart', onTouchStart, { passive: true });
   document.addEventListener('touchmove', onTouchMove, { passive: true });
-  document.addEventListener('click', onScrollHint);
+  document.addEventListener('click', onScrollHint, true);
 
   splashCleanup = () => {
     document.removeEventListener('wheel', onWheel);
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('touchstart', onTouchStart);
     document.removeEventListener('touchmove', onTouchMove);
-    document.removeEventListener('click', onScrollHint);
+    document.removeEventListener('click', onScrollHint, true);
     document.documentElement.classList.remove('cover-mode');
     pageOffset.inert = false;
     splashGoCover = null;
