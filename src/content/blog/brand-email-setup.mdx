@@ -1,0 +1,174 @@
+---
+title: 把 @modusensus.space 刻成自己的门牌号
+subtitle: 品牌邮箱从零到收发全通的完整档案——DNS 迁移、Cloudflare 收件、Resend 发信，以及邮件系统到底怎么运转
+issue: "04"
+category: "DOMAIN / DNS / EMAIL / NOTES"
+tags: ["DNS", "CLOUDFLARE", "EMAIL", "RESEND", "NOTES"]
+date: 2026-09-04
+readingTime: "18"
+module: archive
+ai: true
+excerpt: 邮箱地址从来不属于 Gmail 或 QQ，它只属于域名。这份档案记录我如何用三个免费服务，把 hi@modusensus.space 和 work@modusensus.space 变成永久数字资产——收件走 Cloudflare 转发，发件走 Resend 签名，月费为零。
+---
+
+> 这是一份可复现的档案：如何给自有域名配上一套品牌邮箱，收件、发件全链路走通，月费为零。过程中顺带搞懂了邮件系统的底层逻辑——为什么邮箱地址属于域名而不属于服务商，为什么转发链路的邮件会进垃圾箱。这篇只讲**流程、原理与坑**。
+
+## 00 · 成品一览
+
+最终形态：两个品牌地址，一进一出，全部挂在 `modusensus.space` 上。
+
+| 地址 | 用途 |
+| --- | --- |
+| `hi@modusensus.space` | 主邮箱：页脚、About、社交资料 |
+| `work@modusensus.space` | 服务与商务：合作咨询、未来服务专栏入口 |
+
+全链路架构：
+
+```
+收件（进）                                  发件（出）
+─────────                                  ─────────
+任意邮箱                                   Gmail 网页/App
+   │ 查 DNS 的 MX 记录                         │ 发件人选 hi@modusensus.space
+   ▼                                          ▼
+Cloudflare Email Routing                   Resend SMTP
+   │ 按规则转发: hi@ → 我的 Gmail              │ 用域名 DKIM 私钥给邮件签名
+   ▼                                          ▼
+我的 Gmail 收件箱                           收件方服务器验 SPF + DKIM
+                                              ▼
+                                           ✔ 信誉记在 modusensus.space 头上
+```
+
+成本：**0 元/月**。Cloudflare Free 计划 + Email Routing 免费，Resend 免费额度 3000 封/月，Gmail 本来就有。
+
+## 01 · 原理：邮箱地址属于域名，不属于服务商
+
+这是整件事最值得记下来的认知。`hi@modusensus.space` 里的 `modusensus.space` 是我在注册局买的**命名地皮**，`hi` 只是地皮上的门牌号——想刻多少个刻多少个。Gmail、QQ 邮箱的地址之所以"属于"它们，是因为域名的所有权在腾讯和 Google 手里；你只是租了个门牌。
+
+那全世界的邮件服务器怎么知道信往哪投？靠写在 DNS 里的**公开说明书**。这次配置用到的每一行：
+
+| 记录 | 通俗含义 |
+| --- | --- |
+| **MX** | "寄给 @modusensus.space 的信，投到这些服务器" |
+| **SPF** | "允许替我发信的服务器名单" |
+| **DKIM** | 一对密钥：私钥发信签名，公钥挂 DNS 供全世界验签 |
+| **DMARC** | 告诉收件方：前两个没过怎么办，报表发去哪 |
+
+SMTP 协议规定投递前必须查收件域的 MX 记录——所以只要 MX 指向谁，信就到谁家。换个服务商，改一行 DNS，对外地址纹丝不动。**邮件身份存在 DNS 里，这就是域名邮箱可以"跟人一辈子"的原因。**
+
+![示意图：DNS 记录与邮件投递的关系](/blog/images/brand-email/01-dns-principle.png)
+
+## 02 · 方案选型：为什么是 Cloudflare + Gmail + Resend
+
+动手前比了一圈：
+
+| 方案 | 收件 | 发件 | 费用 | 结论 |
+| --- | --- | --- | --- | --- |
+| Cloudflare Email Routing + 转发 | ✔ 免费、无限别名、Catch-all | 需另配 | 0 | **收件选它** |
+| 阿里云 ESA（对标 Cloudflare 的 CDN） | ✘ 纯 CDN/安全产品，无邮件功能 | ✘ | 0 | 排除 |
+| Zoho Mail 免费版 | ✔ | ✔（网页端） | 0 | 免费版只让一个客户端收发，别扭 |
+| Google Workspace / 腾讯企业邮 | ✔ | ✔ | 每月每席位几十元 | 个人现阶段不值 |
+| ImprovMX 等第三方转发 | ✔（免费版有限额） | 需另配 | 0 | 备选，Cloudflare 已够用 |
+
+发件的组合拳：**Gmail 当操作台**（界面顺手、App 随身），**Resend 当发件引擎**（带域名自己的 DKIM 签名，比"via gmail.com"专业得多，免费 3000 封/月对个人绰绰有余）。
+
+> 坑 ①：一开始误入了阿里云 ESA 的站点接入向导，它让改 NS 的界面和 Cloudflare 几乎一模一样，但它是 CDN 产品——**没有邮件转发能力**，而且免费版边缘节点在境内需要 ICP 备案。域名邮箱场景直接绕开。
+
+## 03 · 第一步：把 DNS 迁到 Cloudflare
+
+前提盘点：域名 DNS 原本托管在阿里云（NS 是 `dns19/dns20.hichina.com`），主站托管在 Vercel，Waline 评论服务也在 Vercel 上。
+
+先说清一个概念，这是本次第二个关键认知：**"DNS 托管商"和"记录指向谁"是两回事**。Vercel 控制台里显示我的域名，只是它"认领"了解析记录——NS 在阿里云，Vercel 并不托管我的 DNS。迁移只是换个地方写记录，Vercel 只认记录指向，不管记录写在哪家。同理，网站托管在谁那里，跟 DNS 放哪完全解耦。
+
+迁移步骤：
+
+1. Cloudflare 注册 → Add a site → 输入域名 → 选 **Free** 计划
+2. Cloudflare 自动扫描现有记录——**逐一核对，别信扫描**。我实际有 4 条，扫描漏了一条指向自己云服务器的 `nest` 子域，漏带它那个服务就断了：
+
+| 类型 | 名称 | 内容 | 代理状态 |
+| --- | --- | --- | --- |
+| A | `@` | `216.198.79.1`（Vercel） | **DNS only（灰云）** |
+| CNAME | `www` | `…vercel-dns-017.com` | **DNS only（灰云）** |
+| CNAME | `waline` | `…vercel-dns-017.com` | **DNS only（灰云）** |
+| A | `nest` | 云服务器 IP | **DNS only（灰云）** |
+
+3. 去阿里云**域名管理控制台**（dc.console.aliyun.com，注意不是云解析页面）→ 域名管理 → DNS 修改 → 修改为自定义 DNS → 填 Cloudflare 分配的两个 NS（形如 `aspen.ns.cloudflare.com`）
+4. 等 NS 生效。`.space` 注册局挺快，当天就切过去了；生效后 Cloudflare 发激活邮件
+
+> 坑 ②：**所有记录保持灰云（DNS only），不要开橙云代理**。Vercel 要自己给域名签发 HTTPS 证书，开了 Cloudflare 代理会证书签发失败甚至重定向循环。
+
+> 坑 ③：排查 DNS 别依赖本地 `nslookup`，我的网络环境走公共 DNS 全程超时。用 DNS over HTTPS 的公共接口查又快又稳：`https://dns.google/resolve?name=域名&type=NS`。
+
+![截图：Cloudflare DNS 记录列表，四条记录均为灰云](/blog/images/brand-email/02-cloudflare-dns.png)
+
+## 04 · 第二步：收件——Email Routing
+
+NS 生效后，在 Cloudflare 控制台：**Email → Email Routing → Enable**。
+
+1. **目标地址**填自己的 Gmail，去 Gmail 点 Cloudflare 发来的验证邮件
+2. 添加自定义地址：`hi@`、`work@`，都转发到同一个 Gmail
+3. 开启 **Catch-all**：任何 `*@modusensus.space` 都落到 Gmail，别人拼错前缀也不漏信
+4. MX 和 SPF 记录 Cloudflare 自动写入，不用手填
+
+配完立刻实测：用另一个邮箱往 `hi@` 发一封信，几秒内应出现在 Gmail 收件箱。
+
+![截图：Email Routing 的自定义地址与 Catch-all 规则列表](/blog/images/brand-email/03-email-routing.png)
+
+## 05 · 第三步：发件——Gmail 操作台 + Resend 引擎
+
+转发只解决"收"。回信时发件人默认还是 Gmail 地址，要让对方看到 `hi@modusensus.space` 需要配"以其他地址发送"（Send mail as）。位置在 Gmail 设置 → **账号和导入** → 以其他地址发送邮件。
+
+流程分三小步：
+
+**① 生成应用专用密码**。Gmail 开两步验证后，在 Google 账号安全页生成一个 16 位应用专用密码（Gmail 登录密码不能直接用于 SMTP）。
+
+**② 在 Resend 验证域名**。注册 Resend → 添加域名 → 把它列出的 DKIM、SPF、MX 记录抄进 Cloudflare DNS → 回 Resend 点验证。这一步做完，发出去的信才会带上 `modusensus.space` 自己的 DKIM 签名。
+
+![截图：Resend 域名验证页面，DKIM/SPF/MX 记录全部 Verified](/blog/images/brand-email/04-resend-domain.png)
+
+**③ 回 Gmail 填 SMTP**。每个品牌地址一条：
+
+```
+SMTP 服务器：smtp.resend.com
+端口：465（SSL）
+用户名：resend
+密码：Resend 的 SMTP 密码（在 Resend 控制台生成）
+```
+
+提交后 Gmail 发验证码到 `hi@`——因为 Cloudflare 转发，几秒后它就落回 Gmail 收件箱，填进去即完成确认。以后写新邮件，发件人下拉框就能切换品牌地址。
+
+## 06 · 收尾：DMARC 与验收
+
+最后补一条 DMARC 记录，把邮件信誉体系闭环（告诉收件方"验证失败怎么办"，顺带收域名被冒充的报告）：
+
+```
+类型: TXT
+名称: _dmarc
+内容: v=DMARC1; p=none; rua=mailto:你的邮箱
+```
+
+`p=none` 是只观察不拒收，先跑几个月看报告再收紧。
+
+验收清单，四条全绿才算完：
+
+- [ ] 外部邮箱 → `hi@`，Gmail 收到
+- [ ] 外部邮箱 → `work@`，Gmail 收到
+- [ ] Gmail 用 `hi@` 发信 → 外部邮箱收到，发件人显示品牌地址，无 "via gmail.com"
+- [ ] 用 [mail-tester.com](https://www.mail-tester.com/) 给它给的随机地址发一封，得分 10/10 说明 SPF/DKIM/DMARC 全对齐
+
+## 07 · 踩坑档案
+
+**坑 ④：转发链路的邮件会进垃圾箱，属正常现象。** Gmail 发出的验证码邮件经 Cloudflare 转发回来后被自家判了垃圾——因为转发会破坏 SPF 对齐：邮件"自称来自 gmail.com"，但发信服务器是 Cloudflare 的，不在 gmail.com 的 SPF 名单里，按协议就是可疑。只影响这封自发自收的验证邮件，不影响对外信誉，标记"非垃圾"即可。
+
+**坑 ⑤：改了 NS 查不到新值，先分清三层。** NS 变更要过三关：注册商提交 → 注册局 whois（RDAP 可查）→ 全球 DNS 缓存。刚提交完去查还是旧 NS，多半是缓存没过期，RDAP（`https://rdap.org/域名`）看注册局的权威数据最准。
+
+**坑 ⑥：转发地址别配进 Gmail 的"转发和 POP/IMAP"。** 那个功能方向相反（把 Gmail 的信往外转），把品牌地址加进去再启用会有 Gmail→品牌地址→Cloudflare→Gmail 的回环风险。收件交给 Cloudflare，Gmail 里只动"账号和导入"的 Send mail as。
+
+## 08 · 维护纪律
+
+三件事记住，这套邮箱就跟域名一样是永久资产：
+
+1. **别动 Cloudflare 里的 MX / SPF / DKIM 记录**——删了邮箱链路就断
+2. **Resend 账号保持有效**，免费额度 3000 封/月，超了再考虑付费
+3. **域名记得续费**——整套身份的根是它
+
+后续如果服务专栏要放联系表单，表单后端可以直接调 Resend API 发通知到 `work@`，和现在 Vercel 上的 Serverless 函数同一套部署，无缝衔接。

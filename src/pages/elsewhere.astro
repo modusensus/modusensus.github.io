@@ -1,6 +1,9 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { elsewhereLinks, type ElsewhereKind } from '../data/elsewhere';
+import { elsewhereLinks } from '../data/elsewhere';
+import waline from '../config/waline.json';
+
+const walineReady = Boolean(waline.serverURL);
 
 const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: string }> = [
   {
@@ -15,12 +18,6 @@ const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: s
     title: 'NETWORKS',
     copy: '我登记入驻的博客平台与圈子，欢迎来串门。',
   },
-  {
-    kind: 'reading',
-    label: 'READING',
-    title: 'READING',
-    copy: '我会反复回去看的工具、项目和资料。',
-  },
 ];
 ---
 
@@ -28,7 +25,7 @@ const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: s
   <header class="container page-header">
     <div class="mono-label">ELSEWHERE</div>
     <h1 class="page-header-title">OTHER<br />PLACES</h1>
-    <p class="page-header-subtitle">远方 — FRIENDS / NETWORKS / READING</p>
+    <p class="page-header-subtitle">远方 — FRIENDS / NETWORKS</p>
   </header>
 
   <div class="container board">
@@ -104,7 +101,7 @@ const groups: Array<{ kind: ElsewhereKind; label: string; title: string; copy: s
         <span class="mono-meta apply-note-title">HOW TO APPLY · 友链申请</span>
         <ul class="exchange-list">
           <li>你的站点需要正常访问，且由你长期维护</li>
-          <li>先用 COPY MY INFO 一键复制本站信息加到你的友链，再按 YOUR INFO 的格式填好你的信息，通过留言板或 GitHub 发给我</li>
+          <li>先用 COPY MY INFO 一键复制本站信息加到你的友链，再按 YOUR INFO 的格式填好你的信息，直接在页面底部的评论区发给我</li>
           <li>内容不限主题，原创优先；拒绝纯采集、挂广告弹窗或含恶意内容的站点</li>
           <li>交换后我会尽快把你的链接加进来，也会期待你把我加上 ↴</li>
         </ul>
@@ -128,16 +125,61 @@ description: 一句话介绍
 website: https://your-site.com/
 image: https://your-site.com/avatar.jpg`}</pre>
         </div>
-        <div class="exchange-actions">
-          <a class="col-more" href="/guestbook">LEAVE A NOTE →</a>
-          <a class="col-more" href="https://github.com/modusensus" target="_blank" rel="noopener noreferrer">GITHUB →</a>
-        </div>
       </aside>
+    </div>
+
+    <!-- 友链申请评论区：独立 path，与留言板分开 -->
+    <div class="ep-comment-block">
+      <div class="mono-label ep-comment-label">APPLY · 申请友链请在下面留言</div>
+      <div class="waline-shell">
+        {walineReady ? (
+          <div class="waline" aria-label="Elsewhere comments"></div>
+        ) : (
+          <div class="community-setup">
+            <div class="community-setup-title">CHANNEL NOT CONFIGURED</div>
+            <p class="community-setup-copy">把 Waline 服务端地址填入 src/config/waline.json 后，评论功能会自动启用。</p>
+          </div>
+        )}
+      </div>
     </div>
   </div>
 </BaseLayout>
 
 <script>
+  // 友链申请评论区（path=/elsewhere）：复制 guestbook 的挂载模式，适配 ViewTransitions 客户端路由
+  import { init } from '@waline/client';
+  import '@waline/client/style';
+  import { serverURL } from '../config/waline.json';
+
+  let walineInstance = null;
+
+  function mountWaline() {
+    if (location.pathname.replace(/\/$/, '') !== '/elsewhere') return;
+    if (walineInstance) {
+      try { walineInstance.destroy(); } catch { /* 已销毁 */ }
+      walineInstance = null;
+      const prev = document.querySelector('.ep-comment-block .waline');
+      if (prev) delete prev.dataset.walineMounted;
+    }
+    const mount = document.querySelector('.ep-comment-block .waline');
+    if (mount && !mount.dataset.walineMounted) {
+      mount.dataset.walineMounted = 'true';
+      walineInstance = init({
+        el: mount,
+        serverURL,
+        lang: 'zh-CN',
+        path: '/elsewhere',
+        dark: ":root[data-theme='dark']",
+        meta: ['nick', 'mail', 'link'],
+        requiredMeta: ['nick', 'mail'],
+        search: false,
+        pageSize: 10,
+      });
+    }
+  }
+  document.addEventListener('modusensus:waline-user', mountWaline);
+  document.addEventListener('astro:page-load', mountWaline);
+
   // 友链信息复制按钮：事件委托绑在 document 上，一次绑定即可跨 ViewTransitions 客户端路由持续有效
   document.addEventListener('click', (e) => {
     const btn = e.target instanceof Element ? e.target.closest('[data-copy-target]') : null;
@@ -420,4 +462,15 @@ image: https://your-site.com/avatar.jpg`}</pre>
   white-space: pre;
 }
 .exchange-actions { display: flex; gap: 24px; flex-wrap: wrap; }
+
+/* ── 友链申请评论区：与便签墙同款标签头，块体压在版心下方 ── */
+.ep-comment-block {
+  margin-top: 72px;
+  padding-top: 26px;
+  border-top: 1px solid var(--rule);
+}
+.ep-comment-label {
+  margin-bottom: 18px;
+  color: var(--muted);
+}
 </style>
