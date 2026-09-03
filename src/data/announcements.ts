@@ -7,8 +7,8 @@ export interface Announcement {
 }
 
 export const announcements: Announcement[] = [
+  { date: '2026.09.04', text: '品牌邮箱上线：hi@modusensus.space 正式启用，页脚 Email 即可直达；ARCHIVE 新增档案笔记《把 @modusensus.space 刻成自己的门牌号》记录全流程。' },
+  { date: '2026.09.04', text: 'ELSEWHERE 友链申请改版：直接在页面底部评论区留言即可，READING 工具档案移至 ARCHIVE 页。' },
   { date: '2026.09.03', text: '《长沙 6 座湿地公园，开车 30 分钟能覆盖多少人？》研究报告上线，FIELDWORK 空间研究首篇。' },
   { date: '2026.09.03', text: 'LAB 栏目开放：FIELDWORK / LOGS / BUILDS 三个子专栏上线。' },
-  { date: '2026.09.01', text: '主页改版：站点统计、分区总览、文章标签上线，公告改为明信片卡片。' },
-  { date: '2026.09.01', text: '新文章《傲慢的两种面孔》发布（THRESHOLD NOTES No.02）。' },
 ];
