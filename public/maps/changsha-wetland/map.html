@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长沙湿地公园 · 驾车等时圈交互地图</title>
+<link rel="stylesheet" href="assets/leaflet.css">
+<script src="assets/leaflet.js"></script>
+<style>
+  html, body { height: 100%; margin: 0; font-family: "Georgia", "Songti SC", serif; }
+  #map { height: 100vh; width: 100%; background: #f5f1e8; }
+
+  /* ---- 折叠侧边栏 ---- */
+  #panel {
+    position: absolute; top: 16px; left: 16px; z-index: 1000;
+    width: 260px; max-height: calc(100vh - 32px); overflow-y: auto;
+    background: rgba(245,241,232,0.96);
+    border: 1px solid #d8d2c4; padding: 16px 18px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    font-size: 13px; line-height: 1.7; color: #2f3d2f;
+    transition: transform 0.25s ease;
+  }
+  #panel.collapsed { transform: translateX(calc(-100% - 26px)); }
+
+  #panel h1 { font-size: 18px; margin: 0 0 6px; color: #2f3d2f; border-bottom: 2px solid #2f3d2f; padding-bottom: 8px; }
+  #panel .sub { font-size: 12px; color: #8a6d3b; margin-bottom: 10px; }
+  #panel .hint { font-size: 12px; color: #6b6f66; margin-bottom: 12px; }
+
+  /* 折叠按钮 */
+  #toggleBtn {
+    position: absolute; top: 10px; right: -34px; z-index: 1001;
+    width: 28px; height: 28px; cursor: pointer;
+    background: #2f3d2f; color: #f5f1e8; border: none;
+    font-size: 15px; line-height: 26px; text-align: center;
+    box-shadow: 1px 1px 4px rgba(0,0,0,0.15);
+  }
+
+  /* 图例 */
+  #legend { margin: 10px 0 12px; }
+  .lg { display: flex; align-items: center; gap: 8px; margin: 3px 0; font-size: 12.5px; }
+  .sw { width: 18px; height: 12px; border: 1px solid rgba(0,0,0,0.15); display: inline-block; }
+
+  /* 时间滑块 */
+  #timeWrap { margin: 12px 0; }
+  #timeWrap label { display: block; font-size: 12px; color: #2f3d2f; margin-bottom: 6px; font-weight: bold; }
+  #timeSlider { width: 100%; accent-color: #2f3d2f; }
+  #timeLabels { display: flex; justify-content: space-between; font-size: 10.5px; color: #6b6f66; margin-top: 4px; }
+  #timeValue { display: inline-block; background: #2f3d2f; color: #f5f1e8; padding: 2px 8px; font-size: 12px; margin-left: 6px; }
+
+  /* 按钮 */
+  #overview, #playBtn {
+    margin-top: 8px; width: 100%; padding: 7px 0; cursor: pointer;
+    background: #2f3d2f; color: #f5f1e8; border: none; font-size: 13px; letter-spacing: 1px;
+  }
+  #overview:hover, #playBtn:hover { background: #3b4d3b; }
+
+  /* 高亮信息框 */
+  #infoBox {
+    margin-top: 12px; padding: 10px; background: rgba(255,255,255,0.5);
+    border: 1px solid #d8d2c4; font-size: 12px; display: none;
+  }
+  #infoBox b { color: #2f3d2f; }
+
+  /* ---- 右下角来源说明 ---- */
+  #credit {
+    position: absolute; bottom: 10px; right: 12px; z-index: 1000;
+    font-family: Georgia, serif; font-size: 11px; color: #8a8a80;
+    background: rgba(255,255,255,0.7); padding: 3px 8px; border-radius: 3px;
+  }
+
+  /* 图层切换 */
+  .layer-ctrl {
+    margin: 12px 0; padding: 8px; background: rgba(255,255,255,0.45);
+    border: 1px solid #d8d2c4; font-size: 12px;
+  }
+  .layer-ctrl label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .layer-ctrl input { accent-color: #2f3d2f; }
+  .heat-hint { display: block; font-size: 11px; color: #6b6f66; margin-top: 4px; }
+
+  /* 自定义 tooltip 样式 */
+  .iso-tooltip { font-size: 12px; color: #2f3d2f; }
+</style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <!-- 说明面板 -->
+  <div id="panel">
+    <button id="toggleBtn" title="收起/展开">‹</button>
+    <h1>6 座湿地公园 · 驾车可达</h1>
+    <div class="sub">等时圈 5–30 分钟 · 基于 OSM 路网</div>
+    <div class="hint">点击等时圈或公园点 → 高亮单个公园；拖动时间滑块 → 只看某一档；悬停 → 查看人口。</div>
+
+    <div id="legend"></div>
+
+    <div id="timeWrap">
+      <label>时间档 <span id="timeValue">全部</span></label>
+      <input id="timeSlider" type="range" min="0" max="6" step="1" value="0">
+      <div id="timeLabels">
+        <span>全</span><span>5</span><span>10</span><span>15</span><span>20</span><span>25</span><span>30</span>
+      </div>
+    </div>
+
+    <div class="layer-ctrl">
+      <label><input type="checkbox" id="heatCheck"> 叠加热力图</label>
+      <span class="heat-hint">显示被等时圈覆盖的"热度"</span>
+    </div>
+
+    <button id="playBtn">▶ 按时间播放</button>
+    <button id="overview">回到全览</button>
+
+    <div id="infoBox"></div>
+  </div>
+
+  <div id="credit">数据：OSM 路网 · WorldPop 人口栅格 · Leaflet</div>
+
+  <script src="assets/data_iso.js"></script>
+  <script src="assets/data_parks.js"></script>
+
+  <script>
+  // ================= 1) 地图初始化 =================
+  var map = L.map('map', { center: [28.3, 112.9], zoom: 9 });
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; <a href="https://www.esri.com">Esri</a> &copy; OpenStreetMap contributors',
+    maxZoom: 16
+  }).addTo(map);
+
+  // ================= 2) 配色 =================
+  var PALETTE = {
+    5:  '#eaf0e1', 10: '#c7d8b2', 15: '#9bbd85',
+    20: '#6e8f58', 25: '#4a6b3c', 30: '#2f3d2f'
+  };
+  var LEVELS = [5,10,15,20,25,30];
+  var HIGHLIGHT = '#c45b3c';  // 赭红
+
+  // ================= 3) 等时圈图层 =================
+  function isoStyle(f, selectedName, selectedLevel) {
+    var name = f.properties.name;
+    var level = f.properties.cost_level;
+    var isSelectedName = selectedName && name === selectedName;
+    var isSelectedLevel = selectedLevel && level === selectedLevel;
+
+    // 默认样式: 全局 overview 下填充较淡, 避免 30min 大圈颜色压过内圈
+    var base = {
+      color: '#16371b', weight: 0.8,
+      fillColor: PALETTE[level], fillOpacity: 0.38, opacity: 0.95
+    };
+
+    // 如果选中了某个公园：该公园高亮，其他变淡
+    if (selectedName) {
+      if (isSelectedName) {
+        base.color = HIGHLIGHT;
+        base.weight = 2.2;
+        base.fillOpacity = 0.82;
+      } else {
+        base.color = '#d9d9d0';
+        base.weight = 0.4;
+        base.fillColor = '#e8e8e0';
+        base.fillOpacity = 0.15;
+        base.opacity = 0.55;
+      }
+    }
+
+    // 如果选中了某个时间档：只显示该档，其他变淡
+    if (selectedLevel) {
+      if (isSelectedLevel) {
+        base.color = '#16371b';
+        base.weight = 1.4;
+        base.fillOpacity = 0.85;
+      } else {
+        base.fillOpacity = 0.06;
+        base.opacity = 0.25;
+        base.weight = 0.3;
+      }
+    }
+    return base;
+  }
+
+  var selectedName = null;
+  var selectedLevel = null;
+
+  var isoLayer = L.geoJSON(ISOCHRONES, {
+    style: function(f) { return isoStyle(f, selectedName, selectedLevel); },
+    onEachFeature: function(f, layer) {
+      // hover tooltip
+      var p = f.properties;
+      var tip = '<div class="iso-tooltip">' +
+        '<b>' + p.name + '</b><br>' +
+        '时间：' + p.cost_level + ' 分钟<br>' +
+        '覆盖人口：' + p.pop_wan.toFixed(2) + ' 万人<br>' +
+        '面积：' + p.area_km2.toFixed(2) + ' km²' +
+      '</div>';
+      layer.bindTooltip(tip, { sticky: true, direction: 'top', offset: [0, -5] });
+
+      // click 高亮该公园
+      layer.on('click', function() {
+        selectPark(p.name);
+      });
+    }
+  }).addTo(map);
+
+  // ================= 4) 公园点图层 =================
+  var parkLayer = L.geoJSON(PARKS, {
+    pointToLayer: function (f, latlng) {
+      return L.circleMarker(latlng, {
+        radius: 7, color: '#c45b3c', weight: 2,
+        fillColor: '#c45b3c', fillOpacity: 0.95
+      });
+    }
+  }).addTo(map);
+  parkLayer.bindTooltip(function (f) { return '<b>' + f.properties.name + '</b>'; }, { sticky: true });
+  parkLayer.on('click', function(e) {
+    selectPark(e.layer.feature.properties.name);
+  });
+
+  // ================= 5) 交互逻辑 =================
+  function updateStyles() {
+    isoLayer.eachLayer(function(ly) {
+      ly.setStyle(isoStyle(ly.feature, selectedName, selectedLevel));
+    });
+  }
+
+  function selectPark(name) {
+    selectedName = name;
+    updateStyles();
+    // 缩放到该公园所有圈
+    var feats = [];
+    isoLayer.eachLayer(function(ly) {
+      if (ly.feature.properties.name === name) feats.push(ly);
+    });
+    if (feats.length) {
+      map.fitBounds(L.featureGroup(feats).getBounds(), { padding: [50, 50], maxZoom: 13 });
+    }
+    showInfo(name);
+  }
+
+  function resetAll() {
+    selectedName = null;
+    selectedLevel = null;
+    document.getElementById('timeSlider').value = 0;
+    document.getElementById('timeValue').innerText = '全部';
+    updateStyles();
+    map.fitBounds(isoLayer.getBounds(), { padding: [30, 30] });
+    document.getElementById('infoBox').style.display = 'none';
+  }
+
+  function showInfo(name) {
+    // 计算该公园 30 分钟的数据
+    var rows = ISOCHRONES.features.filter(function(f) {
+      return f.properties.name === name && f.properties.cost_level === 30;
+    });
+    var box = document.getElementById('infoBox');
+    if (rows.length) {
+      var p = rows[0].properties;
+      box.innerHTML = '<b>' + name + '</b><br>' +
+        '30 分钟覆盖人口：' + p.pop_wan.toFixed(2) + ' 万人<br>' +
+        '覆盖面积：' + p.area_km2.toFixed(2) + ' km²';
+      box.style.display = 'block';
+    }
+  }
+
+  // ================= 6) 时间滑块 =================
+  var slider = document.getElementById('timeSlider');
+  slider.oninput = function() {
+    var idx = parseInt(this.value);
+    if (idx === 0) {
+      selectedLevel = null;
+      document.getElementById('timeValue').innerText = '全部';
+    } else {
+      selectedLevel = LEVELS[idx - 1];
+      document.getElementById('timeValue').innerText = selectedLevel + ' 分钟';
+    }
+    updateStyles();
+  };
+
+  // ================= 7) 播放功能 =================
+  var playTimer = null;
+  document.getElementById('playBtn').onclick = function() {
+    if (playTimer) {
+      clearInterval(playTimer); playTimer = null; this.innerText = '▶ 按时间播放'; return;
+    }
+    this.innerText = '⏸ 暂停播放';
+    var i = 1;
+    slider.value = i;
+    selectedLevel = LEVELS[i-1];
+    document.getElementById('timeValue').innerText = selectedLevel + ' 分钟';
+    updateStyles();
+    playTimer = setInterval(function() {
+      i++; if (i > 6) i = 1;
+      slider.value = i;
+      selectedLevel = i === 0 ? null : LEVELS[i-1];
+      document.getElementById('timeValue').innerText = i === 0 ? '全部' : selectedLevel + ' 分钟';
+      updateStyles();
+    }, 1200);
+  };
+
+  // ================= 8) 折叠侧边栏 =================
+  var panel = document.getElementById('panel');
+  var toggleBtn = document.getElementById('toggleBtn');
+  toggleBtn.onclick = function() {
+    panel.classList.toggle('collapsed');
+    toggleBtn.innerHTML = panel.classList.contains('collapsed') ? '›' : '‹';
+    toggleBtn.title = panel.classList.contains('collapsed') ? '展开' : '收起';
+  };
+
+  // ================= 9) 图例 =================
+  var lg = document.getElementById('legend');
+  LEVELS.forEach(function(t) {
+    var row = document.createElement('div');
+    row.className = 'lg';
+    row.innerHTML = '<span class="sw" style="background:' + PALETTE[t] + '"></span>' + t + ' 分钟';
+    lg.appendChild(row);
+  });
+
+  // ================= 10) 热力图叠加层 (imageOverlay) =================
+  var heatOverlay = null;
+  fetch('assets/heatmap_bounds.json')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var b = data.bounds; // [lat_min, lon_min, lat_max, lon_max]
+      var bounds = [[b[0], b[1]], [b[2], b[3]]]; // [[south, west], [north, east]]
+      heatOverlay = L.imageOverlay('assets/heatmap_coverage.png', bounds, { opacity: 0.72, interactive: true });
+    })
+    .catch(function(e) { console.warn('热力图边界加载失败', e); });
+
+  document.getElementById('heatCheck').onchange = function() {
+    if (!heatOverlay) { this.checked = false; return; }
+    if (this.checked) {
+      heatOverlay.addTo(map);
+      heatOverlay.bringToBack();
+      isoLayer.bringToFront();
+      parkLayer.bringToFront();
+    } else {
+      map.removeLayer(heatOverlay);
+    }
+  };
+
+  // ================= 11) 回全览 + 初始视野 =================
+  document.getElementById('overview').onclick = resetAll;
+  try {
+    map.fitBounds(isoLayer.getBounds(), { padding: [30, 30] });
+  } catch (e) {
+    map.setView([28.3, 112.9], 9);
+  }
+  </script>
+</body>
+</html>

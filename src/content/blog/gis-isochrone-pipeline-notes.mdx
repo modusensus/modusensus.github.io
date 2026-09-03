@@ -1,0 +1,271 @@
+---
+title: 用 Python + QGIS 复现一次驾车可达性分析
+subtitle: 从路网下载、等时圈计算到人口叠加的完整流水线，以及十五个踩过的坑
+issue: "03"
+category: "GIS / PYTHON / NOTES"
+tags: ["PYTHON", "GIS", "QGIS", "OSM", "NOTES"]
+date: 2026-09-03
+readingTime: "25"
+module: archive
+ai: true
+---
+
+> 这是一份可复现的作业记录：如何用 QGIS 图形界面 + Python 脚本，对长沙 6 座湿地公园做 5–30 分钟驾车等时圈，并叠合 WorldPop 人口栅格算出每圈覆盖人口。研究结论在《长沙 6 座湿地公园，开车 30 分钟能覆盖多少人？》，这篇只讲**方法、环境与坑**。
+
+## 00 · 全流程一览
+
+```
+数据获取          预处理                分析                 输出
+─────────        ─────────            ─────────           ─────────
+高德 POI  ──┐    坐标纠偏 gcj02→wgs84   networkx 最短路      matplotlib 静态图
+OSM 路网  ──┼──▶ 统一投影 EPSG:4547 ──▶ 等时圈成面      ──▶  Leaflet 交互地图
+WorldPop ──┘    修复几何 / 裁剪 / 吸附   栅格分区统计         汇总 CSV
+```
+
+原则是：**图形界面能做的用 QGIS（快、直观），要复现、要批量、要进作品集的用 Python 脚本**。两者用同一套文件（GeoJSON / GeoPackage）互通，互不锁定。
+
+## 01 · 环境配置
+
+GIS 的 Python 依赖装在系统 Python 里迟早打架，先建独立环境：
+
+```powershell
+# Miniconda 新建一个叫 gis 的环境（Python 3.10+ 都可以）
+conda create -n gis python=3.11 -y
+conda activate gis
+
+# 核心全家桶：geopandas 管矢量、rasterio 管栅格、networkx 算网络
+pip install geopandas networkx rasterio matplotlib
+
+# 读 OSM 数据的两条路线，都装上（后面会讲为什么两条都要）
+pip install osmnx pyrosm
+
+# geopandas 读文件需要引擎，缺了会报 ImportError
+pip install fiona
+```
+
+桌面端装 **QGIS 3.x**（OSGeo4W 安装器），插件备两个：**QuickOSM**（图形界面下 OSM 数据）和默认自带的处理工具箱（缓冲区、修复几何、吸附全在里面）。
+
+> 坑 ①：`geopandas.read_file()` 直接报 `ImportError: The 'read_file' function requires the 'pyogrio' or 'fiona' package`。新版 geopandas 把 IO 引擎拆出去了，显式 `pip install fiona` 即可。
+
+## 02 · 公园点位：高德 POI
+
+公园入口坐标用高德 Web 服务 API 的关键字搜索拿：
+
+```python
+import requests
+
+GAODE_KEY = "你的key"   # 注意！必须是「Web 服务」类型的 key
+
+def search_poi(keyword, city):
+    url = "https://restapi.amap.com/v3/place/text"
+    params = {
+        "key": GAODE_KEY,
+        "keywords": keyword,
+        "city": city,          # 限定城市，避免跨省误匹配
+        "citylimit": "true",
+        "offset": 5,
+    }
+    r = requests.get(url, params=params, timeout=10).json()
+    return r["pois"]
+```
+
+三个坑全在这一步：
+
+> 坑 ②：**API key 类型必须严格匹配**。拿「Web 端 JS API」的 key 调 REST 接口，返回 `USERKEY_PLAT_NOMATCH`。高德的 key 分平台，Python 后端一律用「Web 服务」类型。
+>
+> 坑 ③：**关键词会被误分类**。「浏阳河国家湿地公园」搜出来一堆松雅湖的结果——长名公园要拆关键词、加 `city` 参数（如 `city=浏阳`）多轮搜索再人工核对。
+>
+> 坑 ④：**高德坐标是 gcj02**（火星坐标系），直接当 WGS84 用会整体偏移几百米。叠 OSM 路网前必须纠偏：
+
+```python
+from math import pi, sin, cos, sqrt
+
+def gcj02_to_wgs84(lon, lat):
+    # 简化逆变换：用正向偏移量迭代逼近，误差 < 1m，对公园点位足够
+    a, ee = 6378245.0, 0.00669342162296594323
+    dlat = _transform_lat(lon - 105.0, lat - 35.0)
+    dlon = _transform_lon(lon - 105.0, lat - 35.0)
+    radlat = lat / 180.0 * pi
+    magic = sin(radlat); magic = 1 - ee * magic * magic
+    sqrtmagic = sqrt(magic)
+    dlat = (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * pi)
+    dlon = (dlon * 180.0) / (a / sqrtmagic * cos(radlat) * pi)
+    return lon - dlon, lat - dlat
+```
+
+> 顺带一提：**别用 osmnx 的 Nominatim 地理编码查中文地名**。实测「洋湖湿地公园」被匹配到安徽去了。中文 POI 用高德，OSM 只拿路网。
+
+## 03 · 路网：从 Overpass 屡败到本地 PBF
+
+路网是可达性分析的骨架。最初想直接 `osmnx` 一把梭，结果一路碰壁：
+
+> 坑 ⑤：**Overpass 公共服务器在国内基本不可用**。`overpass-api.de` 要么超时、要么 400、要么返回非 JSON。换 kumi.systems 等备用镜像同样不稳定。
+>
+> 坑 ⑥：**代理和 TUN 模式同时开会 SSL 握手失败**（`UNEXPECTED_EOF_WHILE_READING`）。科学上网二选一，别叠加。
+>
+> 坑 ⑦：osmnx 2.x 的 `graph_from_bbox()` 签名变了，四个坐标要打包成一个元组：
+
+```python
+# osmnx 2.x 正确写法：bbox 是一个元组 (north, south, east, west)
+G = ox.graph_from_bbox((28.35, 28.05, 113.1, 112.7), network_type="drive")
+```
+
+最终方案：**Geofabrik 下载 Hunan 区域的 PBF 文件，本地解析**。湖南全省 `hunan-latest.osm.pbf` 一次几百 MB，浏览器多线程下载比任何 API 都稳：
+
+```python
+from pyrosm import OSM
+
+# 读全省 PBF，只抽机动车路网
+osm = OSM(r"D:\data\hunan-latest.osm.pbf")
+# 注意返回值：新版 pyrosm 只返回一个 edges GeoDataFrame！
+drive_net = osm.get_network("driving")   # 不是 (nodes, edges) 元组
+```
+
+> 坑 ⑧：**pyrosm 新版 `get_network()` 只返回 edges**，老教程里 `nodes, edges = osm.get_network(...)` 会炸 `too many values to unpack`。节点要从 edges 的端点自己重建。
+>
+> 坑 ⑨：`ox.graph_from_xml()` 读本地 PBF **不支持 bbox 裁剪**。大文件先空间裁剪再建图，别全量进 networkx。
+
+## 04 · 预处理：投影、修复、裁剪、吸附
+
+四步流水，全部在 QGIS 图形界面里点完再导出，或写成脚本：
+
+**统一投影。** 所有数据统一到 CGCS2000 3 度带（EPSG:4547，中央经线 114°E 覆盖长沙）：
+
+> 坑 ⑩：**面积、质心、缓冲区这些度量必须在平面坐标系算**。拿 WGS84（EPSG:4326，单位是「度」）直接算面积，结果会小五个数量级。Web 墨卡托（3857）面积又严重失真（纬度越高越夸大）。等距/等积投影按研究区域选——长沙就用 4547。
+
+**修复几何。** OSM 数据自带脏东西：
+
+> 坑 ⑪：OSM 路网有自相交、重复节点等**无效几何**，不修的话后续插件和空间连接会静默失败或结果为空。QGIS 处理工具箱 → 「修复几何」（Fix Geometries）一键处理。
+
+**裁剪。** 只留公园点 5km 缓冲区内的路网。全量湖南路网进 networkx 既慢又容易在生成插值栅格时失败。
+
+**吸附。** 公园点是 POI 坐标，不一定压在路上：
+
+> 坑 ⑫：**点不在路网上，等时圈就会从错误的起点出发**。QGIS「将几何吸附到图层」（Snap geometries to layer），容差我给到 **1500m**——乡村公园入口离最近车道可能有几百米，容差太小会吸不上。
+
+## 05 · 等时圈：弃 QNEAT3，用 networkx 手算
+
+先试了 QGIS 的 QNEAT3 插件，生成空几何失败（坑 ⑬：与路网数据质量强相关，报错信息毫无帮助）。改用 networkx 手算，反而完全可控，核心就三步：**建图 → 最短路 → 圈层成面**。
+
+```python
+import networkx as nx
+import geopandas as gpd
+from shapely.ops import unary_union
+
+# ---- 1) 建图：边权 = length / speed，单位统一成"分钟" ----
+SPEED_KMH = {                      # 按等级赋速，比全域单一 40km/h 更接近真实
+    "motorway": 80, "trunk": 70, "primary": 55,
+    "secondary": 45, "tertiary": 35, "residential": 25,
+}
+DEFAULT_SPEED = 30                 # 未标注等级的兜底
+
+G = nx.Graph()
+for _, row in roads.iterrows():
+    u, v = row["u"], row["v"]
+    speed = SPEED_KMH.get(row.get("highway", ""), DEFAULT_SPEED)
+    minutes = row["length_m"] / (speed * 1000 / 60)
+    # 平行边/重复边取最快的一条
+    if G.has_edge(u, v):
+        if minutes < G[u][v]["weight"]:
+            G[u][v]["weight"] = minutes
+    else:
+        G.add_edge(u, v, weight=minutes)
+
+# ---- 2) 单源最短路：从公园点出发，拿到每个节点的最短时间 ----
+source = nearest_node(G, park_point)          # 吸附后的起点
+dist = nx.single_source_dijkstra_path_length(G, source, weight="weight")
+
+# ---- 3) 圈层成面：取 ≤T 的节点，缓冲后合并 ----
+LEVELS = [5, 10, 15, 20, 25, 30]
+for t in LEVELS:
+    nodes = [n for n, d in dist.items() if d <= t]
+    node_pts = nodes_gdf.loc[nodes].geometry
+    # 节点缓冲 250m 补上路网空隙，unary_union 合并成整块面
+    poly = unary_union([pt.buffer(250) for pt in node_pts])
+```
+
+两个设计决定值得记下来：
+
+- **速度按等级赋值而非全域恒速**。乡村公园周边步行道缺失，步行等时圈会碎成渣；改驾车 + 分级速度，结果立刻合理。
+- **面用「节点缓冲 + 合并」而不是凸包**。凸包会把不可达的飞地（山、江心）也圈进来；缓冲合并保留路网的真实形态——所以最终的等时圈是顺着道路长出触角的不规则形状，这正是我们想要的。
+
+## 06 · 人口叠加：WorldPop 分区统计
+
+人口用 WorldPop 1km 栅格（`chn_ppp_2020_1km`），与等时圈做分区统计：
+
+```python
+import rasterio
+from rasterio.mask import mask
+import json
+
+with rasterio.open(r"D:\data\chn_ppp_2020_1km.tif") as src:
+    # 栅格先重投影到 4547（QGIS「栅格投影」工具），与矢量同坐标系
+    for _, iso in isochrones.iterrows():
+        geoms = [json.loads(iso.geometry.to_json())]
+        out_img, _ = mask(src, geoms, crop=True, nodata=0)
+        pop = out_img[out_img > 0].sum()   # 像元值即该格人口，求和即覆盖人口
+```
+
+> 坑 ⑭：**人口栅格和矢量必须同投影再统计**，且面积口径要一致——等时圈面积用 4547 平面量，栅格统计在重投影后的栅格上做，两边才对得上。
+
+## 07 · 可视化与交互地图
+
+静态图 matplotlib，三行保命中文字体：
+
+```python
+import matplotlib
+matplotlib.rcParams["font.sans-serif"] = ["Microsoft YaHei"]
+matplotlib.rcParams["axes.unicode_minus"] = False   # 负号显示成方块也治了
+```
+
+交互地图用 Leaflet：等时圈 GeoJSON + 公园点 + 时间滑块 + 点击高亮，底图用 Esri World Light Gray（免 key、浅灰纸感，和站点排版同调）。热力图那步有个性能教训：
+
+> 坑 ⑮：**逐像素 `Path.contains_points` 判断 36 个多边形，慢到怀疑人生**。换成 geopandas 空间索引（`sindex`）+ 边界框粗筛 + 精确 `within`，分辨率从 100m 放宽到 500m（网页叠加够用），速度提升两个数量级。
+
+```python
+# 空间索引批量判定：对每个多边形先 bbox 粗筛，再精确 within
+for geom in gdf.geometry:
+    minx, miny, maxx, maxy = geom.bounds
+    candidates = pts_sindex.query(geom, predicate="intersects")
+    inside = pts.iloc[candidates].within(geom).values
+    coverage[rows_[candidates[inside]], cols[candidates[inside]]] += 1
+```
+
+## 08 · 踩坑速查表
+
+| # | 症状 | 原因 | 解法 |
+| --- | --- | --- | --- |
+| 01 | `read_file` ImportError | IO 引擎被拆分 | `pip install fiona` |
+| 02 | `USERKEY_PLAT_NOMATCH` | 高德 key 类型不匹配 | 用「Web 服务」型 key |
+| 03 | POI 搜索结果错乱 | 关键词被误分类 | 拆词 + `city` 限定 + 人工核对 |
+| 04 | 点位整体偏移 | gcj02 未纠偏 | gcj02→wgs84 转换 |
+| 05 | Overpass 超时/400 | 公共服务器不可用 | Geofabrik PBF 本地处理 |
+| 06 | SSL `UNEXPECTED_EOF` | 代理与 TUN 叠加 | 二选一 |
+| 07 | `graph_from_bbox` 报参数错 | osmnx 2.x 签名变更 | bbox 打包成元组 |
+| 08 | `too many values to unpack` | pyrosm 只返回 edges | 只接一个返回值 |
+| 09 | 本地 PBF 无法裁剪 | `graph_from_xml` 无 bbox | 先空间裁剪再建图 |
+| 10 | 面积/质心离谱 | 在 4326 上算度量 | 投影到 4547 再算 |
+| 11 | 空间分析静默失败 | OSM 无效几何 | QGIS「修复几何」 |
+| 12 | 等时圈起点错误 | 点不在路网上 | 吸附，容差 1500m |
+| 13 | QNEAT3 生成空结果 | 插件对数据质量敏感 | networkx 手算 |
+| 14 | 栅格统计口径对不上 | 矢量/栅格投影不一致 | 同投影再统计 |
+| 15 | 热力图计算极慢 | 逐像素逐多边形判定 | sindex + bbox 粗筛 |
+
+## 附 · 目录结构与复现清单
+
+```
+changsha_wetland_parks/
+├── 01_data_raw/        # 高德 POI 原始返回、wetland_parks.geojson
+├── 02_roads/           # Geofabrik 裁剪后的长沙路网（4547）
+├── 03_processed/       # 吸附后的公园点、修复后的路网
+├── 04_isochrones/      # isochrones_v3.geojson（36 个圈层面）
+├── 05_results/         # 汇总 CSV + 静态图
+├── scripts/            # 全流程 .py 脚本（带注释）
+└── web/                # Leaflet 交互地图 + 图表资产
+```
+
+复现顺序：`01` POI 抓取 → `02` 路网裁剪投影 → `03` 修复吸附 → `04` 等时圈计算 → `05` 人口分区统计 → `web` 出图。每步输入输出都是文件，任何一步断了都能从上一步的产物续跑。
+
+---
+
+*相关：研究结论与数据解读见《长沙 6 座湿地公园，开车 30 分钟能覆盖多少人？》。数据：OpenStreetMap（ODbL）· WorldPop CC-BY 4.0 · 高德开放平台。*
