@@ -85,4 +85,10 @@ export const elsewhereLinks: ElsewhereLink[] = [
     description: '中文博客聚合与收录平台，独立博客都在这里互相发现。',
     kind: 'network',
   },
+  {
+    name: 'BlogFinder',
+    url: 'https://bf.zzxworld.com/',
+    description: '发现优秀的个人博客的聚合平台，收录独立博客与最新文章。',
+    kind: 'network',
+  },
 ];
