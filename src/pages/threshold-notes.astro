@@ -40,6 +40,11 @@ function fmtShort(date: Date) {
           </div>
           <div class="tn-title">{post.data.title}</div>
           {post.data.subtitle && <div class="tn-desc">{post.data.subtitle}</div>}
+          {post.data.tags && post.data.tags.length > 0 && (
+            <div class="tn-tags">
+              {post.data.tags.map(t => <span class="tn-tag">#{t}</span>)}
+            </div>
+          )}
         </a>
       ))}
       {posts.length === 0 && <p class="mono-meta">NO ENTRIES YET.</p>}

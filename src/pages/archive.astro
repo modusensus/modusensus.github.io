@@ -26,7 +26,10 @@ function fmtYear(date: Date) {
   <div class="container board">
     <hr class="board-rule" />
 
-    <div class="mono-label group-label">ONGOING</div>
+    <div class="group-head">
+      <div class="mono-label group-label">ONGOING</div>
+      <p class="group-note">进行中 — 还在路上的自学项目</p>
+    </div>
     <div>
       <a class="lab-row" href="https://github.com/modusensus/tech-stack-map" target="_blank" rel="noopener">
         <span class="lab-year">2026</span>
@@ -38,7 +41,10 @@ function fmtYear(date: Date) {
       </a>
     </div>
 
-    <div class="mono-label group-label">NOTES</div>
+    <div class="group-head">
+      <div class="mono-label group-label">NOTES</div>
+      <p class="group-note">知识笔记 — 方法与踩坑的存档</p>
+    </div>
     <div>
       {posts.map((post, idx) => (
         <a
@@ -52,9 +58,19 @@ function fmtYear(date: Date) {
             <span>{fmtYear(post.data.date)}</span>
           </div>
           <div class="ar-title">{post.data.title}</div>
+          {post.data.tags && post.data.tags.length > 0 && (
+            <div class="ar-tags">
+              {post.data.tags.map(t => <span class="ar-tag">#{t}</span>)}
+            </div>
+          )}
         </a>
       ))}
       {posts.length === 0 && <p class="mono-meta">NO ENTRIES YET.</p>}
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  /* 板块之间的间距：让 ONGOING / NOTES 两组彼此拉开，避免贴在一起 */
+  .group-head ~ .group-head { margin-top: 56px; }
+</style>

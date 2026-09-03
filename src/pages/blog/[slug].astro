@@ -60,6 +60,11 @@ const tocItems = headings.filter(h => h.depth === 2);
           {post.data.readingTime && <span class="mono-meta">{post.data.readingTime} MIN READ</span>}
           <span class="mono-meta"><span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
         </div>
+        {post.data.tags && post.data.tags.length > 0 && (
+          <div class="art-tags">
+            {post.data.tags.map(t => <span class="art-tag">#{t}</span>)}
+          </div>
+        )}
       </header>
 
       {post.data.cover && (
@@ -110,6 +115,11 @@ const tocItems = headings.filter(h => h.depth === 2);
                 <span>{fmtLong(rel.data.date)}</span>
               </div>
               <div class="ar-title">{rel.data.title}</div>
+              {rel.data.tags && rel.data.tags.length > 0 && (
+                <div class="ar-tags">
+                  {rel.data.tags.map(t => <span class="ar-tag">#{t}</span>)}
+                </div>
+              )}
             </a>
           ))}
         </div>

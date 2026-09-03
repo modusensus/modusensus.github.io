@@ -347,6 +347,11 @@ img { max-width: 100%; display: block; }
   letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase;
   margin-top: 16px;
 }
+.page-header-title br {
+  display: block;
+  margin-bottom: 0.06em;
+  content: '';
+}
 
 /* ── 专栏页头部小图：黑白图案，亮/暗两版按主题切换 ── */
 .column-art-wrap {
@@ -423,6 +428,16 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   margin-bottom: 8px;
 }
 .tn-desc { font-family: var(--font-cn); font-size: 13.5px; line-height: 1.75; color: var(--muted); }
+.tn-tags {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-top: 12px;
+}
+.tn-tag {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--muted);
+  transition: color 0.2s var(--ease-out);
+}
+.tn-item:hover .tn-tag { color: var(--c-pink); }
 
 /* ── 卡片交互：放大 + 变色 + 下划线从左向右展开 ── */
 .tn-item, .ar-item, .lab-row {
@@ -480,6 +495,16 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   font-family: var(--font-grot); font-weight: 700; font-size: 17px;
   line-height: 1.35; letter-spacing: -0.01em;
 }
+.ar-tags {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-top: 9px;
+}
+.ar-tag {
+  font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--muted);
+  transition: color 0.2s var(--ease-out);
+}
+.ar-item:hover .ar-tag { color: var(--c-pink); }
 
 .col-more {
   display: inline-block; margin-top: 18px;
@@ -640,9 +665,30 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
 .giscus-frame { max-width: 100%; }
 .waline-shell { margin-top: 48px; min-height: 180px; }
 
+/* Lab 子页面：返回链接 + 分组容器 */
+.back-link {
+  display: inline-block;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 18px;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--c-pink); }
+
+.lab-group { display: flex; flex-direction: column; gap: 16px; }
+.group-list { display: flex; flex-direction: column; }
+
 /* 分组小标题（Lab 页 BUILDS/LOGS、blog 索引年份） */
-.group-label { margin: 44px 0 6px; }
-.group-label:first-of-type { margin-top: 0; }
+.group-label { margin: 0; }
+.group-head .group-label:first-of-type { margin-top: 0; }
+.group-note {
+  font-family: var(--font-cn);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
 
 /* ═══ Article ═══ */
 .article { max-width: 720px; margin: 0 auto; padding-top: 72px; padding-bottom: 40px; }
@@ -657,6 +703,16 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   color: var(--muted); margin-top: 16px;
 }
 .art-meta-line { margin-top: 22px; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+
+/* 文章头部 Tag 行：与首页时间轴的 #TAG 同款 mono 小字 */
+.art-tags {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  margin-top: 16px;
+}
+.art-tag {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; color: var(--muted);
+}
 
 /* 封面图版（杂志 PLATE 式） */
 .art-cover { margin: 2.6rem 0 0; }
@@ -894,6 +950,23 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
 .prose img {
   border-radius: 4px; margin: 1.6rem 0; width: 100%;
   border: 1px solid var(--rule-soft);
+}
+/* 研究类文章的交互地图与图表版式 */
+.map-fig, .chart-fig { margin: 1.8rem 0; }
+.map-fig figcaption, .chart-fig figcaption {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+  color: var(--muted); margin-top: 0.7rem; text-align: center;
+}
+.map-embed {
+  border: 1px solid var(--rule-soft);
+  border-radius: 4px;
+  background: var(--paper-raise);
+  overflow: hidden;
+}
+.map-embed iframe { display: block; width: 100%; height: 560px; border: 0; }
+.chart-fig img { border: 1px solid var(--rule-soft); border-radius: 4px; }
+@media (max-width: 640px) {
+  .map-embed iframe { height: 440px; }
 }
 .prose hr {
   border: none; border-top: 2px solid var(--rule);
