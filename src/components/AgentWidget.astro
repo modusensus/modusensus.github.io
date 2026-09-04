@@ -339,7 +339,6 @@
     fab.addEventListener('click', () => setOpen(!open));
     close.addEventListener('click', () => setOpen(false));
     // 清空对话：丢掉本地历史 + 换新 sid（旧 KV 会话自然过期），模型不再被旧回复带偏
-    const clear = document.getElementById('aw-clear');
     clear.addEventListener('click', () => {
       conv = [];
       loading = false;
