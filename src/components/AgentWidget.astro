@@ -11,7 +11,11 @@
   <div class="aw-panel" id="aw-panel" role="dialog" aria-label="与 MODUSENSUS AI 助理对话">
     <div class="aw-head">
       <span class="aw-title"><span class="aw-pulse" aria-hidden="true"></span>ASK · AI 助理</span>
-      <button class="aw-close" id="aw-close" type="button" aria-label="收起助理">
+      <span class="aw-head-actions">
+        <button class="aw-clear" id="aw-clear" type="button" aria-label="清空对话" title="清空对话（换新会话）">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 3.5h10M5.5 3.5V2.2c0-.4.3-.7.7-.7h1.6c.4 0 .7.3.7.7v1.3M3.4 3.5l.5 8c0 .6.5 1 1 1h4.2c.5 0 1-.4 1-1l.5-8M5.8 6v4M8.2 6v4"/></svg>
+        </button>
+        <button class="aw-close" id="aw-close" type="button" aria-label="收起助理">
         <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M1.5 1.5l9 9M10.5 1.5l-9 9"/></svg>
       </button>
     </div>
@@ -90,12 +94,13 @@
   @keyframes aw-pulse {
     0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
   }
-  .aw-close {
+  .aw-head-actions { display: flex; align-items: center; gap: 10px; }
+  .aw-close, .aw-clear {
     display: flex; padding: 3px;
     color: rgba(239, 234, 224, 0.6); background: none; border: 0; cursor: pointer;
     transition: color 0.2s;
   }
-  .aw-close:hover { color: var(--c-pink); }
+  .aw-close:hover, .aw-clear:hover { color: var(--c-pink); }
 
   /* ── 消息区 ── */
   .aw-msgs {
@@ -325,12 +330,23 @@
     const wrap = document.getElementById('agent-widget');
     const fab = document.getElementById('aw-fab');
     const close = document.getElementById('aw-close');
+    const clear = document.getElementById('aw-clear');
     const form = document.getElementById('aw-form');
     const input = document.getElementById('aw-input');
-    if (!wrap || !fab || !close || !form || !input) return; // 守卫：本页无组件时不做事
+    if (!wrap || !fab || !close || !clear || !form || !input) return; // 守卫：本页无组件时不做事
 
     fab.addEventListener('click', () => setOpen(!open));
     close.addEventListener('click', () => setOpen(false));
+    // 清空对话：丢掉本地历史 + 换新 sid（旧 KV 会话自然过期），模型不再被旧回复带偏
+    const clear = document.getElementById('aw-clear');
+    clear.addEventListener('click', () => {
+      conv = [];
+      loading = false;
+      try { localStorage.removeItem('modusensus_agent_sid'); } catch (e) { /* ignore */ }
+      sid = null;
+      ensureSid();
+      render();
+    });
     form.addEventListener('submit', (e) => { e.preventDefault(); send(input.value); });
     input.addEventListener('input', () => { draft = input.value; });
 
