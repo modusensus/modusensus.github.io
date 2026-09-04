@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { ViewTransitions } from 'astro:transitions';
 import Analytics from '@vercel/analytics/astro';
 import StatusWidget from '../components/StatusWidget.astro';
+import AgentWidget from '../components/AgentWidget.astro';
 import ReaderChip from '../components/ReaderChip.astro';
 import LoginModal from '../components/LoginModal.astro';
 
@@ -175,8 +176,11 @@ const navGroups = [
     </footer>
   </div>
 
-  <!-- ── 右下角站长状态小部件：数据来自自建 /api/status，管理页 /status ── -->
+  <!-- ── 站长状态小部件：对齐左侧导航锚点，数据来自自建 /api/status，管理页 /status ── -->
   <StatusWidget />
+
+  <!-- ── 右下角 AI 助理浮窗：对话走同源 /api/agent（z-index 203：状态 202 之上、封面 205 之下） ── -->
+  <AgentWidget />
 
   <!-- ── 右上角读者身份入口（Waline 登录状态） ── -->
   <ReaderChip />
