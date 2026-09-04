@@ -50,6 +50,13 @@ export const elsewhereLinks: ElsewhereLink[] = [
     kind: 'friends',
   },
   {
+    name: 'ねねこ小屋',
+    url: 'https://huinaihui.com/',
+    description: '主记录创作的y2k风格个人网站',
+    image: 'https://huinaihui.com/assets/nanako.jpg?v=2',
+    kind: 'friends',
+  },
+  {
     name: '博客大平台',
     url: 'https://bo.ke/',
     description: '中文博客聚合与收录平台，独立博客都在这里互相发现。',
