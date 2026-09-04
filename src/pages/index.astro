@@ -81,7 +81,7 @@ function fmtYear(date: Date) {
         <!-- 主页双入口：BLOG 进入博客正文，STUDIO 前往工作室看板 -->
         <div class="hero-entries">
           <a class="hero-entry" href="/blog" data-enter-board>
-            <span class="hero-entry-label">BLOG <span class="hero-entry-arrow">↓</span></span>
+            <span class="hero-entry-label">BLOG <span class="hero-entry-arrow">←</span></span>
             <span class="hero-entry-desc">博客 · 写作与档案</span>
           </a>
           <a class="hero-entry" href="/studio">
@@ -382,7 +382,7 @@ function fmtYear(date: Date) {
   transition: border-color 0.2s, transform 0.25s var(--ease-out);
 }
 .hero-entry:hover { border-color: var(--c-pink); transform: translateY(-3px); }
-.hero-entry:hover .hero-entry-arrow { transform: translateX(3px); }
+.hero-entry:hover .hero-entry-arrow { transform: translateX(-3px); }
 .hero-entry-label {
   display: inline-flex; align-items: center; gap: 8px;
   font-family: var(--font-grot); font-weight: 900; font-size: 15px;
