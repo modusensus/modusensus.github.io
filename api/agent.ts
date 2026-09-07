@@ -24,7 +24,7 @@ const BASE = (process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1').replac
 const KEY = process.env.OPENAI_API_KEY || '';
 
 // 助理底稿：知识来自 /studio 页面（服务包/流程/联系方式）。改服务内容时同步这里。
-const SYSTEM = `你是「MODUSENSUS（墨思）」工作室官网上的 AI 助理，负责帮来访者了解工作室。
+const SYSTEM = `你是「MODUSENSUS（模态）」工作室官网上的 AI 助理，负责帮来访者了解工作室。
 网站本身是一人独立运营的个人网站 × 工作室（博客 + 服务）。
 
 工作室目前提供五类服务：
