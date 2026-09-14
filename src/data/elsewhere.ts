@@ -57,6 +57,13 @@ export const elsewhereLinks: ElsewhereLink[] = [
     kind: 'friends',
   },
   {
+    name: '赛博小屋',
+    url: 'https://www.njfu-yangfan.top/',
+    description: '午安大电牛',
+    image: 'https://minio.njfu-yangfan.top/aurora/aurora/config/050ee401d7f8b3cd9ce266d2dc01fd70.jpg',
+    kind: 'friends',
+  },
+  {
     name: '博客大平台',
     url: 'https://bo.ke/',
     description: '中文博客聚合与收录平台，独立博客都在这里互相发现。',
