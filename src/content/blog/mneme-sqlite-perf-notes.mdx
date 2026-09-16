@@ -1,0 +1,139 @@
+---
+title: "SQLite 检索提速三招：把搬运挡在数学外面"
+subtitle: "5k 行记忆库的周期性卡顿解剖——97% 的耗时不在算法，在数据搬运；231ms 到 51ms 的三步"
+issue: "05"
+category: "OPEN SOURCE / SQLITE / PERFORMANCE"
+tags: ["OPEN SOURCE", "SQLITE", "PERFORMANCE", "NODE.JS"]
+date: 2026-09-16
+readingTime: "10"
+module: lab
+ai: true
+---
+
+> 这是「Mneme 工程笔记」第一篇。系列背景见《Mneme：记忆不是储藏室，是会遗忘的缪斯》，代码都在 [modusensus/dsh-mneme](https://github.com/modusensus/dsh-mneme)。本文的问题线索在 [issue #202](https://github.com/modusensus/dsh-mneme/issues/202)，完整改动在 PR #203。
+
+## 00 · 症状：GUI 每隔一阵卡一下
+
+社区报告（[lengduan](https://github.com/lengduan)）：5k 行记忆库，宿主 GUI 周期性卡顿。他顺手给了一份耗时解剖，这份解剖直接决定了后面所有的修法：
+
+```
+searchVector 一次调用的耗时构成
+────────────────────────────────────────────
+SQL 搬全行         88.1 ms   ████████████
+JSON.parse 向量    47.9 ms   ██████
+余弦相似度计算      4.3 ms   ▌
+────────────────────────────────────────────
+合计 ~140 ms，其中真正的"数学"只占 3%
+```
+
+结论先于方案：**这不是一个算法问题，是一个搬运问题**。对 512 维向量算几千次余弦，只值 4.3ms；剩下 97% 全花在把数据从 SQLite 搬进 JS、把 TEXT 解析成数组这两件"杂活"上。
+
+> 坑 ①：**先解剖，再动手**。只看"检索慢"，第一反应往往是换向量库、上 HNSW——每一项都是一周的工程。而解剖完发现，把三件杂活各自省掉，就能从 140ms 到 16ms。优化顺序永远是：测量 → 找大头 → 消灭大头，而不是替换部件。
+
+## 01 · 第一招：给 ORDER BY 加索引
+
+`all()` 和 `list()` 都按 `updated_at DESC` 排序，但 `updated_at` 没有索引——SQLite 每次都得全表扫描后再排一遍临时 B 树。
+
+修法只多一行，但有两个讲究：
+
+```sql
+-- 放进 SCHEMA 的建表脚本里
+CREATE INDEX IF NOT EXISTS idx_memories_updated ON memories (updated_at);
+```
+
+- **`IF NOT EXISTS` 是给存量用户的**。老库不会重跑 `CREATE TABLE`，所以索引语句必须幂等地放进启动时的建表脚本，老库一启动自动补上。
+- **排序键是 `updated_at`，不是 `created_at`**。autoDream 会更新老记忆，列表按"最近被动过"排——索引建错字段，等于白建。
+
+收益：`all()` 231.6 → 135.4ms（1.71×）。报告者先在自己的库上手动验证过同款收益，我们才动手。
+
+## 02 · 第二招：别把最重的列搬出数据库
+
+`toRow()` 输出的记忆对象从来不含 embedding（向量另有专门的读取接口），但查询写的是 `SELECT *`——于是**全表最重的一列（5k 行 ≈ 9.4 MB 的 TEXT）每次都被拖进内存，然后被 toRow 扔掉**。纯粹的浪费。
+
+修法是显式列清单，但清单怎么来有讲究：
+
+```js
+// 从实际 schema 派生，只排除 embedding——而不是硬编码一份列名
+const memoryColumns = db.prepare("PRAGMA table_info(memories)").all()
+  .map((c) => c.name)
+  .filter((n) => n !== "embedding");
+const memoryColumnList = memoryColumns.join(", ");
+
+const rows = db.prepare(`SELECT ${memoryColumnList} FROM memories ...`).all();
+```
+
+> 坑 ②：**硬编码列清单是 schema 漂移的温床**。下个版本加一列，忘了同步这份清单，新列就在所有列表查询里静默消失——这种 bug 报出来都难：不报错，只是数据"不见了"。用 `PRAGMA table_info` 现场派生，schema 演进自动跟随，排除名单里永远只有一项：embedding。
+
+## 03 · 第三招：解析一次，记住它
+
+检索路径此前每次调用，都对全部带向量的行重新 `JSON.parse`——约一千条 × 512 维 ≈ 48ms，而解析结果和上一次一模一样。
+
+好在向量的访问模式让缓存非常安全：
+
+- **单一写入口**：向量只经 `setEmbedding()` 写入——单一写入口就是单一失效点；
+- **不可变内容**：同一 id 的向量要么被整体替换，要么被清空，没有"改一半"。
+
+```js
+const embeddingCache = new Map();       // id → 已解析的向量
+const EMBEDDING_CACHE_MAX = 4000;       // FIFO 驱逐，内存 16 MB 量级封顶
+
+function cacheEmbedding(id, vector) {
+  if (embeddingCache.size >= EMBEDDING_CACHE_MAX && !embeddingCache.has(id)) {
+    embeddingCache.delete(embeddingCache.keys().next().value);  // 最旧的先走
+  }
+  embeddingCache.set(id, vector);
+}
+```
+
+> 坑 ③：**绕过单一写入口的路径，就是缓存失效的漏网之鱼**。`update()` 里有一条直接 SQL 写 embedding 的捷径，没走 `setEmbedding()`——测试当场抓出脏缓存：update 之后检索到的还是旧向量。修法不是让 update 绕回去，而是在每个旁路写点显式 `embeddingCache.delete(id)`。**缓存失效没有什么聪明办法，只有"枚举所有写点"这一条笨路**——笨路才可靠。
+
+驱逐策略选 FIFO 而不是 LRU：检索路径近似均匀地扫全表，命中分布没有明显的"热头"，FIFO 实现最简单、行为最好预测。
+
+收益：47.9ms 的重复解析 → 缓存命中后 ~0.2ms。
+
+## 04 · 回表：Top-N 才配拿全字段
+
+三招之后还剩最后一处搬运：检索的 SQL 依然拖着正文走。既然打分只需要 id + 向量，那就把查询砍到最瘦：
+
+```js
+// 只取 id 列（~40 KB），而不是 SELECT *（~11 MB）
+const rows = db.prepare(
+  `SELECT id FROM memories
+   WHERE ... AND embedding IS NOT NULL AND embedding != ''`
+).all();
+for (const row of rows) {
+  const v = getParsedEmbedding(row.id);   // 走第三招的缓存
+  const score = cosine(vector, v);
+  // ...排序
+}
+// 只有入选 Top-N 的行，才按主键点查取回完整字段（≤ limit 行）
+```
+
+> 坑 ④：**SQL 里保留 `embedding IS NOT NULL` 过滤，别拿缓存里的 id 集合代替**。缓存只知道"曾经有向量"，不知道"刚刚被删了向量"。「有向量的行」这个集合必须始终以库为准——否则删除操作要等缓存过期才生效。
+
+这就是经典的 Top-N 回表：评分阶段用最瘦的数据，只有入选者才拿回全部字段。四件事叠起来，`searchVector` 从 ~140ms 到 16.3ms。
+
+## 05 · 一条值得记录的弯路
+
+贡献者还实测了一条听起来很美的路：给 embedding 建 JSON 表达式索引，让 SQL 直接算相似度——结果 38.3 → 53.9ms，**更慢了**。对"每行都要做 512 维点积"这种负载，SQLite 表达式索引省回来的 I/O 会被函数调用开销成倍赔回去。
+
+> 优化笔记里，"此路不通"和"此路通"一样值钱。撞过墙的实测数字，比一百句"应该不行"都有说服力——所以它被原样写进了 issue。
+
+## 06 · 结果
+
+| 查询 | 之前 | 之后 |
+| --- | --- | --- |
+| `all()` | 231.6 ms | **50.9 ms** |
+| `searchVector` | ~140 ms（88 SQL + 48 解析 + 4 数学） | **16.3 ms** |
+
+三招一句话版：
+
+1. **排序键要有索引**——临时 B 树是最便宜的胜利；
+2. **列投影**——不要把最重的列搬出来再扔掉，清单从 `PRAGMA` 现场派生；
+3. **解析缓存 + Top-N 回表**——昂贵的解析只做一次，全字段只给入选者。
+
+而贯穿三招的其实是同一句话：**先解剖，再动手。当 97% 的耗时在搬运时，换任何算法都没用。**
+
+---
+
+*相关：[Mneme：记忆不是储藏室，是会遗忘的缪斯](/blog/mneme-technical-blog) · 系列第二篇《让注入的记忆会轮换》。数据来源：issue #202 报告与 PR #203 验收。*
