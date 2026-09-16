@@ -1,0 +1,51 @@
+name: Sync to dev.to
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/content/blog/**'
+      - '.github/scripts/**'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 只打印 payload，不实际发布
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: devto-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install parser dependency
+        run: npm install --no-save gray-matter@4.0.1
+
+      - name: Sync posts to dev.to
+        run: node .github/scripts/sync-devto.mjs ${{ inputs.dry_run == true && '--dry-run' || '' }}
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEV_TO_API_KEY }}
+          SITE_URL: https://modusensus.space
+
+      - name: Commit manifest
+        if: ${{ inputs.dry_run != true }}
+        run: |
+          if [[ -n "$(git status --porcelain .github/scripts/devto-manifest.json)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/scripts/devto-manifest.json
+            git commit -m "chore(devto): update sync manifest [skip ci]"
+            git push
+          fi
