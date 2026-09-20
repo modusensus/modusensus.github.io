@@ -1,0 +1,45 @@
+---
+// 专栏页头部右上角的装饰小图：内联 SVG 用 currentColor 画线，自动跟随明暗主题。
+// 构图原则：单一母题 + 大量留白 + 强调色一处点睛，与全站 mono 排印语言一致。
+interface Props {
+  motif: 'threshold' | 'lab' | 'archive';
+}
+const { motif } = Astro.props;
+---
+
+{motif === 'threshold' && (
+  <svg class="column-art" viewBox="0 0 150 150" width="150" height="150" fill="none" aria-hidden="true">
+    <!-- 门与门缝里的光 -->
+    <rect x="40" y="22" width="70" height="106" stroke="currentColor" stroke-width="2.5"/>
+    <line x1="75" y1="22" x2="75" y2="128" stroke="currentColor" stroke-width="1.5" opacity="0.45"/>
+    <line x1="78" y1="42" x2="78" y2="126" stroke="var(--c-pink)" stroke-width="3" opacity="0.9"/>
+    <circle cx="66" cy="80" r="2.5" fill="currentColor"/>
+  </svg>
+)}
+
+{motif === 'lab' && (
+  <svg class="column-art" viewBox="0 0 150 150" width="150" height="150" fill="none" aria-hidden="true">
+    <!-- 烧瓶与气泡 -->
+    <path d="M64 24 h22 M70 24 v34 L48 112 a8 8 0 0 0 7.4 10.4 h39.2 A8 8 0 0 0 102 112 L80 58 v-34" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+    <path d="M56 92 L94 92" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+    <circle cx="73" cy="102" r="4" stroke="var(--c-pink)" stroke-width="2"/>
+    <circle cx="84" cy="82" r="2.5" stroke="currentColor" stroke-width="1.6" opacity="0.6"/>
+    <circle cx="76" cy="70" r="1.8" stroke="currentColor" stroke-width="1.4" opacity="0.4"/>
+  </svg>
+)}
+
+{motif === 'archive' && (
+  <svg class="column-art" viewBox="0 0 150 150" width="150" height="150" fill="none" aria-hidden="true">
+    <!-- 抽屉柜：三层，第三层半开露出一角 -->
+    <rect x="30" y="26" width="90" height="98" stroke="currentColor" stroke-width="2.5"/>
+    <line x1="30" y1="59" x2="120" y2="59" stroke="currentColor" stroke-width="2"/>
+    <line x1="30" y1="92" x2="120" y2="92" stroke="currentColor" stroke-width="2"/>
+    <line x1="64" y1="43" x2="86" y2="43" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+    <line x1="64" y1="76" x2="86" y2="76" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+    <line x1="66" y1="109" x2="84" y2="109" stroke="currentColor" stroke-width="2" opacity="0.5"/>
+    <!-- 半开的抽屉 -->
+    <path d="M36 92 h78 v22 H36 Z" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
+    <path d="M114 92 l14 -8 v22 l-14 8" fill="var(--paper)" stroke="currentColor" stroke-width="2"/>
+    <path d="M104 104 l16 -9" stroke="var(--c-pink)" stroke-width="2.5"/>
+  </svg>
+)}

@@ -348,9 +348,9 @@ image: https://your-site.com/avatar.jpg`}</pre>
   line-height: 1.8;
   color: var(--muted);
 }
-/* ── 页面右侧栏：友链申请便签（回形针便签卡）── */
-:root { --note-paper: #F8E9BD; }
-:root[data-theme='dark'] { --note-paper: #3A3426; }
+/* ── 页面右侧栏：友链申请便签（回形针便签卡）──
+   底色用当前强调色混入纸色，跟随全站换色，不再用突兀的固定黄色 */
+:root { --note-paper: color-mix(in srgb, var(--c-pink) 7%, var(--paper-raise)); }
 .elsewhere-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 280px;
@@ -427,7 +427,8 @@ image: https://your-site.com/avatar.jpg`}</pre>
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px 12px;
+  flex-wrap: wrap; /* 280px 侧栏放不下长标签+按钮时让按钮换行，不再挤压 */
   margin-bottom: 8px;
 }
 .exchange-block-head .mono-meta { margin-bottom: 0; }
@@ -458,8 +459,8 @@ image: https://your-site.com/avatar.jpg`}</pre>
   border: 1px solid var(--rule-soft);
   border-radius: 4px;
   padding: 12px 14px;
-  overflow-x: auto;
-  white-space: pre;
+  white-space: pre-wrap; /* 窄栏折行代替横向滚动，复制的是 textContent 不受影响 */
+  overflow-wrap: anywhere;
 }
 .exchange-actions { display: flex; gap: 24px; flex-wrap: wrap; }
 

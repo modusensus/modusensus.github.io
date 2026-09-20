@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ColumnArt from '../components/ColumnArt.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -16,8 +17,7 @@ function fmtShort(date: Date) {
 <BaseLayout activeNav="threshold" title="Threshold Notes — MODUSENSUS">
   <header class="container page-header">
     <div class="column-art-wrap" aria-hidden="true">
-      <img class="column-art" data-art="light" src="/images/columns/threshold-light.png" alt="" width="480" height="480" loading="lazy" />
-      <img class="column-art" data-art="dark" src="/images/columns/threshold-dark.png" alt="" width="480" height="480" loading="lazy" />
+      <ColumnArt motif="threshold" />
     </div>
     <div class="mono-label">01 — MAGAZINE</div>
     <h1 class="page-header-title">THRESHOLD<br />NOTES</h1>

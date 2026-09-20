@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ColumnArt from '../components/ColumnArt.astro';
 import { getCollection } from 'astro:content';
 import { readingLinks } from '../data/reading';
 
@@ -16,8 +17,7 @@ function fmtYear(date: Date) {
 <BaseLayout activeNav="archive" title="Archive — MODUSENSUS">
   <header class="container page-header">
     <div class="column-art-wrap" aria-hidden="true">
-      <img class="column-art" data-art="light" src="/images/columns/archive-light.png" alt="" width="480" height="480" loading="lazy" />
-      <img class="column-art" data-art="dark" src="/images/columns/archive-dark.png" alt="" width="480" height="480" loading="lazy" />
+      <ColumnArt motif="archive" />
     </div>
     <div class="mono-label">03 — ARCHIVE</div>
     <h1 class="page-header-title">ARCHIVE</h1>

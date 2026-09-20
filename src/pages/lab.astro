@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import ColumnArt from '../components/ColumnArt.astro';
 import { getCollection } from 'astro:content';
 
 const allPosts = await getCollection('blog');
@@ -15,8 +16,8 @@ const cards = [
     note: '用数据与地图读城市',
     count: `${String(fieldworkCount).padStart(2, '0')} ENTRIES`,
     href: '/lab/fieldwork',
-    image: '/images/lab/demeter-cover.jpg',
-    deity: 'Demeter',
+    image: '/images/lab/fieldwork.svg',
+    alt: '等高线与路线图',
   },
   {
     key: 'logs',
@@ -25,8 +26,8 @@ const cards = [
     note: '从想法到上线',
     count: `${String(logCount).padStart(2, '0')} ENTRIES`,
     href: '/lab/logs',
-    image: '/images/lab/hermes-cover.jpg',
-    deity: 'Hermes',
+    image: '/images/lab/logs.svg',
+    alt: '终端窗口',
   },
   {
     key: 'builds',
@@ -35,8 +36,8 @@ const cards = [
     note: '发布在 GitHub 的作品',
     count: '05 PROJECTS',
     href: '/lab/builds',
-    image: '/images/lab/hephaestus-cover.jpg',
-    deity: 'Hephaestus',
+    image: '/images/lab/builds.svg',
+    alt: '堆叠的构建模块',
   },
 ];
 ---
@@ -44,8 +45,7 @@ const cards = [
 <BaseLayout activeNav="lab" title="Modusensus Lab — MODUSENSUS">
   <header class="container page-header">
     <div class="column-art-wrap" aria-hidden="true">
-      <img class="column-art" data-art="light" src="/images/columns/lab-light.png" alt="" width="480" height="480" loading="lazy" />
-      <img class="column-art" data-art="dark" src="/images/columns/lab-dark.png" alt="" width="480" height="480" loading="lazy" />
+      <ColumnArt motif="lab" />
     </div>
     <div class="mono-label">02 — LAB</div>
     <h1 class="page-header-title">LAB</h1>
@@ -59,7 +59,7 @@ const cards = [
       {cards.map((card, idx) => (
         <a class="lab-card" href={card.href} data-section={card.key}>
           <div class={`card-image-wrap ${card.key === 'builds' ? 'builds-image' : ''}`}>
-            <img src={card.image} alt={`${card.deity} sculpture`} width="480" height="480" loading={idx === 0 ? 'eager' : 'lazy'} />
+            <img src={card.image} alt={card.alt} width="480" height="600" loading={idx === 0 ? 'eager' : 'lazy'} />
           </div>
           <div class="card-body">
             <div class="card-meta">
@@ -108,17 +108,17 @@ const cards = [
     position: relative;
     aspect-ratio: 4 / 5;
     overflow: hidden;
-    background: #E8E3D8;
+    background: #211E19;
   }
   .card-image-wrap img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 55%;
+    object-position: center;
     transition: transform 0.7s var(--ease-out);
   }
   .card-image-wrap.builds-image img {
-    object-position: center 78%;
+    object-position: center;
   }
   .lab-card:hover .card-image-wrap img {
     transform: scale(1.05);
