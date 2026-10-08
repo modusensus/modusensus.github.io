@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
-  // 自定义域名（CNAME 已配置，GitHub Pages 绑定 modusensus.space）
+  // 站点规范地址。modusensus.space 由 Cloudflare → Vercel 服务；GitHub Pages 已解除该域绑定，根目录 CNAME 文件随之移除
   site: 'https://modusensus.space',
   // 如果仓库名不是 username.github.io，需要设置 base
   // base: '/blog/',
