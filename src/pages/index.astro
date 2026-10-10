@@ -231,16 +231,25 @@ function fmtYear(date: Date) {
           {recent.map(post => (
             <a class="tl-item" href={`/blog/${post.slug}`}>
               <span class="tl-node" aria-hidden="true"></span>
-              <div class="tl-meta">
-                <span class="mono-meta">{fmtYear(post.data.date)} — {moduleNames[post.data.module]}{post.data.issue ? ` · NO.${post.data.issue}` : ''}</span>
-              </div>
-              <div class="tl-title">{post.data.title}</div>
-              {post.data.subtitle && <div class="tl-desc">{post.data.subtitle}</div>}
-              {postTags(post).length > 0 && (
-                <div class="tl-tags">
-                  {postTags(post).map(t => <span class="tl-tag">#{t}</span>)}
+              <div class="tl-body">
+                {post.data.cover && (
+                  <span class="tl-thumb" aria-hidden="true">
+                    <img src={post.data.cover} alt="" loading="lazy" />
+                  </span>
+                )}
+                <div class="tl-text">
+                  <div class="tl-meta">
+                    <span class="mono-meta">{fmtYear(post.data.date)} — {moduleNames[post.data.module]}{post.data.issue ? ` · NO.${post.data.issue}` : ''}</span>
+                  </div>
+                  <div class="tl-title">{post.data.title}</div>
+                  {post.data.subtitle && <div class="tl-desc">{post.data.subtitle}</div>}
+                  {postTags(post).length > 0 && (
+                    <div class="tl-tags">
+                      {postTags(post).map(t => <span class="tl-tag">#{t}</span>)}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </a>
           ))}
         </div>
@@ -413,6 +422,29 @@ function fmtYear(date: Date) {
   background: var(--c-pink);
   border-color: var(--c-pink);
   transform: scale(1.25);
+}
+/* 条目主体：封面缩略图（杂志细边框）与文字并排；无封面时纯文字 */
+.tl-body { display: flex; gap: 18px; align-items: flex-start; }
+.tl-thumb {
+  flex: none; width: 96px; height: 68px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  background: var(--paper-raise);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+.tl-thumb img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s var(--ease-out);
+}
+.tl-item:hover .tl-thumb {
+  transform: translateY(-2px);
+  box-shadow: 4px 4px 0 rgba(26, 22, 16, 0.12);
+}
+.tl-item:hover .tl-thumb img { transform: scale(1.05); }
+@media (max-width: 640px) {
+  .tl-body { gap: 12px; }
+  .tl-thumb { width: 72px; height: 52px; }
 }
 .tl-meta { margin-bottom: 9px; }
 .tl-title {

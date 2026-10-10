@@ -495,6 +495,13 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   font-family: var(--font-grot); font-weight: 700; font-size: 17px;
   line-height: 1.35; letter-spacing: -0.01em;
 }
+/* 列表行常驻摘要（/blog 索引）：与 tn-desc 同款中文灰字，最多两行后截断 */
+.ar-desc {
+  font-family: var(--font-cn); font-size: 13px; line-height: 1.7;
+  color: var(--muted); margin-top: 6px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .ar-tags {
   display: flex; flex-wrap: wrap; gap: 12px;
   margin-top: 9px;
@@ -688,6 +695,25 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   line-height: 1.6;
   color: var(--muted);
   margin: 0 0 16px;
+}
+
+/* ── /blog 索引年份分组：竖轴时间线（与 FRAGMENTS 同一套轴线语言）──
+   轴线贯穿每个年份区块，mono-label 的方块节点骑在轴线上，文章行缩进其右 */
+.year-sec { position: relative; padding-left: 30px; }
+.year-sec + .year-sec { margin-top: 52px; }
+.year-sec::before {
+  content: '';
+  position: absolute; left: 8px; top: 14px; bottom: 10px;
+  width: 1px;
+  background: var(--rule-soft);
+}
+/* mono-label::before 的 10px 方块向左偏移，正好压在轴线（left:8px）上 */
+.year-sec .group-label::before { margin-left: -25px; }
+.year-sec .group-label { margin-bottom: 20px; }
+@media (max-width: 640px) {
+  .year-sec { padding-left: 24px; }
+  .year-sec::before { left: 6px; }
+  .year-sec .group-label::before { margin-left: -21px; }
 }
 
 /* ═══ Article ═══ */
@@ -968,7 +994,7 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   background: var(--code-bg); color: var(--code-fg);
   padding: 1.15rem 1.35rem; border-radius: 6px;
   overflow-x: auto; margin: 1.8rem 0;
-  font-size: 13.5px; line-height: 1.75;
+  font-size: 14px; line-height: 1.8;
   text-align: left;
   box-shadow: 0 2px 14px rgba(26, 22, 16, 0.12);
 }
@@ -983,14 +1009,41 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
   background-repeat: no-repeat;
   opacity: 0.85;
 }
-/* 右上角语言标签：Shiki 自带 data-language（plaintext 不显示） */
+/* ── 代码块包装层（JS 生成）：语言标签与复制按钮锚定在外层，
+      代码横向滚动时按钮不跟着移出视野；原 pre 的外边距移交包装层 ── */
+.prose .code-wrap { position: relative; margin: 1.8rem 0; }
+.prose .code-wrap pre { margin: 0; }
+/* 右上角语言标签：Shiki 自带 data-language（plaintext 不显示），让位给复制按钮。
+   pre 版规则是无 JS 兜底：JS 包装时会把 data-language 移到 .code-wrap 上，二者不会同时命中 */
+.prose .code-wrap[data-language]:not([data-language="plaintext"])::after,
 .prose pre[data-language]:not([data-language="plaintext"])::after {
   content: attr(data-language);
-  position: absolute; top: 10px; right: 12px;
+  position: absolute; top: 12px; right: 46px;
   font-family: var(--font-mono); font-size: 9.5px; font-weight: 700;
   letter-spacing: 0.12em; text-transform: uppercase;
   color: rgba(239, 234, 224, 0.4);
 }
+/* 复制按钮：hover 代码块时浮现，复制成功短暂显示对勾 */
+.code-copy {
+  position: absolute; top: 9px; right: 12px; z-index: 2;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: rgba(239, 234, 224, 0.07);
+  border: 1px solid rgba(239, 234, 224, 0.22);
+  border-radius: 4px;
+  color: rgba(239, 234, 224, 0.55);
+  opacity: 0;
+  transition: opacity 0.2s, color 0.2s, border-color 0.2s, background 0.2s;
+}
+.code-wrap:hover .code-copy,
+.code-copy:focus-visible { opacity: 1; }
+.code-copy:hover {
+  color: #EFEAE0;
+  border-color: rgba(239, 234, 224, 0.5);
+  background: rgba(239, 234, 224, 0.14);
+}
+.code-copy svg { display: block; }
+.code-copy.copied { opacity: 1; color: var(--c-green); border-color: currentColor; }
 
 .prose a {
   color: var(--ink);
@@ -1167,6 +1220,62 @@ a.col-head:hover { text-decoration: underline; text-underline-offset: 4px; }
     scroll-behavior: auto !important;
   }
   .fade-in { opacity: 1 !important; transform: none !important; }
+}
+
+/* ═══ 返回顶部按钮（BaseLayout 全站挂载）═══
+   固定右下角，滚动超过 1.5 视口高度后由 JS 加 .show 浮现；
+   z-index 190：导航 200 / 状态件 202 / 封面 205 之下，首页封面态（锁滚动）不会露出 */
+.back-to-top {
+  position: fixed; right: 26px; bottom: 26px; z-index: 190;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  background: var(--paper-raise);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  color: var(--ink);
+  box-shadow: 0 4px 14px rgba(26, 22, 16, 0.12);
+  opacity: 0; visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity 0.25s var(--ease-out), transform 0.25s var(--ease-out),
+              visibility 0.25s, background 0.2s, color 0.2s;
+}
+.back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.back-to-top:hover { background: var(--ink); color: var(--paper); }
+.back-to-top svg { display: block; }
+/* 移动端：底部悬浮导航条（bottom≈12px、高≈56px）之上，避免重叠 */
+@media (max-width: 899px) {
+  .back-to-top { bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); right: 16px; }
+}
+
+/* ═══ 图片灯箱（正文 / 封面图点击放大）═══
+   z-index 9700：噪点层 9600 之上，保证盖满整页；打开时锁页面滚动 */
+html.lightbox-open { overflow: hidden; }
+.prose img, .art-cover img { cursor: zoom-in; }
+.lightbox {
+  position: fixed; inset: 0; z-index: 9700;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(20, 17, 12, 0.88);
+  cursor: zoom-out;
+  animation: lb-fade 0.22s var(--ease-out);
+}
+.lightbox[hidden] { display: none; }
+@keyframes lb-fade { from { opacity: 0; } to { opacity: 1; } }
+.lightbox-fig { max-width: min(1100px, 92vw); text-align: center; }
+.lightbox-fig img {
+  max-width: 100%; max-height: 84vh;
+  margin: 0 auto;
+  border: 1px solid rgba(245, 241, 232, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  cursor: default;
+  animation: lb-zoom 0.28s var(--ease-out);
+}
+@keyframes lb-zoom { from { transform: scale(0.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.lightbox-cap {
+  margin-top: 14px;
+  font-family: var(--font-mono); font-size: 10.5px; font-weight: 700;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: rgba(245, 241, 232, 0.55);
 }
 
 /* ═══ Waline 评论组件主题覆盖（全站生效：留言板 + 文章页评论区） ──

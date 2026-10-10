@@ -85,8 +85,8 @@ const tocItems = headings.filter(h => h.depth === 2);
       )}
 
       {tocItems.length > 0 && (
-        <details class="toc">
-          <summary>CONTENTS</summary>
+        <details class="toc" open>
+          <summary>CONTENTS · {tocItems.length} 节</summary>
           <nav>
             {tocItems.map(h => <a href={`#${h.slug}`}>{h.text}</a>)}
           </nav>
@@ -153,6 +153,70 @@ const tocItems = headings.filter(h => h.depth === 2);
 </BaseLayout>
 
 <script data-astro-rerun>
+  // ── 代码块增强：给 .prose 内每个 <pre> 套一层 .code-wrap（position:relative），
+  //    右上角放复制按钮。按钮锚定包装层而非 pre 本身，代码横向滚动时不跟着移出视野。
+  //    data-astro-rerun：路由切换后脚本随新 DOM 重新执行，正文每次到达文章页都会被包装；
+  //    已包装的 pre 会被跳过，不会重复挂按钮 ──
+  (function enhanceCodeBlocks() {
+    var ICON_COPY = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+    var ICON_DONE = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>';
+
+    var pres = document.querySelectorAll('.prose pre');
+    for (var p = 0; p < pres.length; p++) {
+      var pre = pres[p];
+      if (pre.parentElement && pre.parentElement.classList.contains('code-wrap')) continue;
+
+      var wrap = document.createElement('div');
+      wrap.className = 'code-wrap';
+      // 语言标签移到包装层（CSS ::after 读 attr(data-language)），避免与按钮重叠定位
+      var lang = pre.getAttribute('data-language');
+      if (lang) { wrap.setAttribute('data-language', lang); pre.removeAttribute('data-language'); }
+      pre.parentNode.insertBefore(wrap, pre);
+      wrap.appendChild(pre);
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'code-copy';
+      btn.setAttribute('aria-label', '复制代码');
+      btn.title = '复制代码';
+      btn.innerHTML = ICON_COPY;
+      wrap.appendChild(btn);
+
+      btn.addEventListener('click', function (code, button) {
+        return function () {
+          var text = code.innerText;
+          var done = function () {
+            button.classList.add('copied');
+            button.innerHTML = ICON_DONE;
+            button.setAttribute('aria-label', '已复制');
+            setTimeout(function () {
+              button.classList.remove('copied');
+              button.innerHTML = ICON_COPY;
+              button.setAttribute('aria-label', '复制代码');
+            }, 1600);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text, done); });
+          } else {
+            fallbackCopy(text, done);
+          }
+        };
+      }(pre.querySelector('code') || pre, btn));
+    }
+
+    // http 环境下 navigator.clipboard 不可用（仅安全上下文），用隐藏 textarea 兜底
+    function fallbackCopy(text, done) {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) { /* 静默失败 */ }
+      document.body.removeChild(ta);
+    }
+  })();
+
   // ── 阅读进度条（纯 JS：data-astro-rerun 脚本不经编译，不能使用 TS 语法） ──
   var progress = document.getElementById('reading-progress');
   function onScroll() {

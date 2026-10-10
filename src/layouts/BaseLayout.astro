@@ -184,6 +184,21 @@ const navGroups = [
   <ReaderChip />
   <LoginModal />
 
+  <!-- ── 返回顶部：固定右下角，滚动超过约 1.5 视口高度后浮现（z 190：导航 200 之下，
+       不与状态件 202 / 封面 205 抢层级；首页封面态锁滚动，按钮自然保持隐藏） ── -->
+  <button class="back-to-top" id="back-to-top" type="button" aria-label="返回顶部" title="返回顶部">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+  </button>
+
+  <!-- ── 图片灯箱：正文/封面图点击放大（z 9700：噪点层 9600 之上）。
+       常驻隐藏，内容由 JS 填充；点击任意处或 Esc 关闭 ── -->
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="图片预览" hidden>
+    <figure class="lightbox-fig">
+      <img id="lightbox-img" src="" alt="" />
+      <figcaption class="lightbox-cap">点击任意处 / ESC 关闭</figcaption>
+    </figure>
+  </div>
+
   <script>
     // ── Waline 浏览量统计（全局）：任何页面出现 .waline-pageview-count 元素都会被填充，
     //    元素上的 data-path 指定计数路径；挂 astro:page-load 适配 ViewTransitions（首次加载与每次路由切换都触发） ──
@@ -388,11 +403,72 @@ const navGroups = [
       });
     }
 
+    // ── 返回顶部 + 图片灯箱：监听全部挂在 document/window 上（跨 ViewTransitions 路由切换存活），
+    //    运行时用 getElementById / closest 取当前 DOM，因此只需绑定一次，切页后无需重绑 ──
+    let globalUiBound = false;
+
+    // 返回顶部按钮显隐：滚动超过约 1.5 视口高度浮现（模块级，路由切换后也能单独调用）
+    function syncBackToTop() {
+      const btn = document.getElementById('back-to-top');
+      if (btn) btn.classList.toggle('show', window.scrollY > window.innerHeight * 1.5);
+    }
+
+    function openLightbox(img) {
+      const lb = document.getElementById('lightbox');
+      const lbImg = document.getElementById('lightbox-img');
+      if (!lb || !lbImg) return;
+      lbImg.src = img.currentSrc || img.src;
+      lbImg.alt = img.alt || '';
+      lb.hidden = false;
+      document.documentElement.classList.add('lightbox-open');
+    }
+
+    function closeLightbox() {
+      const lb = document.getElementById('lightbox');
+      if (!lb || lb.hidden) return;
+      lb.hidden = true;
+      document.documentElement.classList.remove('lightbox-open');
+    }
+
+    function bindGlobalUi() {
+      if (globalUiBound) return;
+      globalUiBound = true;
+
+      // 返回顶部：滚动/缩放时同步显隐（after-swap 里另有一次，见下方绑定处）
+      window.addEventListener('scroll', syncBackToTop, { passive: true });
+      window.addEventListener('resize', syncBackToTop);
+      syncBackToTop();
+
+      document.addEventListener('click', (e) => {
+        const t = e.target;
+        if (!(t instanceof Element)) return;
+        // 返回顶部按钮（按钮 DOM 随路由切换重建，用事件委托避免逐次重绑）
+        if (t.closest('#back-to-top')) {
+          window.scrollTo({ top: 0 });
+          return;
+        }
+        // 灯箱开启：正文图 / 文章封面图；被链接包裹的图不拦截（保持链接跳转）
+        const img = t.closest('.prose img, .art-cover img');
+        if (img && !img.closest('a')) {
+          openLightbox(img);
+          return;
+        }
+        // 灯箱已开：点击任意处关闭
+        const lb = document.getElementById('lightbox');
+        if (lb && !lb.hidden) closeLightbox();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeLightbox();
+      });
+    }
+
     bindThemeToggle();
     bindAccentPalette();
     bindOnlineWidget();
     bindPostPop();
     bindMobileNav();
+    bindGlobalUi();
     document.addEventListener('astro:after-swap', () => {
       applyStoredTheme();
       applyStoredAccent();
@@ -401,6 +477,10 @@ const navGroups = [
       bindOnlineWidget();
       bindPostPop();
       bindMobileNav();
+      // 路由切换后按钮/灯箱是全新 DOM（灯箱默认隐藏）：
+      // 按新页面滚动位置刷新返回顶部显隐；兜底清除可能残留的灯箱锁滚动类
+      syncBackToTop();
+      document.documentElement.classList.remove('lightbox-open');
     });
 
     // ── 文章行悬浮描述卡：悬停带 data-desc 的文章行时弹出（自下而上），

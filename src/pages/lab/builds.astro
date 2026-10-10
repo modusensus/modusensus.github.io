@@ -2,11 +2,15 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 
 const projects = [
-  { name: 'Nest',       year: '2026', badge: 'AI/APP',  desc: '对话驱动的个人 AI 工作台。聊天即可管理项目、任务、习惯、文章，React + FastAPI + SQLite，支持 Function Calling 与记忆库。', link: 'https://github.com/modusensus/nest' },
-  { name: 'dsh-mneme',  year: '2026', badge: 'MEMORY',  desc: 'The memory that dreams — self-evolving memory for DeepSeek Harness: your AI remembers across sessions, consolidates in its sleep, forgets what matters less, and grows smarter over time. Fully offline & private.', link: 'https://github.com/modusensus/dsh-mneme' },
-  { name: 'CaseForge',  year: '2026', badge: 'LLM',     desc: '学术论文深度拆解框架。8 字段结构化提取 + 4 格式输出。', link: 'https://github.com/modusensus/CaseForge' },
-  { name: 'MindOS',     year: '2026', badge: 'WIDGET',  desc: 'AI 驱动的个人成长系统。8 模块单文件 HTML Widget。', link: 'https://github.com/modusensus/Mindos' },
-  { name: 'Ponte',      year: '2026', badge: 'CLI',     desc: 'Persistent SSH reverse tunnel daemon CLI. Auto-reconnect with exponential backoff + jitter.', link: 'https://github.com/modusensus/ponte' },
+  { name: 'Nest',       year: '2026', owner: 'modusensus', badge: 'AI/APP',  desc: '对话驱动的个人 AI 工作台。聊天即可管理项目、任务、习惯、文章，React + FastAPI + SQLite，支持 Function Calling 与记忆库。', link: 'https://github.com/modusensus/nest' },
+  { name: 'dsh-mneme',  year: '2026', owner: 'modusensus', badge: 'MEMORY',  desc: 'The memory that dreams — self-evolving memory for DeepSeek Harness: your AI remembers across sessions, consolidates in its sleep, forgets what matters less, and grows smarter over time. Fully offline & private.', link: 'https://github.com/modusensus/dsh-mneme' },
+  { name: 'CaseForge',  year: '2026', owner: 'modusensus', badge: 'LLM',     desc: '学术论文深度拆解框架。8 字段结构化提取 + 4 格式输出。', link: 'https://github.com/modusensus/CaseForge' },
+  { name: 'MindOS',     year: '2026', owner: 'modusensus', badge: 'WIDGET',  desc: 'AI 驱动的个人成长系统。8 模块单文件 HTML Widget。', link: 'https://github.com/modusensus/Mindos' },
+  { name: 'Ponte',      year: '2026', owner: 'modusensus', badge: 'CLI',     desc: 'Persistent SSH reverse tunnel daemon CLI. Auto-reconnect with exponential backoff + jitter.', link: 'https://github.com/modusensus/ponte' },
+  { name: 'euthyna',    year: '2026', owner: 'slow-stack', badge: 'AUDIT',   desc: 'AI 编码代理跳不过的代码安全审计：确定性事实（git 历史、测试覆盖率）+ 六道闸门主张裁定，不是又一个扫描器。DSH 插件，零依赖。', link: 'https://github.com/slow-stack/euthyna' },
+  { name: 'ai-governance-compare', year: '2026', owner: 'modusensus', badge: 'LAW', desc: '欧盟与中国 AI 及数据法律的对照研究：一次一个问题，每条论断标注可信度与日期，全部可溯源。', link: 'https://github.com/modusensus/ai-governance-compare' },
+  { name: 'Ripples-of-Aion', year: '2026', owner: 'modusensus', badge: 'MEMORY', desc: '岁月涟漪 — Cyrene 的结构化记忆层插件，让代理拥有分层、可检索的长期记忆。', link: 'https://github.com/modusensus/Ripples-of-Aion' },
+  { name: 'dsh-study-desk', year: '2026', owner: 'slow-stack', badge: 'STUDY', desc: 'DSH 考研工作台插件：Notion 式待办墙 + 按复习时长点亮的学习热力图 + 跨面板存活的番茄钟，零运行时依赖。', link: 'https://github.com/slow-stack/dsh-study-desk' },
 ];
 ---
 
@@ -25,17 +29,84 @@ const projects = [
       <div class="mono-label group-label">{String(projects.length).padStart(2, '0')} PROJECTS</div>
       <p class="group-note">发布在 GitHub 的作品</p>
     </div>
-    <div>
+    <div class="build-cards">
       {projects.map(p => (
-        <a class="lab-row" href={p.link} target="_blank" rel="noopener">
-          <span class="lab-year">{p.year}</span>
-          <span>
-            <span class="lab-name">{p.name}</span><br />
-            <span class="lab-desc">{p.desc}</span>
+        <a class="build-card" href={p.link} target="_blank" rel="noopener">
+          <div class="build-card-top">
+            <span class="mono-meta">{p.year} — {p.owner}</span>
+            <span class="badge">{p.badge}</span>
+          </div>
+          <div class="build-name">{p.name}</div>
+          <p class="build-desc">{p.desc}</p>
+          <span class="build-cta">
+            <span>GITHUB</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
           </span>
-          <span class="badge">{p.badge}</span>
         </a>
       ))}
     </div>
   </div>
 </BaseLayout>
+
+<style>
+  /* ── 项目卡片：纸片网格，杂志细边框 + hover 上浮；桌面三列 / 平板两列 / 手机一列 ── */
+  .build-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .build-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--paper-raise);
+    border: 1px solid var(--rule-soft);
+    border-top: 2px solid var(--rule);
+    border-radius: 3px;
+    padding: 18px 20px 16px;
+    transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out), border-color 0.3s var(--ease-out);
+  }
+  .build-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--rule);
+    box-shadow: 0 12px 26px rgba(26, 26, 26, 0.1);
+  }
+  .build-card-top {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .build-name {
+    font-family: var(--font-grot); font-weight: 900; font-size: 19px;
+    letter-spacing: -0.01em; line-height: 1.25;
+    color: var(--ink);
+    transition: color 0.25s var(--ease-out);
+    /* 长仓库名允许断行，避免撑破卡片 */
+    overflow-wrap: anywhere;
+  }
+  .build-card:hover .build-name { color: var(--c-pink); }
+  .build-desc {
+    font-family: var(--font-cn); font-size: 12.5px; line-height: 1.75;
+    color: var(--muted);
+    margin-top: 8px;
+    flex: 1; /* 描述区撑满剩余高度，让 CTA 行对齐卡片底部 */
+    /* 摘要最多 4 行，卡片高度保持整齐 */
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .build-cta {
+    display: inline-flex; align-items: center; gap: 7px;
+    margin-top: 14px; padding-top: 12px;
+    border-top: 1px solid var(--rule-soft);
+    font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-soft);
+    transition: gap 0.25s var(--ease-out), color 0.25s var(--ease-out);
+  }
+  .build-card:hover .build-cta { gap: 11px; color: var(--c-pink); }
+  @media (max-width: 1040px) {
+    .build-cards { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 680px) {
+    .build-cards { grid-template-columns: 1fr; gap: 16px; }
+  }
+</style>

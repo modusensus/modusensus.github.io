@@ -28,16 +28,24 @@ const years = [...new Set(posts.map(p => p.data.date.getFullYear()))].sort((a, b
   <div class="container board">
     <hr class="board-rule" />
     {years.map(year => (
-      <section>
+      <section class="year-sec">
         <div class="mono-label group-label">{year}</div>
         <div>
           {posts.filter(p => p.data.date.getFullYear() === year).map(post => (
-            <a class="ar-item" href={`/blog/${post.slug}`}>
+            <a
+              class="ar-item"
+              href={`/blog/${post.slug}`}
+              data-desc={post.data.excerpt && post.data.excerpt !== (post.data.subtitle || '') ? post.data.excerpt : undefined}
+              data-ai={post.data.ai ? 'ai' : undefined}
+            >
               <div class="ar-meta">
                 <span>{sectionNames[post.data.module]}{post.data.issue ? ` · NO.${post.data.issue}` : ''}</span>
                 <span>{fmtYear(post.data.date)} · <span class="waline-pageview-count" data-path={`/blog/${post.slug}`}>–</span> VIEWS</span>
               </div>
               <div class="ar-title">{post.data.title}</div>
+              {(post.data.subtitle || post.data.excerpt) && (
+                <div class="ar-desc">{post.data.subtitle || post.data.excerpt}</div>
+              )}
               {post.data.tags && post.data.tags.length > 0 && (
                 <div class="ar-tags">
                   {post.data.tags.map(t => <span class="ar-tag">#{t}</span>)}

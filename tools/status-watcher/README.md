@@ -75,5 +75,5 @@ Win+R → shell:startup
 vbs 内容(注意只能用 ASCII,中文注释会导致 wscript 解析失败):
 
 ```vbscript
-CreateObject("Wscript.Shell").Run """D:\New Folder\node.exe"" ""D:\modusensus.github.io\tools\status-watcher\watch-status.mjs""", 0, False
+CreateObject("Wscript.Shell").Run """D:\nodejs\node.exe"" ""D:\modusensus.github.io\tools\status-watcher\watch-status.mjs""", 0, False
 ```
